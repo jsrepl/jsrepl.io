@@ -1,0 +1,47 @@
+{
+  "name": "jsrepl.io",
+  "description": "JavaScript REPL & Playground",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://jsrepl.io",
+  "author": {
+    "name": "Aleksei Nagovitsyn",
+    "email": "contact@jsrepl.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsrepl/jsrepl.io.git"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "preview": "turbo run preview",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:vitest": "turbo run test:vitest",
+    "test:vitest:watch": "turbo run test:vitest:watch",
+    "test:playwright": "turbo run test:playwright",
+    "test:playwright:web-server:build": "turbo run test:playwright:web-server:build",
+    "test:playwright:web-server:start": "turbo run test:playwright:web-server:start",
+    "format": "prettier . --write"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7",
+    "prettier": "3.3.2",
+    "prettier-plugin-tailwindcss": "^0.6.5",
+    "turbo": "^2.1.1"
+  },
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "nuxi@3.13.1": "patches/nuxi@3.13.1.patch"
+    }
+  }
+}

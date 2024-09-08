@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+public/e.js
+database.types.ts
+test-results/
+playwright-report/

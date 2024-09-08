@@ -1,0 +1,35 @@
+diff --git a/dist/chunks/preview.mjs b/dist/chunks/preview.mjs
+index 720390d643fe72f79a386724f0c5a82ea0e029e4..4f2a058ce78f7a656818149695722a80c31fdb46 100644
+--- a/dist/chunks/preview.mjs
++++ b/dist/chunks/preview.mjs
+@@ -64,6 +64,16 @@ const preview = defineCommand({
+   async run(ctx) {
+     process.env.NODE_ENV = process.env.NODE_ENV || "production";
+     const cwd = resolve(ctx.args.cwd || ctx.args.rootDir || ".");
++
++    // https://github.com/nuxt/cli/issues/383
++    const envExists = ctx.args.dotenv ? existsSync(resolve(cwd, ctx.args.dotenv)) : existsSync(cwd);
++    if (envExists) {
++      consola.info(
++        `Loading "${ ctx.args.dotenv ?? '.env' }". This will not be loaded when running the server in production.`
++      );
++      await setupDotenv({ cwd, fileName: ctx.args.dotenv });
++    }
++
+     const { loadNuxtConfig } = await loadKit(cwd);
+     const config = await loadNuxtConfig({
+       cwd,
+@@ -119,13 +129,6 @@ const preview = defineCommand({
+         }
+       )
+     );
+-    const envExists = ctx.args.dotenv ? existsSync(resolve(cwd, ctx.args.dotenv)) : existsSync(cwd);
+-    if (envExists) {
+-      consola.info(
+-        "Loading `.env`. This will not be loaded when running the server in production."
+-      );
+-      await setupDotenv({ cwd, fileName: ctx.args.dotenv });
+-    }
+     consola.info(`Starting preview command: \`${nitroJSON.commands.preview}\``);
+     const [command, ...commandArgs] = nitroJSON.commands.preview.split(" ");
+     consola.log("");

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".nuxt/**", ".output/**", "dist/**"],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_KEY",
+        "SUPABASE_SERVICE_KEY",
+        "JSREPL_PREVIEW_URL",
+        "JSREPL_CUSTOM_APP_VERSION",
+        "JSREPL_ORIGIN",
+        "VERCEL_ENV",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "VERCEL_URL"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "test": {
+      "dependsOn": ["test:vitest", "test:playwright"]
+    },
+    "test:vitest": {},
+    "test:playwright": {
+      "dependsOn": ["test:playwright:web-server:build"]
+    },
+    "test:playwright:web-server:build": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".nuxt/**", ".output/**", "dist/**"],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_KEY",
+        "SUPABASE_SERVICE_KEY",
+        "JSREPL_PREVIEW_URL",
+        "JSREPL_CUSTOM_APP_VERSION",
+        "JSREPL_ORIGIN",
+        "VERCEL_ENV",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "VERCEL_URL"
+      ]
+    },
+    "test:playwright:web-server:start": {
+      "cache": false,
+      "persistent": true,
+      "interactive": false
+    },
+    "test:vitest:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "jsrepl#build": {
+      "dependsOn": ["preview-entry#build"]
+    },
+    "jsrepl#test:playwright:web-server:build": {
+      "dependsOn": ["preview-entry#test:playwright:web-server:build"]
+    }
+  },
+  "envMode": "loose"
+}

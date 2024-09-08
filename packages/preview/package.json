@@ -1,0 +1,26 @@
+{
+  "name": "preview",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc && eslint .",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest",
+    "test:playwright:web-server:build": "vite build --mode test",
+    "test:playwright:web-server:start": "vite preview --mode test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.1",
+    "@types/node": "^22.1.0",
+    "eslint": "^9.9.1",
+    "globals": "^15.9.0",
+    "typescript": "^5.2.2",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.3.4",
+    "vitest": "^2.0.5"
+  }
+}

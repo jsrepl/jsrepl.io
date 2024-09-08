@@ -2,12 +2,12 @@
 
 **JavaScript REPL & Playground**
 
-Quickly test and share your code snippets.
-Ideal for learning and prototyping.
+Quickly test and share your code snippets. Ideal for learning and prototyping.
 
 ![demo](https://github.com/user-attachments/assets/d6a12ee5-4227-4b3a-860c-48de845ccb0b)
 
 ## Links
+
 - Website: https://jsrepl.io
 - [Issues](https://github.com/jsrepl/jsrepl.io/issues)
 - [Discussions](https://github.com/jsrepl/jsrepl.io/discussions)
