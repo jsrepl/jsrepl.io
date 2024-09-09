@@ -1,6 +1,7 @@
 import { ToastAction } from '@/components/ui/toast'
 import { useToast } from '@/components/ui/toast/use-toast'
 import type { UserStoredState } from '~/types/repl.types'
+import { parseVersion } from '~/utils/semver'
 
 export function useNewVersionToast(userStoredState: Ref<UserStoredState>) {
   const { toast } = useToast()
@@ -8,20 +9,13 @@ export function useNewVersionToast(userStoredState: Ref<UserStoredState>) {
 
   onMounted(() => {
     const userVersion = userStoredState.value.version
-    if (
-      userVersion /* skip on first launch */ &&
-      runtimeConfig.public.appVersion &&
-      userVersion !== runtimeConfig.public.appVersion &&
-      /^[0-9a-zA-Z.-]+$/.test(userVersion)
-    ) {
-      setTimeout(async () => {
-        const versionData = await useFetch('/api/new-version', {
-          query: { a: userVersion, b: runtimeConfig.public.appVersion },
-        })
+    const appVersion = runtimeConfig.public.appVersion
 
-        if (versionData.data.value?.hnc) {
-          showToast()
-        }
+    // Skip on first launch (userVersion is undefined).
+    // Skip patch version updates (bug fixes only).
+    if (userVersion && isMajorOrMinorUpdated(userVersion, appVersion)) {
+      setTimeout(async () => {
+        showToast(appVersion)
       }, 3000)
     }
 
@@ -30,15 +24,37 @@ export function useNewVersionToast(userStoredState: Ref<UserStoredState>) {
     }
   })
 
-  function showToast() {
+  function isMajorOrMinorUpdated(userVersion: string, appVersion: string) {
+    if (userVersion === appVersion) {
+      return false
+    }
+
+    const userVersionData = parseVersion(userVersion)
+    if (!userVersionData) {
+      return false
+    }
+
+    const appVersionData = parseVersion(runtimeConfig.public.appVersion)
+    if (!appVersionData) {
+      return false
+    }
+
+    return (
+      appVersionData.major > userVersionData.major ||
+      (appVersionData.major === userVersionData.major &&
+        appVersionData.minor > userVersionData.minor)
+    )
+  }
+
+  function showToast(appVersion: string) {
     const { dismiss } = toast({
-      title: `Updated to version ${runtimeConfig.public.appVersion}`,
+      title: `Updated to version ${appVersion}`,
       description: h('div', { class: 'flex flex-col gap-1' }, [
         h('p', {}, [
           h(
             'a',
             {
-              href: `/releases#${runtimeConfig.public.appVersion}`,
+              href: `https://github.com/jsrepl/jsrepl.io/releases/tag/${appVersion}`,
               target: '_blank',
               class: 'text-sm underline underline-offset-4 hover:text-primary',
               onClick: () => {

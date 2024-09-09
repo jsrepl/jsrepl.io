@@ -17,7 +17,6 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/': { prerender: true },
-    '/releases': { prerender: true },
     '/contact': { prerender: true },
     '/terms': { prerender: true },
     '/privacy': { prerender: true },
@@ -48,7 +47,7 @@ export default defineNuxtConfig({
     'shadcn-nuxt',
     'nuxt-security',
     '@nuxt/content',
-    '@nuxt/icon'
+    '@nuxt/icon',
   ],
 
   supabase: {

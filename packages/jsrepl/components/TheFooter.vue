@@ -22,7 +22,10 @@
         >Issues<LucideArrowUpRight :size="16" class="ml-1 inline-block opacity-30" />
       </a>
 
-      <NuxtLink to="/releases">Changelog</NuxtLink>
+      <NuxtLink to="https://github.com/jsrepl/jsrepl.io/releases" target="_blank"
+        >Changelog<LucideArrowUpRight :size="16" class="ml-1 inline-block opacity-30"
+      /></NuxtLink>
+
       <NuxtLink to="/contact">Contact</NuxtLink>
       <NuxtLink to="/terms">Terms of Service</NuxtLink>
       <NuxtLink to="/privacy">Privacy Policy</NuxtLink>

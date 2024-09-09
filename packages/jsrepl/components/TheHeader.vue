@@ -14,7 +14,9 @@
       <div
         class="text-secondary-foreground/80 ml-auto flex items-center text-sm font-medium leading-10 [&_a]:px-3 [&_a]:underline-offset-4 hover:[&_a]:underline"
       >
-        <NuxtLink to="/releases" class="">Changelog</NuxtLink>
+        <NuxtLink to="https://github.com/jsrepl/jsrepl.io/releases" target="_blank"
+          >Changelog</NuxtLink
+        >
 
         <div class="border-border mx-2 h-5 border-l" />
 
