@@ -1,4 +1,4 @@
-import type { ReplPayload } from '../../jsrepl/types/repl.types'
+import type { ReplPayload, ThemeDef } from '../../jsrepl/types/repl.types'
 
 declare global {
   const __JSREPL_ORIGIN__: string
@@ -17,3 +17,18 @@ export type PreviewEntryWindow = Window &
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type PreviewWindow = Window & typeof globalThis & { __r: Function }
+
+export type ReplMessageData = {
+  token: number
+  type: 'repl'
+  jsCode: string
+  htmlCode: string
+  cssCode: string
+  importmap: ImportMap
+  theme: Pick<ThemeDef, 'id' | 'isDark'>
+}
+
+export type UpdateThemeMessageData = {
+  type: 'update-theme'
+  theme: Pick<ThemeDef, 'id' | 'isDark'>
+}

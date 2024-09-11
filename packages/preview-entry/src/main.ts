@@ -1,11 +1,19 @@
 import type { ThemeDef } from '../../jsrepl/types/repl.types'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
+import { defer } from './promise-with-resolvers'
 import { setupRepl } from './repl'
-import type { ImportMap, PreviewEntryWindow, PreviewWindow } from './types'
+import type {
+  ImportMap,
+  PreviewEntryWindow,
+  PreviewWindow,
+  ReplMessageData,
+  UpdateThemeMessageData,
+} from './types'
 
 const JSREPL_ORIGIN = __JSREPL_ORIGIN__
-let resetIframeTimeoutId: NodeJS.Timeout | undefined
+let currentToken: number | undefined
+let afterJsScriptDeferred: PromiseWithResolvers<void> | undefined
 
 const iframe1 = createIframe()
 iframe1.id = 'preview1'
@@ -40,51 +48,50 @@ function onMessage(event: MessageEvent) {
     return
   }
 
-  const data = event.data as
-    | {
-        token: number
-        type: 'repl'
-        jsCode: string
-        htmlCode: string
-        cssCode: string
-        importmap: ImportMap
-        theme: Pick<ThemeDef, 'id' | 'isDark'>
-      }
-    | {
-        type: 'update-theme'
-        theme: Pick<ThemeDef, 'id' | 'isDark'>
-      }
+  const data = event.data as ReplMessageData | UpdateThemeMessageData
 
   if (data.type === 'repl') {
-    const { token, jsCode, htmlCode, cssCode, importmap, theme } = data
-
-    const iframeToEnter = activeIframe === iframe1 ? iframe2 : iframe1
-    const iframeToLeave = activeIframe === iframe1 ? iframe1 : iframe2
-    activeIframe = iframeToEnter
-
-    iframeToEnter.style.opacity = '0'
-    iframeToEnter.style.pointerEvents = 'none'
-    iframeToEnter.srcdoc = getIframeTemplate(importmap, jsCode, htmlCode, cssCode, theme, token)
-
-    iframeToEnter.classList.add('active')
-    iframeToLeave.classList.remove('active')
-
-    clearTimeout(resetIframeTimeoutId)
-    resetIframeTimeoutId = setTimeout(() => {
-      iframeToEnter.style.opacity = ''
-      iframeToEnter.style.pointerEvents = ''
-
-      iframeToLeave.style.opacity = '0'
-      iframeToLeave.style.pointerEvents = 'none'
-      iframeToLeave.srcdoc = ''
-    }, 80)
+    onReplMessage(data)
   }
 
   if (data.type === 'update-theme') {
-    const { theme } = data
-    const html = activeIframe?.contentWindow?.document.documentElement
-    html?.classList.toggle('dark', theme.isDark)
+    onUpdateThemeMessage(data)
   }
+}
+
+async function onReplMessage(data: ReplMessageData) {
+  const { token, jsCode, htmlCode, cssCode, importmap, theme } = data
+  currentToken = token
+
+  const iframeToEnter = activeIframe === iframe1 ? iframe2 : iframe1
+  const iframeToLeave = activeIframe === iframe1 ? iframe1 : iframe2
+  activeIframe = iframeToEnter
+
+  iframeToEnter.style.opacity = '0'
+  iframeToEnter.style.pointerEvents = 'none'
+  iframeToEnter.srcdoc = getIframeTemplate(importmap, jsCode, htmlCode, cssCode, theme, token)
+
+  iframeToEnter.classList.add('active')
+  iframeToLeave.classList.remove('active')
+
+  afterJsScriptDeferred = defer()
+  await Promise.race([afterJsScriptDeferred.promise, new Promise((r) => setTimeout(r, 250))])
+  if (currentToken !== token) {
+    return
+  }
+
+  iframeToEnter.style.opacity = ''
+  iframeToEnter.style.pointerEvents = ''
+
+  iframeToLeave.style.opacity = '0'
+  iframeToLeave.style.pointerEvents = 'none'
+  iframeToLeave.srcdoc = ''
+}
+
+function onUpdateThemeMessage(data: UpdateThemeMessageData) {
+  const { theme } = data
+  const html = activeIframe?.contentWindow?.document.documentElement
+  html?.classList.toggle('dark', theme.isDark)
 }
 
 function getIframeTemplate(
@@ -155,6 +162,7 @@ function setup(previewWindow: PreviewWindow, token: number) {
 
 function afterJsScript(_window: PreviewWindow, token: number) {
   postMessage(token, { type: 'script-complete' })
+  afterJsScriptDeferred?.resolve()
 }
 
 function bodyMutation(token: number) {
