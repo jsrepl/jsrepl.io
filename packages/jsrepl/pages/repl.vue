@@ -233,6 +233,7 @@
               :tsx-value="initialTsx"
               :html-value="initialHtml"
               :css-value="initialCss"
+              :tailwind-config-value="initialTailwindConfig"
               :selected-model-name="selectedModelName"
               :theme="theme"
               :preview-iframe="iframeRef"
@@ -240,6 +241,7 @@
               @tsx-change="onTsxChange"
               @html-change="onHtmlChange"
               @css-change="onCssChange"
+              @tailwind-config-change="onTailwindConfigChange"
               @repl="onRepl"
               @repl-body-mutation="onReplBodyMutation"
             />
@@ -330,6 +332,7 @@ import { PreviewPosition, type ThemeDef } from '~/types/repl.types'
 import type { CssModelShared } from '~/utils/css-model-shared'
 import type { HtmlModelShared } from '~/utils/html-model-shared'
 import { getReplTitle } from '~/utils/repl-title'
+import type { TailwindConfigModelShared } from '~/utils/tailwind-config-model-shared'
 import { Themes } from '~/utils/themes'
 
 definePageMeta({
@@ -369,8 +372,9 @@ const initialInfo = replStoredState.value.info
 const initialTsx = replStoredState.value.tsx
 const initialHtml = replStoredState.value.html
 const initialCss = replStoredState.value.css
+const initialTailwindConfig = replStoredState.value.tailwindConfig
 
-const selectedModelName = ref<'info' | 'tsx' | 'html' | 'css'>(
+const selectedModelName = ref<'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'>(
   replStoredState.value.currentModelName
 )
 
@@ -396,11 +400,15 @@ let hideIframeTimeoutId: NodeJS.Timeout | undefined
 // There is no functionality related to logged in users yet.
 const disableUsers = true
 
-const modelSwitcherOptions: { value: 'info' | 'tsx' | 'html' | 'css'; label: string }[] = [
+const modelSwitcherOptions: {
+  value: 'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'
+  label: string
+}[] = [
   // { value: 'info', label: 'About' },
   { value: 'tsx', label: 'TS/TSX' },
   { value: 'html', label: 'HTML' },
   { value: 'css', label: 'CSS' },
+  { value: 'tailwindConfig', label: 'tailwind.config.ts' },
 ]
 
 const previewPosOptions = [
@@ -475,6 +483,13 @@ const debouncedCssSave = debounce((cssModelShared: CssModelShared) => {
   replStoredState.value.css = cssModelShared.getValue()
 }, 500)
 
+const debouncedTailwindConfigSave = debounce(
+  (tailwindConfigModelShared: TailwindConfigModelShared) => {
+    replStoredState.value.tailwindConfig = tailwindConfigModelShared.getValue()
+  },
+  500
+)
+
 onMounted(() => {
   window.addEventListener('beforeunload', onWindowBeforeUnload)
 })
@@ -511,6 +526,10 @@ function onCssChange(cssModelShared: CssModelShared) {
   debouncedCssSave(cssModelShared)
 }
 
+function onTailwindConfigChange(tailwindConfigModelShared: TailwindConfigModelShared) {
+  debouncedTailwindConfigSave(tailwindConfigModelShared)
+}
+
 function onRepl() {
   clearTimeout(hideIframeTimeoutId)
 
@@ -529,6 +548,7 @@ function onWindowBeforeUnload() {
   debouncedTsxSave.flush()
   debouncedHtmlSave.flush()
   debouncedCssSave.flush()
+  debouncedTailwindConfigSave.flush()
 }
 
 async function share() {

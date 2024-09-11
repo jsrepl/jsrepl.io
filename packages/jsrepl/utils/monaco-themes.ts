@@ -69,7 +69,7 @@ export async function loadShikiMonacoTheme(theme: ThemeDef['id']) {
 
   shikiHighlighter = await createHighlighter({
     themes: [theme],
-    langs: ['json', 'tsx', 'html', 'css'],
+    langs: ['json', 'tsx', /*'javascript',*/ 'html', 'css'],
     langAlias: {
       typescript: 'tsx',
     },

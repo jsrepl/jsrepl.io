@@ -95,12 +95,19 @@ export async function getDtsMap(
     }
 
     const add = (moduleSpecifier: string): void => {
-      const importUrl = moduleSpecifier.startsWith('https://')
+      let importUrl = moduleSpecifier.startsWith('https://')
         ? moduleSpecifier
         : new URL(moduleSpecifier, url).href // relative path -> absolute url
+
+      // https://esm.sh/v135/tailwindcss@3.4.10/types/config.d -> .../config.d.ts
+      if (importUrl.endsWith('.d')) {
+        importUrl += '.ts'
+      }
+
       imports.add(importUrl)
     }
 
+    // TODO: `declare module 'https://esm.sh/v135/source-map-js@1.2.0/source-map.d.ts'` in "file:///node_modules/tailwindcss/v135/source-map-js@1.2.0/source-map.d.ts"
     const transformer: TS.TransformerFactory<TS.SourceFile> = (context) => {
       const { factory } = context
       return (sourceFile: TS.SourceFile) => {

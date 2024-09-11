@@ -12,20 +12,20 @@ import { type SourceMapInput, TraceMap, originalPositionFor } from '@jridgewell/
 import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
+import type { TailwindConfigModelShared } from '~/utils/tailwind-config-model-shared'
 
 export function useCodeEditorRepl(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
   getTsxModelShared: () => TsxModelShared | null,
   getHtmlModelShared: () => HtmlModelShared | null,
   getCssModelShared: () => CssModelShared | null,
+  getTailwindConfigModelShared: () => TailwindConfigModelShared | null,
   {
-    monacoTailwindcssPromise,
     theme,
     previewIframe,
     onRepl,
     onReplBodyMutation,
   }: {
-    monacoTailwindcssPromise: Promise<MonacoTailwindcss>
     theme: Ref<ThemeDef>
     previewIframe: Ref<HTMLIFrameElement | null>
     onRepl: ({ error }: { error: unknown }) => void
@@ -44,6 +44,10 @@ export function useCodeEditorRepl(
   let decorationsDisposables: (() => void)[] = []
   let decorationUniqIndex = 0
   let monacoTailwindcss: MonacoTailwindcss | null = null
+  let configureMonacoTailwindcss:
+    | typeof import('@nag5000/monaco-tailwindcss').configureMonacoTailwindcss
+    | null = null
+  const changedModels = new Set<monaco.editor.ITextModel>()
 
   const debouncedDoRepl = debounce(doRepl, 300)
 
@@ -51,25 +55,42 @@ export function useCodeEditorRepl(
   const [babel, loadBabel] = useBabel()
 
   onMounted(async () => {
-    ;[, monacoTailwindcss] = await Promise.all([loadBabel(), monacoTailwindcssPromise])
+    ;[, { configureMonacoTailwindcss }] = await Promise.all([
+      loadBabel(),
+      import('@nag5000/monaco-tailwindcss'),
+    ])
 
     window.addEventListener('message', onMessage)
 
     const tsxModelShared = getTsxModelShared()!
     const htmlModelShared = getHtmlModelShared()!
     const cssModelShared = getCssModelShared()!
+    const tailwindConfigModelShared = getTailwindConfigModelShared()!
+
+    changedModels.add(tsxModelShared.model)
+    changedModels.add(htmlModelShared.model)
+    changedModels.add(cssModelShared.model)
+    changedModels.add(tailwindConfigModelShared.model)
 
     doRepl()
 
     tsxModelShared.model.onDidChangeContent(() => {
+      changedModels.add(tsxModelShared.model)
       debouncedDoRepl()
     })
 
     htmlModelShared.model.onDidChangeContent(() => {
+      changedModels.add(htmlModelShared.model)
       debouncedDoRepl()
     })
 
     cssModelShared.model.onDidChangeContent(() => {
+      changedModels.add(cssModelShared.model)
+      debouncedDoRepl()
+    })
+
+    tailwindConfigModelShared.model.onDidChangeContent(() => {
+      changedModels.add(tailwindConfigModelShared.model)
       debouncedDoRepl()
     })
 
@@ -84,6 +105,8 @@ export function useCodeEditorRepl(
     window.removeEventListener('message', onMessage)
     clearTimeout(delayedUpdateDecorationsTimeoutId)
     decorationsDisposables.forEach((d) => d())
+
+    monacoTailwindcss?.dispose()
   })
 
   return { updateDecorations }
@@ -108,6 +131,7 @@ export function useCodeEditorRepl(
     const tsxModelShared = getTsxModelShared()!
     const htmlModelShared = getHtmlModelShared()!
     const cssModelShared = getCssModelShared()!
+    const tailwindConfigModelShared = getTailwindConfigModelShared()!
 
     const {
       code: jsCode,
@@ -117,15 +141,41 @@ export function useCodeEditorRepl(
     const themeVal = theme.value
 
     const htmlCode = !jsError ? htmlModelShared.getValue() : ''
+    const { code: tailwindConfig, error: tailwindConfigError } =
+      tailwindConfigModelShared.getBabelTransformResult(babel.value!)
+
+    if (tailwindConfigError) {
+      console.groupCollapsed(
+        '%cREPL%c %s',
+        'color: light-dark(#410E0B, #FADEDC); background-color: light-dark(#FCEBEB, #4E3534); border-radius: 2px; padding: 1px 4px;',
+        'font-weight: 400;',
+        'tailwind config error'
+      )
+      console.warn(tailwindConfigError)
+      console.groupEnd()
+    }
+
+    if (!tailwindConfigError) {
+      if (!monacoTailwindcss || changedModels.has(tailwindConfigModelShared.model)) {
+        if (monacoTailwindcss) {
+          monacoTailwindcss.setTailwindConfig(tailwindConfig ?? '')
+        } else {
+          monacoTailwindcss = configureMonacoTailwindcss!(monaco, {
+            tailwindConfig: tailwindConfig ?? '',
+          })
+        }
+      }
+    }
 
     const currToken = iframeToken
-    const cssCode: string = !jsError
-      ? await getTailwindCSSCode(monacoTailwindcss!, {
-          tsx: tsxModelShared.getValue(),
-          html: htmlModelShared.getValue(),
-          css: cssModelShared.getValue(),
-        })
-      : ''
+    const cssCode: string =
+      !jsError && !tailwindConfigError
+        ? await getTailwindCSSCode({
+            tsx: jsCode,
+            html: htmlCode,
+            css: cssModelShared.getValue(),
+          })
+        : cssModelShared.getValue()
 
     if (iframeToken !== currToken) {
       return
@@ -177,6 +227,8 @@ export function useCodeEditorRepl(
     }, 1000)
 
     onRepl({ error: jsError })
+
+    changedModels.clear()
   }
 
   function handleReplError(error: Error | BabelParseError) {
@@ -338,12 +390,17 @@ export function useCodeEditorRepl(
     }
   }
 
-  async function getTailwindCSSCode(
-    monacoTailwindcss: MonacoTailwindcss,
-    { tsx, html, css }: { tsx: string; html: string; css: string }
-  ): Promise<string> {
+  async function getTailwindCSSCode({
+    tsx,
+    html,
+    css,
+  }: {
+    tsx: string
+    html: string
+    css: string
+  }): Promise<string> {
     try {
-      return await monacoTailwindcss.generateStylesFromContent(css, [
+      return await monacoTailwindcss!.generateStylesFromContent(css, [
         { content: tsx, extension: 'tsx' },
         { content: html, extension: 'html' },
       ])

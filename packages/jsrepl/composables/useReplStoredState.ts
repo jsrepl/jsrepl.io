@@ -72,6 +72,7 @@ function getDefaultState(): ReplStoredState {
     tsx: getDefaultTsx(),
     html: getDefaultHtml(),
     css: getDefaultCss(),
+    tailwindConfig: getDefaultTailwindConfig(),
     currentModelName: 'tsx',
     showPreview: true,
   }
@@ -128,5 +129,18 @@ setInterval(() => {
 function formatTime(date: Date) {
   return format(date, 'HH:mm:ss');
 }
+`
+}
+
+function getDefaultTailwindConfig(): string {
+  return `import type { Config } from 'tailwindcss';
+
+export default {
+  content: ['**/*'],
+  corePlugins: {
+    preflight: false,
+  },
+  darkMode: 'class',
+} satisfies Config;
 `
 }

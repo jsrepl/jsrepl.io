@@ -1,12 +1,4 @@
 import type * as monaco from 'monaco-editor'
-import { type Debug } from '../utils/debug'
-
-declare global {
-  interface Window {
-    debug: Record<Debug, boolean>
-    debugAll(): void
-  }
-}
 
 export enum ReplPayloadCustomKind {
   DomNode = 'dom-node', // non-cloneable
@@ -99,7 +91,8 @@ export type ReplStoredState = {
   tsx: string
   html: string
   css: string
-  currentModelName: 'info' | 'tsx' | 'html' | 'css'
+  tailwindConfig: string
+  currentModelName: 'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'
   showPreview: boolean
 }
 
