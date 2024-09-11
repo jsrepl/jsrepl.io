@@ -187,9 +187,9 @@
             instantly. Live feedback gives you tangible productivity boost when prototyping.
           </p>
           <p>
-            You still have the power to debug your code using `debugger` statements, thanks to the
-            source maps, and, of course, you can use your favorite `console.log` just as you like
-            :).
+            You still have the power to debug your code using `<span>d</span>ebugger` statements,
+            thanks to the source maps, and, of course, you can use your favorite `console.log` just
+            as you like :).
           </p>
         </template>
         <template #media="{ videoProps }">
