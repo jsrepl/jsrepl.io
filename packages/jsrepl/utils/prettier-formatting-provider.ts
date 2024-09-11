@@ -1,4 +1,5 @@
 import type * as monaco from 'monaco-editor'
+import type { Options, Plugin } from 'prettier'
 
 export class PrettierFormattingProvider implements monaco.languages.DocumentFormattingEditProvider {
   displayName = 'Prettier'
@@ -8,10 +9,36 @@ export class PrettierFormattingProvider implements monaco.languages.DocumentForm
     options: monaco.languages.FormattingOptions,
     token: monaco.CancellationToken
   ): Promise<monaco.languages.TextEdit[] | null | undefined> {
-    const [prettier, typescriptPlugin, estreePlugin] = await Promise.all([
+    let pluginPromises: Array<Promise<Plugin>>
+    let parser: Options['parser']
+
+    switch (model.getLanguageId()) {
+      case 'typescript':
+        parser = 'typescript'
+        pluginPromises = [
+          import('prettier/plugins/typescript').then((x) => x.default),
+          import('prettier/plugins/estree').then((x) => x.default),
+        ]
+        break
+      case 'javascript':
+        parser = 'babel'
+        pluginPromises = [import('prettier/plugins/babel').then((x) => x.default)]
+        break
+      case 'html':
+        parser = 'html'
+        pluginPromises = [import('prettier/plugins/html').then((x) => x.default)]
+        break
+      case 'css':
+        parser = 'css'
+        pluginPromises = [import('prettier/plugins/postcss').then((x) => x.default)]
+        break
+      default:
+        return null
+    }
+
+    const [prettier, ...plugins] = await Promise.all([
       import('prettier/standalone'),
-      import('prettier/plugins/typescript').then((x) => x.default),
-      import('prettier/plugins/estree').then((x) => x.default),
+      ...pluginPromises,
     ])
 
     if (token.isCancellationRequested) {
@@ -21,9 +48,9 @@ export class PrettierFormattingProvider implements monaco.languages.DocumentForm
     let output: string
     try {
       output = await prettier.format(model.getValue(), {
-        parser: 'typescript',
-        plugins: [typescriptPlugin, estreePlugin],
-        // TODO: make it configurable
+        parser,
+        plugins,
+        // TODO: make it configurable (.prettierrc or prettier.config.ts model)
         tabWidth: options.tabSize,
         useTabs: !options.insertSpaces,
         singleQuote: true,

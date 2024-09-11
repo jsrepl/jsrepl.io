@@ -268,9 +268,15 @@ function setupMonaco() {
     },
   ])
 
+  const prettierFormattingProvider = new PrettierFormattingProvider()
   monaco.languages.registerDocumentFormattingEditProvider(
+    [
     { language: 'typescript', exclusive: true },
-    new PrettierFormattingProvider()
+      { language: 'javascript', exclusive: true },
+      { language: 'html', exclusive: true },
+      { language: 'css', exclusive: true },
+    ],
+    prettierFormattingProvider
   )
 
   monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
