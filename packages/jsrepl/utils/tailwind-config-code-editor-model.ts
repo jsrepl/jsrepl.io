@@ -1,20 +1,9 @@
 import type { BabelTransformResult, BabelTransformResultError } from '@/types/babel.types'
 import type { PluginObj, types } from '@babel/core'
 import type * as Babel from '@babel/standalone'
-import type * as Monaco from 'monaco-editor'
 
-export class TailwindConfigModelShared {
-  model: Monaco.editor.ITextModel
-  #value: string | null = null
+export class TailwindConfigCodeEditorModel extends CodeEditorModel {
   #babelTransformResult: BabelTransformResult | BabelTransformResultError | null = null
-
-  constructor(model: Monaco.editor.ITextModel) {
-    this.model = model
-  }
-
-  getValue(): string {
-    return this.#value ?? (this.#value = this.model.getValue())
-  }
 
   getBabelTransformResult(babel: typeof Babel): BabelTransformResult | BabelTransformResultError {
     return (
@@ -23,8 +12,8 @@ export class TailwindConfigModelShared {
     )
   }
 
-  invalidateCache() {
-    this.#value = null
+  override invalidateCache() {
+    super.invalidateCache()
     this.#babelTransformResult = null
   }
 

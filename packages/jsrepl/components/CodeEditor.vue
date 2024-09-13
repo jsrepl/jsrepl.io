@@ -1,91 +1,39 @@
 <script setup lang="ts">
 import { useCodeEditorRepl } from '@/composables/useCodeEditorRepl'
 import { useCodeEditorTypescript } from '@/composables/useCodeEditorTypescript'
-import { CssModelShared } from '@/utils/css-model-shared'
-import { HtmlModelShared } from '@/utils/html-model-shared'
-import { InfoModelShared } from '@/utils/info-model-shared'
 import { loadMonacoTheme } from '@/utils/monaco-themes'
 import { Themes } from '@/utils/themes'
-import { TsxModelShared } from '@/utils/tsx-model-shared'
 import * as monaco from 'monaco-editor'
 // @ts-expect-error: no types for this
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput'
-import { type Theme, type ThemeDef } from '~/types/repl.types'
+import { type ModelDef, type Theme, type ThemeDef } from '~/types/repl.types'
+import { createCodeEditorModel } from '~/utils/code-editor-model-factory'
 import { PrettierFormattingProvider } from '~/utils/prettier-formatting-provider'
-import { TailwindConfigModelShared } from '~/utils/tailwind-config-model-shared'
 
-const containerRef = ref<HTMLElement | null>(null)
-const editor = shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
-
-let infoModel: monaco.editor.ITextModel
-let tsxModel: monaco.editor.ITextModel
-let htmlModel: monaco.editor.ITextModel
-let cssModel: monaco.editor.ITextModel
-let tailwindConfigModel: monaco.editor.ITextModel
-
-let infoModelShared: InfoModelShared | null = null
-let tsxModelShared: TsxModelShared | null = null
-let htmlModelShared: HtmlModelShared | null = null
-let cssModelShared: CssModelShared | null = null
-let tailwindConfigModelShared: TailwindConfigModelShared | null = null
+const emit = defineEmits(['model-change', 'repl', 'replBodyMutation'])
 
 const props = defineProps<{
-  infoValue: string
-  tsxValue: string
-  htmlValue: string
-  cssValue: string
-  tailwindConfigValue: string
-  selectedModelName: 'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'
+  modelDefinitions: Map<string, ModelDef>
+  activeModel: string
   theme: ThemeDef
   previewIframe: HTMLIFrameElement | null
 }>()
 
-const {
-  infoValue,
-  tsxValue,
-  htmlValue,
-  cssValue,
-  tailwindConfigValue,
-  selectedModelName,
-  theme,
-  previewIframe,
-} = toRefs(props)
+const { modelDefinitions, activeModel, theme, previewIframe } = toRefs(props)
 
-const emit = defineEmits([
-  'info-change',
-  'tsx-change',
-  'html-change',
-  'css-change',
-  'tailwind-config-change',
-  'repl',
-  'replBodyMutation',
-])
+const containerRef = ref<HTMLElement | null>(null)
+const editor = shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+const models = shallowReactive(new Map<string, InstanceType<typeof CodeEditorModel>>())
+
+const [userStoredState] = useUserStoredState()
+const currentTextModel = computed(() => models.get(activeModel.value)?.monacoModel ?? null)
 
 defineExpose({
   getEditor: () => editor.value,
-  getTsxModelShared: () => tsxModelShared,
-  getHtmlModelShared: () => htmlModelShared,
-  getCssModelShared: () => cssModelShared,
-  getTailwindConfigModelShared: () => tailwindConfigModelShared,
-})
-
-const [userStoredState] = useUserStoredState()
-
-const selectedModel = computed(() => {
-  switch (selectedModelName.value) {
-    case 'info':
-      return infoModel
-    case 'tsx':
-      return tsxModel
-    case 'html':
-      return htmlModel
-    case 'css':
-      return cssModel
-    case 'tailwindConfig':
-      return tailwindConfigModel
-    default:
-      return tsxModel
-  }
+  restartRepl: () => {
+    const model = models.get('file:///index.tsx')
+    model?.monacoModel.setValue(model.getValue())
+  },
 })
 
 setupMonaco()
@@ -98,43 +46,27 @@ watch(theme, async (theme) => {
   editor.value?.updateOptions({ theme: theme.id })
 })
 
-watch(selectedModelName, () => {
-  editor.value?.setModel(selectedModel.value)
+watch(currentTextModel, () => {
+  editor.value?.setModel(currentTextModel.value)
 
-  if (selectedModel.value === tsxModel) {
+  if (currentTextModel.value?.uri.toString() === 'file:///index.tsx') {
     updateDecorations()
   }
 })
 
 onMounted(() => {
-  infoModel = monaco.editor.createModel(
-    infoValue.value,
-    'json',
-    monaco.Uri.parse('file:///index.json')
-  )
-
-  tsxModel = monaco.editor.createModel(
-    tsxValue.value,
-    'typescript',
-    monaco.Uri.parse('file:///index.tsx')
-  )
-
-  htmlModel = monaco.editor.createModel(
-    htmlValue.value,
-    'html',
-    monaco.Uri.parse('file:///index.html')
-  )
-
-  cssModel = monaco.editor.createModel(cssValue.value, 'css', monaco.Uri.parse('file:///index.css'))
-
-  tailwindConfigModel = monaco.editor.createModel(
-    tailwindConfigValue.value,
-    'typescript',
-    monaco.Uri.parse('file:///tailwind.config.ts')
-  )
+  modelDefinitions.value.forEach((modelDef) => {
+    const model = createCodeEditorModel(modelDef)
+    if (model) {
+      models.set(modelDef.uri, model)
+      model.monacoModel.onDidChangeContent(() => {
+        emit('model-change', model)
+      })
+    }
+  })
 
   editor.value = monaco.editor.create(containerRef.value!, {
-    model: selectedModel.value,
+    model: currentTextModel.value,
     automaticLayout: true,
     padding: { top: 20, bottom: 20 },
     // TODO: make it configurable
@@ -153,37 +85,6 @@ onMounted(() => {
     renderLineHighlight: 'none',
     scrollBeyondLastLine: false,
   })
-
-  infoModel.onDidChangeContent(() => {
-    infoModelShared?.invalidateCache()
-    emit('info-change', infoModelShared)
-  })
-
-  tsxModel.onDidChangeContent(() => {
-    tsxModelShared?.invalidateCache()
-    emit('tsx-change', tsxModelShared)
-  })
-
-  htmlModel.onDidChangeContent(() => {
-    htmlModelShared?.invalidateCache()
-    emit('html-change', htmlModelShared)
-  })
-
-  cssModel.onDidChangeContent(() => {
-    cssModelShared?.invalidateCache()
-    emit('css-change', cssModelShared)
-  })
-
-  tailwindConfigModel.onDidChangeContent(() => {
-    tailwindConfigModelShared?.invalidateCache()
-    emit('tailwind-config-change', tailwindConfigModelShared)
-  })
-
-  infoModelShared = new InfoModelShared(infoModel)
-  tsxModelShared = new TsxModelShared(tsxModel)
-  htmlModelShared = new HtmlModelShared(htmlModel)
-  cssModelShared = new CssModelShared(cssModel)
-  tailwindConfigModelShared = new TailwindConfigModelShared(tailwindConfigModel)
 
   const quickInputCommand = editor.value.addCommand(0, (accessor, func) => {
     const quickInputService = accessor.get(IQuickInputService)
@@ -225,33 +126,20 @@ onMounted(() => {
   })
 })
 
-useCodeEditorTypescript(
-  () => editor.value,
-  () => tsxModelShared,
-  () => tailwindConfigModelShared
-)
+useCodeEditorTypescript(() => editor.value, models)
 
-const { updateDecorations } = useCodeEditorRepl(
-  () => editor.value,
-  () => tsxModelShared,
-  () => htmlModelShared,
-  () => cssModelShared,
-  () => tailwindConfigModelShared,
-  {
-    theme,
-    previewIframe,
-    onRepl: ({ error }) => emit('repl', { error }),
-    onReplBodyMutation: () => emit('replBodyMutation'),
-  }
-)
+const { updateDecorations } = useCodeEditorRepl(() => editor.value, models, {
+  theme,
+  previewIframe,
+  onRepl: ({ error }) => emit('repl', { error }),
+  onReplBodyMutation: () => emit('replBodyMutation'),
+})
 
 onBeforeUnmount(() => {
   editor.value?.dispose()
-  infoModel?.dispose()
-  tsxModel?.dispose()
-  htmlModel?.dispose()
-  cssModel?.dispose()
-  tailwindConfigModel?.dispose()
+  models.forEach((model) => {
+    model.monacoModel.dispose()
+  })
 })
 
 function setupMonaco() {

@@ -1,25 +1,25 @@
+import type {
+  CssCodeEditorModel,
+  HtmlCodeEditorModel,
+  TailwindConfigCodeEditorModel,
+  TsxCodeEditorModel,
+} from '#imports'
 import { useBabel } from '@/composables/useBabel'
 import { type BabelParseError, isBabelParseError } from '@/types/babel.types'
 import { type ReplPayload, type ThemeDef } from '@/types/repl.types'
 import { cssInject } from '@/utils/css-inject'
-import type { CssModelShared } from '@/utils/css-model-shared'
-import type { HtmlModelShared } from '@/utils/html-model-shared'
 import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
 import { stringifyPayload } from '@/utils/repl-payload'
-import type { TsxModelShared } from '@/utils/tsx-model-shared'
 import type { BabelFileResult } from '@babel/core'
 import { type SourceMapInput, TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
-import type { TailwindConfigModelShared } from '~/utils/tailwind-config-model-shared'
+import { defaultTailwindConfigJson } from '~/utils/tailwind-configs'
 
 export function useCodeEditorRepl(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
-  getTsxModelShared: () => TsxModelShared | null,
-  getHtmlModelShared: () => HtmlModelShared | null,
-  getCssModelShared: () => CssModelShared | null,
-  getTailwindConfigModelShared: () => TailwindConfigModelShared | null,
+  models: Map<string, InstanceType<typeof CodeEditorModel>>,
   {
     theme,
     previewIframe,
@@ -47,12 +47,12 @@ export function useCodeEditorRepl(
   let configureMonacoTailwindcss:
     | typeof import('@nag5000/monaco-tailwindcss').configureMonacoTailwindcss
     | null = null
-  const changedModels = new Set<monaco.editor.ITextModel>()
+  const changedModels = new Set<InstanceType<typeof CodeEditorModel>>()
 
   const debouncedDoRepl = debounce(doRepl, 300)
 
   const debouncedUpdateDecorations = debounce(updateDecorations, 1)
-  const [babel, loadBabel] = useBabel()
+  const [babelRef, loadBabel] = useBabel()
 
   onMounted(async () => {
     ;[, { configureMonacoTailwindcss }] = await Promise.all([
@@ -62,36 +62,17 @@ export function useCodeEditorRepl(
 
     window.addEventListener('message', onMessage)
 
-    const tsxModelShared = getTsxModelShared()!
-    const htmlModelShared = getHtmlModelShared()!
-    const cssModelShared = getCssModelShared()!
-    const tailwindConfigModelShared = getTailwindConfigModelShared()!
-
-    changedModels.add(tsxModelShared.model)
-    changedModels.add(htmlModelShared.model)
-    changedModels.add(cssModelShared.model)
-    changedModels.add(tailwindConfigModelShared.model)
+    models.forEach((model) => {
+      changedModels.add(model)
+    })
 
     doRepl()
 
-    tsxModelShared.model.onDidChangeContent(() => {
-      changedModels.add(tsxModelShared.model)
-      debouncedDoRepl()
-    })
-
-    htmlModelShared.model.onDidChangeContent(() => {
-      changedModels.add(htmlModelShared.model)
-      debouncedDoRepl()
-    })
-
-    cssModelShared.model.onDidChangeContent(() => {
-      changedModels.add(cssModelShared.model)
-      debouncedDoRepl()
-    })
-
-    tailwindConfigModelShared.model.onDidChangeContent(() => {
-      changedModels.add(tailwindConfigModelShared.model)
-      debouncedDoRepl()
+    models.forEach((model) => {
+      model.monacoModel.onDidChangeContent(() => {
+        changedModels.add(model)
+        debouncedDoRepl()
+      })
     })
 
     watch(theme, () => {
@@ -128,21 +109,24 @@ export function useCodeEditorRepl(
   async function doRepl() {
     iframeToken = (iframeToken + 1) % Number.MAX_VALUE
 
-    const tsxModelShared = getTsxModelShared()!
-    const htmlModelShared = getHtmlModelShared()!
-    const cssModelShared = getCssModelShared()!
-    const tailwindConfigModelShared = getTailwindConfigModelShared()!
+    const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
+    const htmlModel = models.get('file:///index.html') as HtmlCodeEditorModel
+    const cssModel = models.get('file:///index.css') as CssCodeEditorModel
+    const tailwindConfigModel = models.get(
+      'file:///tailwind.config.ts'
+    ) as TailwindConfigCodeEditorModel
 
     const {
       code: jsCode,
       metadata: jsMetadata,
       error: jsError,
-    } = tsxModelShared.getBabelTransformResult(babel.value!)
+    } = tsxModel.getBabelTransformResult(babelRef.value!)
     const themeVal = theme.value
 
-    const htmlCode = !jsError ? htmlModelShared.getValue() : ''
-    const { code: tailwindConfig, error: tailwindConfigError } =
-      tailwindConfigModelShared.getBabelTransformResult(babel.value!)
+    const htmlCode = !jsError ? htmlModel.getValue() : ''
+    const { code: tailwindConfig, error: tailwindConfigError } = tailwindConfigModel
+      ? tailwindConfigModel.getBabelTransformResult(babelRef.value!)
+      : { code: null, error: null }
 
     if (tailwindConfigError) {
       console.groupCollapsed(
@@ -156,12 +140,12 @@ export function useCodeEditorRepl(
     }
 
     if (!tailwindConfigError) {
-      if (!monacoTailwindcss || changedModels.has(tailwindConfigModelShared.model)) {
+      if (!monacoTailwindcss || changedModels.has(tailwindConfigModel)) {
         if (monacoTailwindcss) {
-          monacoTailwindcss.setTailwindConfig(tailwindConfig ?? '')
+          monacoTailwindcss.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
         } else {
           monacoTailwindcss = configureMonacoTailwindcss!(monaco, {
-            tailwindConfig: tailwindConfig ?? '',
+            tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
           })
         }
       }
@@ -173,9 +157,9 @@ export function useCodeEditorRepl(
         ? await getTailwindCSSCode({
             tsx: jsCode,
             html: htmlCode,
-            css: cssModelShared.getValue(),
+            css: cssModel.getValue(),
           })
-        : cssModelShared.getValue()
+        : cssModel.getValue()
 
     if (iframeToken !== currToken) {
       return
@@ -286,8 +270,8 @@ export function useCodeEditorRepl(
         const payload = event.data.payload as ReplPayload
 
         if (payload.ctx.kind === 'error') {
-          const tsxModelShared = getTsxModelShared()!
-          const { sourcemap } = tsxModelShared.getBabelTransformResult(babel.value!)
+          const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
+          const { sourcemap } = tsxModel.getBabelTransformResult(babelRef.value!)
           if (sourcemap) {
             const { line, column } = getOriginalPosition(
               sourcemap,
@@ -339,8 +323,8 @@ export function useCodeEditorRepl(
 
   function updateDecorations() {
     const editor = getEditor()
-    const tsxModelShared = getTsxModelShared()
-    if (!editor || !tsxModelShared || editor.getModel() !== tsxModelShared.model) {
+    const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
+    if (!editor || !tsxModel || editor.getModel() !== tsxModel.monacoModel) {
       return
     }
 
@@ -368,7 +352,7 @@ export function useCodeEditorRepl(
       const { lineStart, kind /* lineEnd, colStart, colEnd, source */ } = ctx
       const uniqClassName = `jsrepl-decor-${decorationUniqIndex++}`
 
-      const stringifiedPayload = stringifyPayload(payload, babel.value!)
+      const stringifiedPayload = stringifyPayload(payload, babelRef.value!)
       if (stringifiedPayload === null) {
         return null
       }

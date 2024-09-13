@@ -1,16 +1,13 @@
 import { useTypescript } from '@/composables/useTypescript'
 import { getDtsMap } from '@/utils/dts'
 import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
-import type { TailwindConfigModelShared } from '@/utils/tailwind-config-model-shared'
-import type { TsxModelShared } from '@/utils/tsx-model-shared'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
 
 export function useCodeEditorTypescript(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
-  getTsxModelShared: () => TsxModelShared | null,
-  getTailwindConfigModelShared: () => TailwindConfigModelShared | null
+  models: Map<string, InstanceType<typeof CodeEditorModel>>
 ) {
   const modelPackages = new Map<string, { abortController: AbortController }>()
 
@@ -39,35 +36,31 @@ export function useCodeEditorTypescript(
   })
 
   const debouncedUpdateDts = debounce(updateDts, 500)
-  const [ts, loadTS] = useTypescript()
+  const [tsRef, loadTS] = useTypescript()
 
-  let sharedModels: Array<TsxModelShared | TailwindConfigModelShared> = []
+  let tsModels: Array<InstanceType<typeof CodeEditorModel>> = []
   const changedModels = new Set<monaco.editor.ITextModel>()
   const cachedImports = new Map<monaco.editor.ITextModel, Set<string>>()
 
   onMounted(async () => {
     await Promise.all([loadTS()])
 
-    const tsxModelShared = getTsxModelShared()!
-    const tailwindConfigModelShared = getTailwindConfigModelShared()!
+    tsModels = Array.from(models.values()).filter(
+      (model) => model.monacoModel.getLanguageId() === 'typescript'
+    )
 
-    sharedModels = [tsxModelShared, tailwindConfigModelShared]
-
-    changedModels.add(tsxModelShared.model)
-    changedModels.add(tailwindConfigModelShared.model)
+    tsModels.forEach((model) => {
+      changedModels.add(model.monacoModel)
+    })
 
     updateDts()
 
-    tsxModelShared.model.onDidChangeContent(() => {
-      changedModels.add(tsxModelShared.model)
-      cachedImports.delete(tsxModelShared.model)
-      debouncedUpdateDts()
-    })
-
-    tailwindConfigModelShared.model.onDidChangeContent(() => {
-      changedModels.add(tailwindConfigModelShared.model)
-      cachedImports.delete(tailwindConfigModelShared.model)
-      debouncedUpdateDts()
+    tsModels.forEach((model) => {
+      model.monacoModel.onDidChangeContent(() => {
+        changedModels.add(model.monacoModel)
+        cachedImports.delete(model.monacoModel)
+        debouncedUpdateDts()
+      })
     })
   })
 
@@ -76,20 +69,20 @@ export function useCodeEditorTypescript(
   })
 
   function updateDts() {
-    const _ts = ts.value!
+    const ts = tsRef.value!
 
     const imports = new Set<string>()
 
     try {
-      sharedModels.forEach((sharedModel) => {
+      models.forEach((model) => {
         // `modelContext.getValue()` is used here instead of `modelContext.getBabelTransformResult().code`
         // to preserve unused imports. Babel transform with typescript plugin removes unused imports.
-        const sourceFile = _ts.createSourceFile(
-          sharedModel.model.uri.path,
-          sharedModel.getValue(),
-          _ts.ScriptTarget.ESNext,
+        const sourceFile = ts.createSourceFile(
+          model.monacoModel.uri.path,
+          model.getValue(),
+          ts.ScriptTarget.ESNext,
           true,
-          sharedModel.model.uri.path.endsWith('.tsx') ? _ts.ScriptKind.TSX : _ts.ScriptKind.TS
+          model.monacoModel.uri.path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
         )
 
         const _imports = findImports(sourceFile)
@@ -137,7 +130,7 @@ export function useCodeEditorTypescript(
       modelPackages.set(packageName, { abortController })
 
       // TODO: await Promise.all of addedPackages?
-      const dtsMap = await getDtsMap(packageName, ts.value!, { signal })
+      const dtsMap = await getDtsMap(packageName, tsRef.value!, { signal })
       debug(Debug.DTS, packageName, 'dtsMap', dtsMap)
 
       for (const [fileUri, content] of dtsMap) {
@@ -175,7 +168,7 @@ export function useCodeEditorTypescript(
   }
 
   function findImports(sourceFile: TS.SourceFile) {
-    const _ts = ts.value!
+    const ts = tsRef.value!
     const imports = new Set<string>()
 
     function findImportsAndExports(node: TS.Node) {
@@ -187,17 +180,17 @@ export function useCodeEditorTypescript(
       //   console.log('Export assignment:', node.expression.getText());
       // }
 
-      if (_ts.isImportDeclaration(node)) {
+      if (ts.isImportDeclaration(node)) {
         const moduleSpecifier = node.moduleSpecifier as TS.StringLiteral
         if (moduleSpecifier.text) {
           imports.add(moduleSpecifier.text)
         }
       }
 
-      _ts.forEachChild(node, findImportsAndExports)
+      ts.forEachChild(node, findImportsAndExports)
     }
 
-    _ts.forEachChild(sourceFile, findImportsAndExports)
+    ts.forEachChild(sourceFile, findImportsAndExports)
 
     return imports
   }

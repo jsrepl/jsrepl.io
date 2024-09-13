@@ -22,10 +22,10 @@
             <Button
               variant="none"
               size="none"
-              :data-active="selectedModelName === modelOption.value"
+              :data-active="activeModel === modelOption.value"
               class="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer px-4 py-2 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner"
               :class="['pr-8']"
-              @click="selectedModelName = modelOption.value"
+              @click="activeModel = modelOption.value"
             >
               <span
                 class="relative opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80"
@@ -57,10 +57,10 @@
             <Button
               variant="none"
               size="none"
-              :data-active="isIframeShown"
+              :data-active="preview.shown.value"
               class="data-[active=true]:border-border data-[active=true]:bg-editor-background group peer border border-transparent px-4 py-1.5 before:absolute before:inset-0 data-[active=true]:shadow-inner"
               :class="['pr-8']"
-              @click="toggleIframe"
+              @click="preview.toggle"
             >
               <span class="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80"
                 >Preview</span
@@ -80,9 +80,9 @@
               <DropdownMenuContent class="w-56">
                 <DropdownMenuLabel>Preview Position</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup v-model="userStoredState.previewPos">
+                <DropdownMenuRadioGroup v-model="preview.position.value">
                   <DropdownMenuRadioItem
-                    v-for="option in previewPosOptions"
+                    v-for="option in preview.positionOptions"
                     :key="option.value"
                     :value="option.value"
                   >
@@ -95,18 +95,6 @@
         </div>
 
         <div class="ml-auto flex items-center self-center">
-          <!-- <Button
-            size="icon-sm"
-            variant="ghost"
-            aria-label="Open this Repl info & config..."
-            title="Open this Repl info & config..."
-            class="text-secondary-foreground/60"
-            :class="{ 'border border-border bg-editor-background': selectedModelName === 'info' }"
-            @click="selectedModelName = selectedModelName === 'info' ? 'tsx' : 'info'"
-          >
-            <LucideInfo :size="18" />
-          </Button> -->
-
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <Button
@@ -141,7 +129,7 @@
             variant="ghost"
             class="text-secondary-foreground/60"
             title="Restart REPL / Reload Preview"
-            @click="reloadPreview"
+            @click="preview.reload"
           >
             <LucideRotateCw :size="18" />
           </Button>
@@ -222,26 +210,18 @@
         <div
           class="grid h-full grid-rows-1"
           :class="{
-            'grid-cols-[1fr,auto]': previewPos === 'aside-right' && isIframeShown,
+            'grid-cols-[1fr,auto]': preview.position.value === 'aside-right' && preview.shown.value,
           }"
         >
           <Suspense>
             <CodeEditorAsync
               ref="codeEditorRef"
               class="min-w-0"
-              :info-value="initialInfo"
-              :tsx-value="initialTsx"
-              :html-value="initialHtml"
-              :css-value="initialCss"
-              :tailwind-config-value="initialTailwindConfig"
-              :selected-model-name="selectedModelName"
+              :model-definitions="modelDefinitions"
+              :active-model="activeModel"
               :theme="theme"
-              :preview-iframe="iframeRef"
-              @info-change="onInfoChange"
-              @tsx-change="onTsxChange"
-              @html-change="onHtmlChange"
-              @css-change="onCssChange"
-              @tailwind-config-change="onTailwindConfigChange"
+              :preview-iframe="previewIframeRef"
+              @model-change="onModelChange"
               @repl="onRepl"
               @repl-body-mutation="onReplBodyMutation"
             />
@@ -253,46 +233,47 @@
           </Suspense>
 
           <div
-            ref="iframeContainerRef"
             :class="{
-              relative: previewPos === 'aside-right',
-              'absolute bottom-1 right-4 z-10': previewPos === 'float-bottom-right',
-              'absolute right-4 top-1 z-10': previewPos === 'float-top-right',
+              relative: preview.position.value === 'aside-right',
+              'absolute bottom-1 right-4 z-10': preview.position.value === 'float-bottom-right',
+              'absolute right-4 top-1 z-10': preview.position.value === 'float-top-right',
               'pointer-events-none !absolute translate-x-[calc(100%+3rem)] opacity-0':
-                !isIframeShown,
+                !preview.shown.value,
             }"
           >
             <!-- iframe must not be .sr-only or .hidden, otherwise timer are throttled (e.g. setInterval throttled to 1s) -->
             <Resizable
-              v-model="previewSize"
+              v-model="preview.size.value"
               left
-              :top="previewPos === 'float-bottom-right'"
-              :bottom="previewPos === 'float-top-right'"
+              :top="preview.position.value === 'float-bottom-right'"
+              :bottom="preview.position.value === 'float-top-right'"
               :class="{
-                '!h-full pl-2': previewPos === 'aside-right',
+                '!h-full pl-2': preview.position.value === 'aside-right',
                 'max-h-[calc(100vh-0.25rem-var(--hh))] max-w-[calc(100vw-1rem)] p-4':
-                  previewPos === 'float-bottom-right' || previewPos === 'float-top-right',
+                  preview.position.value === 'float-bottom-right' ||
+                  preview.position.value === 'float-top-right',
               }"
             >
               <iframe
-                ref="iframeRef"
+                ref="previewIframeRef"
                 :src="previewUrl"
                 width="100%"
                 height="100%"
                 class="bg-secondary"
                 :class="{
                   'border-border rounded border opacity-90 shadow-lg':
-                    previewPos === 'float-bottom-right' || previewPos === 'float-top-right',
-                  'border-l': previewPos === 'aside-right',
+                    preview.position.value === 'float-bottom-right' ||
+                    preview.position.value === 'float-top-right',
+                  'border-l': preview.position.value === 'aside-right',
                 }"
               />
             </Resizable>
 
             <Button
-              v-if="iframeMightBeHidden"
+              v-if="preview.mightBeHidden.value"
               variant="secondary"
               class="text-secondary-foreground absolute inset-0 z-10 m-auto w-fit opacity-60 hover:opacity-100 focus:opacity-100"
-              @click="toggleIframe(false)"
+              @click="preview.toggle(false)"
             >
               Close Preview
             </Button>
@@ -314,8 +295,6 @@ import Resizable from '@/components/Resizable.vue'
 import { Button } from '@/components/ui/button'
 import { useEarlyAccessToast } from '@/composables/toasts/useEarlyAccessToast'
 import { useReplStoredState } from '@/composables/useReplStoredState'
-import type { InfoModelShared } from '@/utils/info-model-shared'
-import type { TsxModelShared } from '@/utils/tsx-model-shared'
 import debounce from 'debounce'
 import {
   LucideEllipsisVertical,
@@ -328,11 +307,9 @@ import {
 } from 'lucide-vue-next'
 import type CodeEditor from '~/components/CodeEditor.vue'
 import { useNewVersionToast } from '~/composables/toasts/useNewVersionToast'
-import { PreviewPosition, type ThemeDef } from '~/types/repl.types'
-import type { CssModelShared } from '~/utils/css-model-shared'
-import type { HtmlModelShared } from '~/utils/html-model-shared'
+import { usePreview } from '~/composables/usePreview'
+import { type ThemeDef } from '~/types/repl.types'
 import { getReplTitle } from '~/utils/repl-title'
-import type { TailwindConfigModelShared } from '~/utils/tailwind-config-model-shared'
 import { Themes } from '~/utils/themes'
 
 definePageMeta({
@@ -357,78 +334,56 @@ if (import.meta.client) {
 }
 
 const [replStoredState, loadReplStoredState, saveReplStoredState] = useReplStoredState()
+const debouncedSaveReplStoredState = debounce(saveReplStoredState, 500)
 loadReplStoredState()
 if (import.meta.client) {
   watch(
     replStoredState,
     () => {
-      saveReplStoredState()
+      debouncedSaveReplStoredState()
     },
     { deep: true }
   )
 }
 
-const initialInfo = replStoredState.value.info
-const initialTsx = replStoredState.value.tsx
-const initialHtml = replStoredState.value.html
-const initialCss = replStoredState.value.css
-const initialTailwindConfig = replStoredState.value.tailwindConfig
+const modelDefinitions = ref(replStoredState.value.models)
+const activeModel = ref<string>(replStoredState.value.activeModel)
 
-const selectedModelName = ref<'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'>(
-  replStoredState.value.currentModelName
-)
-
-watch(selectedModelName, () => {
-  replStoredState.value.currentModelName = selectedModelName.value
+watch(activeModel, () => {
+  replStoredState.value.activeModel = activeModel.value
 })
 
-const iframeRef = shallowRef<HTMLIFrameElement | null>(null)
-const iframeContainerRef = shallowRef<HTMLDivElement | null>(null)
+const previewIframeRef = shallowRef<HTMLIFrameElement | null>(null)
 const codeEditorRef = shallowRef<typeof CodeEditor | null>(null)
-
-const isIframeShown = ref(replStoredState.value.showPreview)
-
-watch(isIframeShown, () => {
-  replStoredState.value.showPreview = isIframeShown.value
-})
-
-const iframeMightBeHidden = ref(false)
-const floatPreviewSize = ref({ width: 350, height: 180 })
-const asidePreviewSize = ref({ width: 350, height: 0 })
-let hideIframeTimeoutId: NodeJS.Timeout | undefined
 
 // There is no functionality related to logged in users yet.
 const disableUsers = true
 
-const modelSwitcherOptions: {
-  value: 'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'
-  label: string
-}[] = [
-  // { value: 'info', label: 'About' },
-  { value: 'tsx', label: 'TS/TSX' },
-  { value: 'html', label: 'HTML' },
-  { value: 'css', label: 'CSS' },
-  { value: 'tailwindConfig', label: 'tailwind.config.ts' },
-]
-
-const previewPosOptions = [
-  { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
-  { value: PreviewPosition.FloatBottomRight, label: 'Floating: bottom right' },
-  { value: PreviewPosition.AsideRight, label: 'Dock to right' },
-]
+const modelSwitcherOptions = computed(() => {
+  return Array.from(modelDefinitions.value.values()).map((model) => {
+    const label = model.uri.replace('file:///', '')
+    return { value: model.uri, label }
+  })
+})
 
 const theme: ComputedRef<ThemeDef> = computed(() => {
   return Themes.find((theme) => theme.id === userStoredState.value.theme) ?? Themes[0]
 })
 
-const previewPos = computed(() => userStoredState.value.previewPos)
-
 const sharableUrl = ref('')
 
 const replTitle = computed<string>(() => getReplTitle(replStoredState.value))
+const runtimeConfig = useRuntimeConfig()
+const previewUrl = runtimeConfig.public.previewUrl
 
 useEarlyAccessToast()
 useNewVersionToast(userStoredState)
+
+const preview = usePreview({
+  codeEditorRef,
+  userStoredState,
+  replStoredState,
+})
 
 useHead({
   title: replTitle,
@@ -437,118 +392,25 @@ useHead({
   },
 })
 
-const previewSize = computed({
-  get() {
-    switch (previewPos.value) {
-      case 'float-bottom-right':
-      case 'float-top-right':
-        return floatPreviewSize.value
-      case 'aside-right':
-        return asidePreviewSize.value
-      default:
-        return { width: 0, height: 0 }
-    }
-  },
-  set(value) {
-    switch (previewPos.value) {
-      case 'float-bottom-right':
-      case 'float-top-right':
-        floatPreviewSize.value = value
-        asidePreviewSize.value.width = value.width
-        break
-      case 'aside-right':
-        asidePreviewSize.value = value
-        floatPreviewSize.value.width = value.width
-        break
-    }
-  },
-})
-
-const runtimeConfig = useRuntimeConfig()
-const previewUrl = runtimeConfig.public.previewUrl
-
-const debouncedInfoSave = debounce((infoModelShared: InfoModelShared) => {
-  replStoredState.value.info = infoModelShared.getValue()
-}, 500)
-
-const debouncedTsxSave = debounce((tsxModelShared: TsxModelShared) => {
-  replStoredState.value.tsx = tsxModelShared.getValue()
-}, 500)
-
-const debouncedHtmlSave = debounce((htmlModelShared: HtmlModelShared) => {
-  replStoredState.value.html = htmlModelShared.getValue()
-}, 500)
-
-const debouncedCssSave = debounce((cssModelShared: CssModelShared) => {
-  replStoredState.value.css = cssModelShared.getValue()
-}, 500)
-
-const debouncedTailwindConfigSave = debounce(
-  (tailwindConfigModelShared: TailwindConfigModelShared) => {
-    replStoredState.value.tailwindConfig = tailwindConfigModelShared.getValue()
-  },
-  500
-)
-
 onMounted(() => {
   window.addEventListener('beforeunload', onWindowBeforeUnload)
 })
 
 onBeforeUnmount(() => {
-  debouncedTsxSave.flush()
-  debouncedHtmlSave.flush()
-  debouncedCssSave.flush()
-  clearTimeout(hideIframeTimeoutId)
+  debouncedSaveReplStoredState.flush()
   window.removeEventListener('beforeunload', onWindowBeforeUnload)
 })
 
-function toggleIframe(force?: boolean) {
-  if (typeof force === 'boolean' && isIframeShown.value === force) {
-    return
-  }
-
-  isIframeShown.value = typeof force === 'boolean' ? force : !isIframeShown.value
-}
-
-function onInfoChange(infoModelShared: InfoModelShared) {
-  debouncedInfoSave(infoModelShared)
-}
-
-function onTsxChange(tsxModelShared: TsxModelShared) {
-  debouncedTsxSave(tsxModelShared)
-}
-
-function onHtmlChange(htmlModelShared: HtmlModelShared) {
-  debouncedHtmlSave(htmlModelShared)
-}
-
-function onCssChange(cssModelShared: CssModelShared) {
-  debouncedCssSave(cssModelShared)
-}
-
-function onTailwindConfigChange(tailwindConfigModelShared: TailwindConfigModelShared) {
-  debouncedTailwindConfigSave(tailwindConfigModelShared)
-}
-
-function onRepl() {
-  clearTimeout(hideIframeTimeoutId)
-
-  hideIframeTimeoutId = setTimeout(() => {
-    iframeMightBeHidden.value = true
-  }, 1000)
-}
-
-function onReplBodyMutation() {
-  clearTimeout(hideIframeTimeoutId)
-  iframeMightBeHidden.value = false
+function onModelChange(editorModel: InstanceType<typeof CodeEditorModel>) {
+  const uri = editorModel.monacoModel.uri.toString()
+  replStoredState.value.models.set(uri, {
+    uri,
+    content: editorModel.getValue(),
+  })
 }
 
 function onWindowBeforeUnload() {
-  debouncedInfoSave.flush()
-  debouncedTsxSave.flush()
-  debouncedHtmlSave.flush()
-  debouncedCssSave.flush()
-  debouncedTailwindConfigSave.flush()
+  debouncedSaveReplStoredState.flush()
 }
 
 async function share() {
@@ -557,17 +419,12 @@ async function share() {
   sharableUrl.value = url
 }
 
-function reloadPreview() {
-  const tsxModelShared = codeEditorRef.value?.getTsxModelShared() as
-    | TsxModelShared
-    | null
-    | undefined
+function onRepl() {
+  preview.onRepl()
+}
 
-  if (!tsxModelShared) {
-    return
-  }
-
-  tsxModelShared.model.setValue(tsxModelShared.getValue())
+function onReplBodyMutation() {
+  preview.onReplBodyMutation()
 }
 
 async function signIn() {

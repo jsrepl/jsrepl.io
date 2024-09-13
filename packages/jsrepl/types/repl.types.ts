@@ -87,13 +87,14 @@ type ReplNonPromiseFields = {
 }
 
 export type ReplStoredState = {
-  info: string
-  tsx: string
-  html: string
-  css: string
-  tailwindConfig: string
-  currentModelName: 'info' | 'tsx' | 'html' | 'css' | 'tailwindConfig'
+  models: Map<string, ModelDef>
+  activeModel: string
   showPreview: boolean
+}
+
+export type ModelDef = {
+  uri: string
+  content: string
 }
 
 export type UserStoredState = {

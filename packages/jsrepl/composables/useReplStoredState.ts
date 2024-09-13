@@ -1,4 +1,5 @@
-import type { ReplStoredState } from '@/types/repl.types'
+import type { ModelDef, ReplStoredState } from '@/types/repl.types'
+import { defaultTailwindConfigTs } from '@/utils/tailwind-configs'
 import { atou, utoa } from '@/utils/zip'
 import type { Router } from 'vue-router'
 
@@ -18,26 +19,65 @@ export function useReplStoredState(): [Ref<ReplStoredState>, () => void, () => P
 function load(router: Router): ReplStoredState {
   const { query } = router.currentRoute.value
   const modelsQP = query.i
-  const currentModelNameQP = query.c
+  const activeModelQP = query.c
   const showPreviewQP = query.p
 
-  let models: Omit<ReplStoredState, 'currentModelName' | 'showPreview'> | null = null
+  let models: Array<ModelDef> | null = null
 
   if (typeof modelsQP === 'string') {
     try {
-      models = deserialize(modelsQP) as Omit<ReplStoredState, 'currentModelName' | 'showPreview'>
+      models = deserialize(modelsQP) as Array<ModelDef>
     } catch (e) {
       console.error('load error', e)
     }
   }
 
-  const state = {
-    ...getDefaultState(),
-    ...models,
-    ...(typeof currentModelNameQP === 'string'
-      ? { currentModelName: currentModelNameQP as ReplStoredState['currentModelName'] }
-      : null),
-    ...(typeof showPreviewQP === 'string' ? { showPreview: showPreviewQP === '1' } : null),
+  const state = getDefaultState()
+
+  if (models) {
+    let arr: Array<ModelDef>
+
+    if (Array.isArray(models)) {
+      arr = models
+    } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
+      // Old format
+      arr = [
+        {
+          uri: 'file:///index.tsx',
+          // @ts-expect-error: Old format
+          content: models.tsx,
+        },
+        {
+          uri: 'file:///index.html',
+          // @ts-expect-error: Old format
+          content: models.html,
+        },
+        {
+          uri: 'file:///index.css',
+          // @ts-expect-error: Old format
+          content: models.css,
+        },
+      ]
+    } else {
+      arr = []
+    }
+
+    state.models = new Map(arr.map((model) => [model.uri, model]))
+  }
+
+  if (typeof activeModelQP === 'string') {
+    const oldFormatMap = {
+      tsx: 'file:///index.tsx',
+      html: 'file:///index.html',
+      css: 'file:///index.css',
+    }
+
+    state.activeModel =
+      oldFormatMap[activeModelQP as keyof typeof oldFormatMap] ?? 'file:///' + activeModelQP
+  }
+
+  if (typeof showPreviewQP === 'string') {
+    state.showPreview = showPreviewQP === '1'
   }
 
   return state
@@ -53,9 +93,10 @@ async function save(state: ReplStoredState, router: Router): Promise<void> {
 }
 
 export function toQueryParams(state: ReplStoredState): Record<string, string> {
-  const { currentModelName, showPreview, ...models } = state
-  const modelsQP = serialize(models)
-  return { i: modelsQP, c: currentModelName, p: showPreview ? '1' : '0' }
+  const { activeModel, showPreview, models } = state
+  const modelsArr = Array.from(models.values())
+  const modelsQP = serialize(modelsArr)
+  return { i: modelsQP, c: activeModel.replace('file:///', ''), p: showPreview ? '1' : '0' }
 }
 
 function deserialize(serialized: string): unknown {
@@ -68,19 +109,43 @@ function serialize(storedState: unknown): string {
 
 function getDefaultState(): ReplStoredState {
   return {
-    info: getDefaultInfo(),
-    tsx: getDefaultTsx(),
-    html: getDefaultHtml(),
-    css: getDefaultCss(),
-    tailwindConfig: getDefaultTailwindConfig(),
-    currentModelName: 'tsx',
+    models: getDefaultModels(),
+    activeModel: 'file:///index.tsx',
     showPreview: true,
   }
 }
 
-function getDefaultInfo(): string {
-  const json = { title: '', description: '' }
-  return JSON.stringify(json, null, 2)
+function getDefaultModels(): ReplStoredState['models'] {
+  return new Map([
+    [
+      'file:///index.tsx',
+      {
+        uri: 'file:///index.tsx',
+        content: getDefaultTsx(),
+      },
+    ],
+    [
+      'file:///index.html',
+      {
+        uri: 'file:///index.html',
+        content: getDefaultHtml(),
+      },
+    ],
+    [
+      'file:///index.css',
+      {
+        uri: 'file:///index.css',
+        content: getDefaultCss(),
+      },
+    ],
+    [
+      'file:///tailwind.config.ts',
+      {
+        uri: 'file:///tailwind.config.ts',
+        content: defaultTailwindConfigTs,
+      },
+    ],
+  ])
 }
 
 function getDefaultHtml(): string {
@@ -129,18 +194,5 @@ setInterval(() => {
 function formatTime(date: Date) {
   return format(date, 'HH:mm:ss');
 }
-`
-}
-
-function getDefaultTailwindConfig(): string {
-  return `import type { Config } from 'tailwindcss';
-
-export default {
-  content: ['**/*'],
-  corePlugins: {
-    preflight: false,
-  },
-  darkMode: 'class',
-} satisfies Config;
 `
 }
