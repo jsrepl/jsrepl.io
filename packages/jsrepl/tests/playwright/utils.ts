@@ -76,11 +76,8 @@ export async function visitPlayground(
   state: Partial<ReplStoredState>
 ) {
   const defaultState: ReplStoredState = {
-    tsx: '',
-    html: '',
-    css: '',
-    info: '',
-    currentModelName: 'tsx',
+    models: new Map(),
+    activeModel: '',
     showPreview: false,
   }
 

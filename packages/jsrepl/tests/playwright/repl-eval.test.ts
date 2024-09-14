@@ -7,16 +7,40 @@ import { assertReplLines, monacoLocator, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page, goto }) => {
   await visitPlayground(goto, {
-    tsx: dedent`
-      const n = 1;
-      const m = n + 2;
+    activeModel: 'file:///index.tsx',
+    showPreview: false,
+    models: new Map([
+      [
+        'file:///index.tsx',
+        {
+          uri: 'file:///index.tsx',
+          content: dedent`
+            const n = 1;
+            const m = n + 2;
 
-      const a = 'foo';
-      const b = a + 'bar';
+            const a = 'foo';
+            const b = a + 'bar';
 
-      let now = new Date('2024');
-      now.toISOString();
-    `,
+            let now = new Date('2024');
+            now.toISOString();
+          `,
+        },
+      ],
+      [
+        'file:///index.html',
+        {
+          uri: 'file:///index.html',
+          content: ``,
+        },
+      ],
+      [
+        'file:///index.css',
+        {
+          uri: 'file:///index.css',
+          content: ``,
+        },
+      ],
+    ]),
   })
 
   const monaco = monacoLocator(page)

@@ -4,15 +4,37 @@ import { visitPlayground } from './utils'
 
 test('preview', async ({ page, goto }) => {
   await visitPlayground(goto, {
-    tsx: dedent`
-      const now = new Date('2024');
-      const foo = document.querySelector('.foo');
-      foo.innerHTML = now.toISOString();
-    `,
-    html: dedent`
-      <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
-    `,
+    activeModel: 'file:///index.tsx',
     showPreview: true,
+    models: new Map([
+      [
+        'file:///index.tsx',
+        {
+          uri: 'file:///index.tsx',
+          content: dedent`
+            const now = new Date('2024');
+            const foo = document.querySelector('.foo');
+            foo.innerHTML = now.toISOString();
+          `,
+        },
+      ],
+      [
+        'file:///index.html',
+        {
+          uri: 'file:///index.html',
+          content: dedent`
+            <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
+          `,
+        },
+      ],
+      [
+        'file:///index.css',
+        {
+          uri: 'file:///index.css',
+          content: ``,
+        },
+      ],
+    ]),
   })
 
   const frame = page.frameLocator('iframe').frameLocator('.preview.active')
