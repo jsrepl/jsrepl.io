@@ -4,6 +4,7 @@ import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
+import { debugLog } from '~/utils/debug-log'
 
 export function useCodeEditorTypescript(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
@@ -131,7 +132,7 @@ export function useCodeEditorTypescript(
 
       // TODO: await Promise.all of addedPackages?
       const dtsMap = await getDtsMap(packageName, tsRef.value!, { signal })
-      debug(Debug.DTS, packageName, 'dtsMap', dtsMap)
+      debugLog(DebugLog.DTS, packageName, 'dtsMap', dtsMap)
 
       for (const [fileUri, content] of dtsMap) {
         if (signal.aborted) {

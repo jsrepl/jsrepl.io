@@ -1,4 +1,4 @@
-export enum Debug {
+export enum DebugLog {
   TS = 'ts',
   DTS = 'dts',
   REPL = 'repl',
@@ -11,7 +11,7 @@ const debugFlags =
     ? new URLSearchParams(location.search).getAll('debug')
     : undefined
 
-export function debug(key: Debug, ...args: unknown[]) {
+export function debugLog(key: DebugLog, ...args: unknown[]) {
   if (import.meta.dev && import.meta.client && debugFlags!.includes(key)) {
     console.debug(
       '%cDEBUG%c %s',
