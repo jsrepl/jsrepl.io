@@ -2,12 +2,7 @@ import type { ReplStoredState } from '@/types/repl.types'
 
 export function getReplTitle(replStoredState: ReplStoredState): string {
   try {
-    const info = JSON.parse(replStoredState.info)
-    if (typeof info.title === 'string' && info.title.trim()) {
-      return transformTitle(info.title)
-    }
-
-    const tsx = replStoredState.tsx
+    const tsx = replStoredState.models.get('file:///index.tsx')?.content ?? ''
     const tsxFirstNonEmptyLine = tsx.match(/.+/)?.[0].trim() ?? ''
 
     if (tsxFirstNonEmptyLine.startsWith('//')) {
@@ -35,7 +30,7 @@ export function getReplTitle(replStoredState: ReplStoredState): string {
       return transformTitle(tsxFirstNonEmptyLine)
     }
 
-    const html = replStoredState.html
+    const html = replStoredState.models.get('file:///index.html')?.content ?? ''
     const htmlFirstNonEmptyLine = html.match(/.+/)?.[0].trim() ?? ''
 
     if (htmlFirstNonEmptyLine.startsWith('<!--')) {
