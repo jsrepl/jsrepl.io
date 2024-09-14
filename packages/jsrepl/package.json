@@ -8,8 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "NUXT_PREPARE=1 nuxt prepare",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "nuxi typecheck && eslint .",
     "test:vitest": "vitest run",
     "test:vitest:watch": "vitest",
     "test:playwright": "playwright test",
@@ -77,6 +76,7 @@
     "vite": "*",
     "vitest": "^2.0.5",
     "vue": "^3.3.8",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "vue-tsc": "^2.1.6"
   }
 }
