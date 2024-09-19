@@ -7,7 +7,12 @@ const publicRuntimeConfig = getPublicRuntimeConfig()
 export default defineNuxtConfig({
   compatibilityDate: '2024-07-12',
 
-  devtools: { enabled: true },
+  devtools: {
+    enabled: true,
+
+    // Tmp disabled due to https://github.com/nuxt/devtools/issues/722
+    componentInspector: false,
+  },
 
   runtimeConfig: {
     public: {
