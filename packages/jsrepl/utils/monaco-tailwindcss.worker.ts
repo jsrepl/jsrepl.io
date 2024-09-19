@@ -1,4 +1,4 @@
-import { type TailwindConfig } from '@nag5000/monaco-tailwindcss'
+import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import { initialize } from '@nag5000/monaco-tailwindcss/tailwindcss.worker'
 
 initialize({
@@ -7,7 +7,7 @@ initialize({
       const blob = new Blob([tailwindConfig], { type: 'application/javascript' })
       const url = URL.createObjectURL(blob)
       try {
-        const module = await import(url)
+        const module = await import(/* @vite-ignore */ url)
         return module.default
       } finally {
         URL.revokeObjectURL(url)
