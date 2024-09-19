@@ -3,7 +3,7 @@
     class="bg-background text-foreground flex h-screen select-none flex-col overflow-hidden"
     :style="{ '--hh': '2.6875rem' }"
   >
-    <header class="flex h-[--hh] items-stretch border-b px-2 leading-[calc(var(--hh)-1px)]">
+    <header class="flex h-[--hh] items-stretch gap-2 border-b px-2 leading-[calc(var(--hh)-1px)]">
       <NuxtLink
         to="/"
         class="mr-24 inline-flex items-center gap-2 text-lg font-light tracking-wide max-[840px]:mr-6"
@@ -308,7 +308,7 @@ import {
 import type CodeEditor from '~/components/CodeEditor.vue'
 import { useNewVersionToast } from '~/composables/toasts/useNewVersionToast'
 import { usePreview } from '~/composables/usePreview'
-import { type ThemeDef } from '~/types/repl.types'
+import type { ThemeDef } from '~/types/repl.types'
 import { getReplTitle } from '~/utils/repl-title'
 import { Themes } from '~/utils/themes'
 
