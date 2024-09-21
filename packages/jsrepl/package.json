@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "test:vitest": "vitest run",
-    "test:vitest:watch": "vitest"
+    "test:vitest:watch": "vitest",
+    "test:playwright": "playwright test",
+    "test:playwright:web-server:build": "NODE_ENV=test next build",
+    "test:playwright:web-server:start": "NODE_ENV=test next start"
   },
   "dependencies": {
     "next": "14.2.13",
@@ -16,6 +19,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@playwright/test": "^1.46.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^20",
