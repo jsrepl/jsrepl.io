@@ -1,5 +1,5 @@
 {
-  "name": "jsrepl",
+  "name": "jsrepl-nuxt",
   "private": true,
   "type": "module",
   "scripts": {
