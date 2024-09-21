@@ -42,3 +42,5 @@ next-env.d.ts
 /playwright/.cache/
 
 *storybook.log
+
+public/e.js

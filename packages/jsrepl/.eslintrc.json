@@ -1,3 +1,4 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript", "plugin:storybook/recommended"]
+  "extends": ["next/core-web-vitals", "next/typescript", "plugin:storybook/recommended"],
+  "ignores": ["public/e.js"]
 }

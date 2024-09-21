@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { expect, test } from 'vitest'
-import { type ReplPayload, ReplPayloadCustomKind } from '../../jsrepl/types/repl.types'
+import { type ReplPayload, ReplPayloadCustomKind } from '../../jsrepl/src/types'
 import { transformPayload } from './payload'
 import type { PreviewWindow, ReplRawPayload } from './types'
 

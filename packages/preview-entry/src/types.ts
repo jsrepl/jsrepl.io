@@ -1,4 +1,4 @@
-import type { ReplPayload, ThemeDef } from '../../jsrepl/types/repl.types'
+import type { ReplPayload, ThemeDef } from '../../jsrepl/src/types'
 
 declare global {
   const __JSREPL_ORIGIN__: string

@@ -1,4 +1,4 @@
-import { ReplPayload } from '../../jsrepl/types/repl.types'
+import { ReplPayload } from '../../jsrepl/src/types'
 
 const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 

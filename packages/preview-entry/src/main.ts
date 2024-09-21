@@ -1,4 +1,4 @@
-import type { ThemeDef } from '../../jsrepl/types/repl.types'
+import type { ThemeDef } from '../../jsrepl/src/types'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
