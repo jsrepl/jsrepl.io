@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 import { Themes } from './src/lib/themes'
 
+const isDev = process.env.NODE_ENV === 'development'
 const darkThemes = Themes.filter((theme) => theme.isDark)
 
 const config: Config = {
@@ -10,7 +11,9 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+    isDev && './src/stories/**/*.{js,ts,jsx,tsx,mdx}',
+    isDev && './.storybook/**/*.{js,ts,jsx,tsx,mdx}',
+  ].filter((x) => x !== false),
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require('@tailwindcss/typography'), require('tailwindcss-animate')],
