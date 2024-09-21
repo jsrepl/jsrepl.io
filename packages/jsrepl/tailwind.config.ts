@@ -1,7 +1,11 @@
 import type { Config } from 'tailwindcss'
+import { Themes } from './src/lib/themes'
+
+const darkThemes = Themes.filter((theme) => theme.isDark)
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: ['variant', darkThemes.map((theme) => `&:is([data-theme="${theme.id}"] *)`)],
+  safelist: Themes.map((theme) => `[data-theme="${theme.id}"]`),
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,13 +13,14 @@ const config: Config = {
   ],
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  plugins: [require('tailwindcss-animate')],
+  plugins: [require('@tailwindcss/typography'), require('tailwindcss-animate')],
 
   theme: {
     extend: {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        'editor-background': 'hsl(var(--editor-background))',
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
@@ -56,6 +61,7 @@ const config: Config = {
         },
       },
       borderRadius: {
+        xl: 'calc(var(--radius) + 4px)',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

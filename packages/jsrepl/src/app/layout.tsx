@@ -1,3 +1,4 @@
+import ThemeProvider from '@/components/theme-provider'
 import type { Metadata } from 'next'
 import { allFonts } from './fonts'
 import './globals.css'
@@ -13,9 +14,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+    <html lang="en" suppressHydrationWarning>
       <body className={`${allFonts.map((font) => font.variable).join(' ')} antialiased`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )
