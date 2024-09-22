@@ -1,4 +1,5 @@
 import ThemeProvider from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import type { Metadata } from 'next'
 import { allFonts } from './fonts'
 import './globals.css'
@@ -17,7 +18,10 @@ export default function RootLayout({
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
       <body className={`${allFonts.map((font) => font.variable).join(' ')} antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <main>{children}</main>
+        </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   )
