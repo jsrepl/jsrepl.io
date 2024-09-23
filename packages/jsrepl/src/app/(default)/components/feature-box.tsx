@@ -8,7 +8,7 @@ interface FeatureBoxProps {
 
 const FeatureBox: React.FC<FeatureBoxProps> = ({ icon, title, description }) => {
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-[#202127] p-6 text-white/85">
+    <div className="flex flex-col gap-4 rounded-xl bg-zinc-800 p-6 text-white/85">
       <div className="bg-background flex h-12 w-12 items-center justify-center rounded-sm">
         {icon}
       </div>

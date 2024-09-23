@@ -374,7 +374,7 @@ export default function Home() {
           Made with <LucideHeart className="mx-1 inline-block text-red-500" size={28} /> by
         </h2>
 
-        <div className="mx-auto flex w-full max-w-96 flex-col items-center gap-4 rounded-xl bg-[#202127] p-6 text-center text-white/85">
+        <div className="mx-auto flex w-full max-w-96 flex-col items-center gap-4 rounded-xl bg-zinc-800 p-6 text-center text-white/85">
           <img
             src="https://github.com/nag5000.png?size=192"
             alt="Aleksei Nagovitsyn"
