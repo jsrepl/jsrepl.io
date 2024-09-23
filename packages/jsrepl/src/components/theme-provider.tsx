@@ -1,16 +1,13 @@
-'use client'
-
-import { Themes } from '@/lib/themes'
 import { ThemeProvider as NextThemeProvider } from 'next-themes'
-import { usePathname } from 'next/navigation'
+import { Themes } from '@/lib/themes'
 
 export default function ThemeProvider({
+  forcedTheme,
   children,
 }: Readonly<{
+  forcedTheme?: string
   children: React.ReactNode
 }>) {
-  const pathname = usePathname()
-
   return (
     <>
       <NextThemeProvider
@@ -18,7 +15,7 @@ export default function ThemeProvider({
         enableSystem={false}
         themes={Themes.map((theme) => theme.id)}
         defaultTheme={Themes[0].id}
-        forcedTheme={pathname === '/repl' ? undefined : 'dark-plus'}
+        forcedTheme={forcedTheme}
         enableColorScheme
         disableTransitionOnChange
         attribute="data-theme"

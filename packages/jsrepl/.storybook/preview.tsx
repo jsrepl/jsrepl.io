@@ -1,7 +1,6 @@
+import React from 'react'
 import { withThemeByDataAttribute } from '@storybook/addon-themes'
 import type { Preview, ReactRenderer } from '@storybook/react'
-import React from 'react'
-import { allFonts } from '../src/app/fonts'
 import '../src/app/globals.css'
 import { Themes } from '../src/lib/themes'
 
@@ -27,18 +26,7 @@ const preview: Preview = {
       defaultTheme: Themes[0].id,
       attributeName: 'data-theme',
     }),
-
-    (Story) => (
-      <StoryWrapper>
-        <Story />
-      </StoryWrapper>
-    ),
   ],
-}
-
-const StoryWrapper = ({ children }: { children: React.ReactNode }) => {
-  const fontsClassName = allFonts.map((font) => font.variable).join(' ')
-  return <div className={`${fontsClassName} antialiased`}>{children}</div>
 }
 
 export default preview

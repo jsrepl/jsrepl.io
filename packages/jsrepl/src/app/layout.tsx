@@ -1,7 +1,5 @@
-import ThemeProvider from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/sonner'
 import type { Metadata } from 'next'
-import { allFonts } from './fonts'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -17,10 +15,8 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
-      <body className={`${allFonts.map((font) => font.variable).join(' ')} antialiased`}>
-        <ThemeProvider>
-          <main>{children}</main>
-        </ThemeProvider>
+      <body>
+        {children}
         <Toaster />
       </body>
     </html>
