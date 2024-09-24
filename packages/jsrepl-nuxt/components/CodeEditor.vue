@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import * as monaco from 'monaco-editor'
+// @ts-expect-error: no types for this
+import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput'
+import type { ModelDef, Theme, ThemeDef } from '~/types/repl.types'
+import { createCodeEditorModel } from '~/utils/code-editor-model-factory'
+import { PrettierFormattingProvider } from '~/utils/prettier-formatting-provider'
 import { useCodeEditorRepl } from '@/composables/useCodeEditorRepl'
 import { useCodeEditorTypescript } from '@/composables/useCodeEditorTypescript'
 import { loadMonacoTheme } from '@/utils/monaco-themes'
 import { Themes } from '@/utils/themes'
-import * as monaco from 'monaco-editor'
-// @ts-expect-error: no types for this
-import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput'
-import { type ModelDef, type Theme, type ThemeDef } from '~/types/repl.types'
-import { createCodeEditorModel } from '~/utils/code-editor-model-factory'
-import { PrettierFormattingProvider } from '~/utils/prettier-formatting-provider'
 
 const emit = defineEmits(['model-change', 'repl', 'replBodyMutation'])
 

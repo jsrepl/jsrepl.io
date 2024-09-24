@@ -8,8 +8,6 @@ import tailwindConfig from '../../tailwind.config.ts'
 export const fullConfig = resolveConfig(tailwindConfig)
 export const colors = fullConfig.theme.accentColor
 
-<Meta title="Theme/Colors" />
-
 <ColorPalette>
   <ColorItem title="background" colors={[colors.background]} />
   <ColorItem title="foreground" colors={[colors.foreground]} />
@@ -40,5 +38,5 @@ export const colors = fullConfig.theme.accentColor
 
 <div hidden>
   <p>HACK: @storybook/addon-themes doesn't work in MDX files w/o Story</p>
-  <Story of={ButtonStories.Default} />
+  <Story of={ButtonStories.None} />
 </div>

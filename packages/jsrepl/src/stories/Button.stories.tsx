@@ -1,11 +1,10 @@
+import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 import { fn } from '@storybook/test'
-import React from 'react'
 import { Button } from '../components/ui/button'
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: 'UI/Button',
   component: Button,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
@@ -22,41 +21,66 @@ const meta = {
 } satisfies Meta<typeof Button>
 
 export default meta
-type Story = StoryObj<typeof meta>
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Default: Story = {
-  args: {},
+type Story = StoryObj<typeof meta>
+
+export const Variants: Story = {
+  render: ({ ...args }) => (
+    <div className="space-x-4 space-y-2">
+      <Button {...args}>default</Button>
+      <Button {...args} variant="secondary">
+        secondary
+      </Button>
+      <Button {...args} variant="ghost">
+        ghost
+      </Button>
+      <Button {...args} variant="ghost-primary">
+        ghost-primary
+      </Button>
+      <Button {...args} variant="link">
+        link
+      </Button>
+      <Button {...args} variant="destructive">
+        destructive
+      </Button>
+      <Button {...args} variant="none">
+        none
+      </Button>
+    </div>
+  ),
 }
 
-export const Primary: Story = {
-  args: {
-    variant: 'primary',
-  },
-}
-
-export const Secondary: Story = {
-  args: {
-    variant: 'secondary',
-  },
-}
-
-export const Large: Story = {
-  args: {
-    size: 'lg',
-  },
-}
-
-export const Small: Story = {
-  args: {
-    size: 'sm',
-  },
-}
-
-export const Link: Story = {
-  args: {
-    variant: 'link',
-  },
+export const Sizes: Story = {
+  render: ({ ...args }) => (
+    <div className="space-x-4 space-y-2">
+      <Button {...args}>default</Button>
+      <Button {...args} size="xs">
+        xs
+      </Button>
+      <Button {...args} size="sm">
+        sm
+      </Button>
+      <Button {...args} size="lg">
+        lg
+      </Button>
+      <Button {...args} size="icon">
+        icon
+      </Button>
+      <Button {...args} size="icon-sm">
+        icon-sm
+      </Button>
+      <Button {...args} size="icon-xs">
+        icon-xs
+      </Button>
+      <Button {...args} size="icon-lg">
+        icon-lg
+      </Button>
+      <Button {...args} size="none">
+        none
+      </Button>
+    </div>
+  ),
 }
 
 export const AsLink: Story = {
@@ -70,4 +94,11 @@ export const AsLink: Story = {
       </a>
     </Button>
   ),
+}
+
+export const None: Story = {
+  args: {
+    variant: 'none',
+    size: 'none',
+  },
 }

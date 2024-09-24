@@ -10,14 +10,13 @@ import {
 } from '../components/ui/dropdown-menu'
 
 export default {
-  title: 'Dropdown',
   component: DropdownMenu,
 }
 
 export const Default = () => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button>Open</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

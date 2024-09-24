@@ -99,7 +99,6 @@ export type ModelDef = {
 
 export type UserStoredState = {
   version: string | undefined
-  theme: Theme
   previewPos: PreviewPosition
 }
 

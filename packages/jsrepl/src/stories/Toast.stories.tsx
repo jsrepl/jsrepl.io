@@ -4,7 +4,6 @@ import { Button } from '../components/ui/button'
 import { Toaster } from '../components/ui/sonner'
 
 export default {
-  title: 'Toast',
   component: Toaster,
 }
 

@@ -7,7 +7,7 @@ export default function ReplLayout({
 }>) {
   return (
     <ThemeProvider>
-      <main>{children}</main>
+      <div className="flex h-screen flex-col">{children}</div>
     </ThemeProvider>
   )
 }

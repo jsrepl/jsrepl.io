@@ -8,8 +8,6 @@ import tailwindConfig from '../../tailwind.config.ts'
 export const fullConfig = resolveConfig(tailwindConfig)
 export const borderRadius = fullConfig.theme.borderRadius
 
-<Meta title="Theme/BorderRadius" />
-
 <div className="[&_div]:text-foreground [&_div]:bg-background flex flex-wrap gap-4 [&_div]:border [&_div]:p-4">
   <div className="rounded">rounded</div>
   <div className="rounded-sm">rounded-sm</div>
@@ -22,5 +20,5 @@ export const borderRadius = fullConfig.theme.borderRadius
 
 <div hidden>
   <p>HACK: @storybook/addon-themes doesn't work in MDX files w/o Story</p>
-  <Story of={ButtonStories.Default} />
+  <Story of={ButtonStories.None} />
 </div>
