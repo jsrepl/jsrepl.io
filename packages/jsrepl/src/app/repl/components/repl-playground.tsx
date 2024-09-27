@@ -1,215 +1,54 @@
 'use client'
 
-import React, { useMemo } from 'react'
-import { useTheme } from 'next-themes'
-import {
-  LucideEllipsisVertical,
-  LucideMoon,
-  LucidePalette,
-  LucideRotateCw,
-  LucideShare2,
-  LucideSun,
-} from 'lucide-react'
-import ShareRepl from '@/components/share-repl'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import React from 'react'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
-import { Themes } from '@/lib/themes'
-import { PreviewPosition, type Theme } from '@/types'
+import { cn } from '@/lib/utils'
 import CodeEditor from './code-editor'
-import HeaderBase from './header-base'
+import Header from './header'
+import Preview from './preview'
 
 export default function ReplPlayground() {
   const [replState, setReplState] = useReplStoredState()
   const [userState, setUserState] = useUserStoredState()
 
+  const previewPos = userState.previewPos
   const [previewSize, setPreviewSize] = useReplPreviewSize({ userState })
   const [previewShown, togglePreview, previewShownProps] = useReplPreviewShown({
     replState,
     setReplState,
   })
 
-  const { resolvedTheme, setTheme } = useTheme()
-  const themeId = resolvedTheme as Theme
-
-  console.log('repl state', replState, typeof window)
-  console.log('user state', userState, typeof window)
-
-  const modelSwitcherOptions = useMemo(() => {
-    return Array.from(replState.models.values()).map((model) => {
-      const label = model.uri.replace('file:///', '')
-      return { value: model.uri, label }
-    })
-  }, [replState.models])
-
-  const previewPositionOptions = [
-    { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
-    { value: PreviewPosition.FloatBottomRight, label: 'Floating: bottom right' },
-    { value: PreviewPosition.AsideRight, label: 'Dock to right' },
-  ]
-
-  function restartRepl() {
-    // TODO: implement
-  }
-
   return (
     <>
-      <HeaderBase>
-        <div className="flex">
-          {modelSwitcherOptions.map((modelOption) => (
-            <span key={modelOption.value} className="group relative inline-flex items-center">
-              <Button
-                variant="none"
-                size="none"
-                data-active={replState.activeModel === modelOption.value}
-                className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer px-4 py-2 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner"
-                onClick={() =>
-                  setReplState((prev) => ({ ...prev, activeModel: modelOption.value }))
-                }
-              >
-                <span className="relative opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
-                  {modelOption.label}
-                </span>
-              </Button>
+      <Header
+        replState={replState}
+        setReplState={setReplState}
+        userState={userState}
+        setUserState={setUserState}
+        previewShown={previewShown}
+        togglePreview={togglePreview}
+      />
 
-              {false && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="none"
-                      className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px cursor-default self-center p-0.5 aria-expanded:visible peer-data-[active=true]:visible"
-                    >
-                      <LucideEllipsisVertical size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>{/* TODO */}</DropdownMenuLabel>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </span>
-          ))}
+      <main className="bg-background relative min-h-0 flex-1">
+        <div
+          className={cn(
+            'grid h-full grid-rows-1',
+            previewPos === 'aside-right' && previewShown && 'grid-cols-[1fr,auto]'
+          )}
+        >
+          <CodeEditor className="min-w-0" />
+          <Preview
+            pos={previewPos}
+            size={previewSize}
+            setSize={setPreviewSize}
+            shown={previewShown}
+            mightBeHidden={previewShownProps.mightBeHidden}
+            toggle={togglePreview}
+          />
         </div>
-
-        <div className="ml-10 flex max-[840px]:ml-2">
-          <span className="group relative inline-flex items-center">
-            <Button
-              variant="none"
-              size="none"
-              data-active={previewShown}
-              className="data-[active=true]:border-border data-[active=true]:bg-editor-background group peer border border-transparent py-1.5 pl-4 pr-8 before:absolute before:inset-0 data-[active=true]:shadow-inner"
-              onClick={() => togglePreview()}
-            >
-              <span className="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
-                Preview
-              </span>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="none"
-                  className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px cursor-default self-center p-0.5 aria-expanded:visible peer-data-[active=true]:visible"
-                >
-                  <LucideEllipsisVertical size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Preview Position</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={userState.previewPos}
-                  onValueChange={(value) =>
-                    setUserState((prev) => ({ ...prev, previewPos: value as PreviewPosition }))
-                  }
-                >
-                  {previewPositionOptions.map((option) => (
-                    <DropdownMenuRadioItem key={option.value} value={option.value}>
-                      {option.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </span>
-        </div>
-
-        <div className="ml-auto flex items-center self-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                className="text-secondary-foreground/60"
-                title="Choose theme..."
-              >
-                <LucidePalette size={18} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={themeId} onValueChange={(value) => setTheme(value)}>
-                {Themes.map((option) => (
-                  <DropdownMenuRadioItem key={option.id} value={option.id}>
-                    {option.label}
-                    {option.isDark ? (
-                      <LucideMoon width={18} height={18} className="text-foreground/20 ml-auto" />
-                    ) : (
-                      <LucideSun width={18} height={18} className="text-foreground/20 ml-auto" />
-                    )}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            className="text-secondary-foreground/60"
-            title="Restart REPL"
-            onClick={() => restartRepl()}
-          >
-            <LucideRotateCw size={18} />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                className="text-secondary-foreground/60"
-                title="Share..."
-              >
-                <LucideShare2 size={18} />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent className="w-96">
-              <DropdownMenuLabel className="text-foreground/80 text-sm font-normal">
-                <ShareRepl setReplState={setReplState} />
-              </DropdownMenuLabel>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </HeaderBase>
-
-      <main>
-        <CodeEditor />
       </main>
     </>
   )

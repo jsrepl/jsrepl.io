@@ -10,7 +10,7 @@ import { Theme } from '@/types'
 setupMonaco()
 setupTailwindCSS()
 
-export default function CodeEditor() {
+export default function CodeEditor({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
@@ -60,7 +60,7 @@ export default function CodeEditor() {
 
   return (
     <>
-      <div className={cn('h-96 w-full', { 'opacity-0': !isThemeLoaded })} ref={containerRef} />
+      <div className={cn(className, { 'opacity-0': !isThemeLoaded })} ref={containerRef} />
     </>
   )
 }
