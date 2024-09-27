@@ -1,28 +1,83 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import { CodeEditorModel } from '@/lib/code-editor-model'
+import { createCodeEditorModel } from '@/lib/code-editor-model-factory'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { Theme } from '@/types'
+import { ModelDef, Theme } from '@/types'
+
+type Props = {
+  className?: string
+  modelDefinitions: Map<string, ModelDef>
+  activeModel: string
+  onModelChange: (model: CodeEditorModel) => void
+  onRepl: () => void
+  onReplBodyMutation: () => void
+}
 
 setupMonaco()
 setupTailwindCSS()
 
-export default function CodeEditor({ className }: { className?: string }) {
+export default function CodeEditor({
+  className,
+  modelDefinitions,
+  activeModel,
+  onModelChange,
+  onRepl,
+  onReplBodyMutation,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme } = useTheme()
   const themeId = resolvedTheme as Theme
-
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
 
-  const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
-    value: '<div class="bg-red-500 ml-4">Hello World</div>',
-    language: 'html',
+  const models = useMemo(() => {
+    const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
 
+    modelDefinitions.forEach((modelDef) => {
+      const model = createCodeEditorModel(modelDef)
+      if (model) {
+        map.set(modelDef.uri, model)
+      }
+    })
+
+    return map
+  }, [modelDefinitions])
+
+  useEffect(() => {
+    const disposables = Array.from(models.values()).map((model) => {
+      return model.monacoModel.onDidChangeContent(() => {
+        onModelChange(model)
+      })
+    })
+
+    return () => {
+      disposables.forEach((disposable) => disposable.dispose())
+    }
+  }, [models, onModelChange])
+
+  const currentTextModel = useMemo(
+    () => models.get(activeModel)?.monacoModel ?? null,
+    [models, activeModel]
+  )
+
+  useEffect(() => {
+    editorRef.current?.setModel(currentTextModel)
+
+    if (currentTextModel?.uri.toString() === 'file:///index.tsx') {
+      // TODO:
+      // updateDecorations()
+    }
+  }, [currentTextModel])
+
+  const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
+    model: currentTextModel,
     automaticLayout: true,
     padding: { top: 20, bottom: 20 },
     // TODO: make it configurable

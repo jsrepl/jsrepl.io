@@ -9,7 +9,11 @@ export type SetReplStoredState = (
   options?: { saveImmediate?: boolean }
 ) => void
 
-export function useReplStoredState(): [ReplStoredState, SetReplStoredState] {
+export function useReplStoredState(): [
+  ReplStoredState,
+  SetReplStoredState,
+  (immediate?: boolean) => void,
+] {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [state, _setState] = useState<ReplStoredState>(() => load(searchParams))
@@ -57,5 +61,28 @@ export function useReplStoredState(): [ReplStoredState, SetReplStoredState] {
     }
   }, [debouncedSave])
 
-  return [state, setState]
+  useEffect(() => {
+    const onWindowBeforeUnload = () => {
+      debouncedSave.flush()
+    }
+
+    window.addEventListener('beforeunload', onWindowBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', onWindowBeforeUnload)
+    }
+  }, [debouncedSave])
+
+  const saveState = useCallback(
+    (immediate = false) => {
+      debouncedSave()
+
+      if (immediate) {
+        debouncedSave.flush()
+      }
+    },
+    [debouncedSave]
+  )
+
+  return [state, setState, saveState]
 }

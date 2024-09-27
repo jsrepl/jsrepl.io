@@ -41,5 +41,17 @@ export function useUserStoredState(): [UserStoredState, Dispatch<SetStateAction<
     }
   }, [debouncedSave])
 
+  useEffect(() => {
+    const onWindowBeforeUnload = () => {
+      debouncedSave.flush()
+    }
+
+    window.addEventListener('beforeunload', onWindowBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', onWindowBeforeUnload)
+    }
+  }, [debouncedSave])
+
   return [state, setState]
 }
