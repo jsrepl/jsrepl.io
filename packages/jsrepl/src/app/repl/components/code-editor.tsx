@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { createCodeEditorModel } from '@/lib/code-editor-model-factory'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
@@ -17,9 +18,6 @@ type Props = {
   onRepl: () => void
   onReplBodyMutation: () => void
 }
-
-setupMonaco()
-setupTailwindCSS()
 
 export default function CodeEditor({
   className,
@@ -49,6 +47,19 @@ export default function CodeEditor({
 
     return map
   }, [modelDefinitions])
+
+  useEffect(() => {
+    setupMonaco()
+    setupTailwindCSS()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      models.forEach((model) => {
+        model.monacoModel.dispose()
+      })
+    }
+  }, [models])
 
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {
@@ -112,6 +123,8 @@ export default function CodeEditor({
       editor.dispose()
     }
   }, [])
+
+  useCodeEditorTypescript(editorRef, models)
 
   return (
     <>

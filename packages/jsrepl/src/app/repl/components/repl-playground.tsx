@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
@@ -22,20 +22,18 @@ export default function ReplPlayground() {
     setReplState,
   })
 
-  function onModelChange(editorModel: InstanceType<typeof CodeEditorModel>) {
-    const uri = editorModel.monacoModel.uri.toString()
-    const modelDef = replState.models.get(uri)
-    if (modelDef) {
-      modelDef.content = editorModel.getValue()
-    } else {
-      replState.models.set(uri, {
-        uri,
-        content: editorModel.getValue(),
-      })
-    }
+  const onModelChange = useCallback(
+    (editorModel: InstanceType<typeof CodeEditorModel>) => {
+      const uri = editorModel.monacoModel.uri.toString()
+      const modelDef = replState.models.get(uri)
+      if (modelDef) {
+        modelDef.content = editorModel.getValue()
+      }
 
-    saveReplState()
-  }
+      saveReplState()
+    },
+    [replState.models, saveReplState]
+  )
 
   return (
     <>

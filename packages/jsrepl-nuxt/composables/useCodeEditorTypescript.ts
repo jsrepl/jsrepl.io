@@ -1,10 +1,10 @@
-import { useTypescript } from '@/composables/useTypescript'
-import { getDtsMap } from '@/utils/dts'
-import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
 import { debugLog } from '~/utils/debug-log'
+import { useTypescript } from '@/composables/useTypescript'
+import { getDtsMap } from '@/utils/dts'
+import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
 
 export function useCodeEditorTypescript(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
@@ -40,25 +40,19 @@ export function useCodeEditorTypescript(
   const [tsRef, loadTS] = useTypescript()
 
   let tsModels: Array<InstanceType<typeof CodeEditorModel>> = []
-  const changedModels = new Set<monaco.editor.ITextModel>()
   const cachedImports = new Map<monaco.editor.ITextModel, Set<string>>()
 
   onMounted(async () => {
-    await Promise.all([loadTS()])
+    await loadTS()
 
     tsModels = Array.from(models.values()).filter(
       (model) => model.monacoModel.getLanguageId() === 'typescript'
     )
 
-    tsModels.forEach((model) => {
-      changedModels.add(model.monacoModel)
-    })
-
     updateDts()
 
     tsModels.forEach((model) => {
       model.monacoModel.onDidChangeContent(() => {
-        changedModels.add(model.monacoModel)
         cachedImports.delete(model.monacoModel)
         debouncedUpdateDts()
       })
@@ -76,17 +70,22 @@ export function useCodeEditorTypescript(
 
     try {
       models.forEach((model) => {
-        // `modelContext.getValue()` is used here instead of `modelContext.getBabelTransformResult().code`
-        // to preserve unused imports. Babel transform with typescript plugin removes unused imports.
-        const sourceFile = ts.createSourceFile(
-          model.monacoModel.uri.path,
-          model.getValue(),
-          ts.ScriptTarget.ESNext,
-          true,
-          model.monacoModel.uri.path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-        )
+        let _imports = cachedImports.get(model.monacoModel)
+        if (!_imports) {
+          // `modelContext.getValue()` is used here instead of `modelContext.getBabelTransformResult().code`
+          // to preserve unused imports. Babel transform with typescript plugin removes unused imports.
+          const sourceFile = ts.createSourceFile(
+            model.monacoModel.uri.path,
+            model.getValue(),
+            ts.ScriptTarget.ESNext,
+            true,
+            model.monacoModel.uri.path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+          )
 
-        const _imports = findImports(sourceFile)
+          _imports = findImports(sourceFile)
+          cachedImports.set(model.monacoModel, _imports)
+        }
+
         _imports.forEach((importPath) => imports.add(importPath))
       })
     } catch (e) {
@@ -164,8 +163,6 @@ export function useCodeEditorTypescript(
         paths,
       })
     }
-
-    changedModels.clear()
   }
 
   function findImports(sourceFile: TS.SourceFile) {

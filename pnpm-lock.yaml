@@ -106,6 +106,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.11)
+      typescript:
+        specifier: ^5.6.2
+        version: 5.6.2
     devDependencies:
       '@chromatic-com/storybook':
         specifier: ^1.9.0
@@ -200,9 +203,6 @@ importers:
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.11
-      typescript:
-        specifier: ^5
-        version: 5.6.2
       unplugin-icons:
         specifier: ^0.19.3
         version: 0.19.3(@svgr/core@8.1.0(typescript@5.6.2))(@vue/compiler-sfc@3.5.5)(webpack-sources@3.2.3)
