@@ -32,6 +32,9 @@ previewEntryWindow.hooks = { setup, afterJsScript }
 previewEntryWindow.addEventListener('message', onMessage)
 
 postMessage(-1, { type: 'ready' })
+const postReadyIntervalId = setInterval(() => {
+  postMessage(-1, { type: 'ready' })
+}, 100)
 
 function createIframe() {
   const el = document.createElement('iframe')
@@ -48,13 +51,13 @@ function onMessage(event: MessageEvent) {
     return
   }
 
+  clearInterval(postReadyIntervalId)
+
   const data = event.data as ReplMessageData | UpdateThemeMessageData
 
   if (data.type === 'repl') {
     onReplMessage(data)
-  }
-
-  if (data.type === 'update-theme') {
+  } else if (data.type === 'update-theme') {
     onUpdateThemeMessage(data)
   }
 }
@@ -98,7 +101,6 @@ function onUpdateThemeMessage(data: UpdateThemeMessageData) {
 
 function setTheme(html: HTMLElement, theme: Pick<ThemeDef, 'id' | 'isDark'>) {
   html.classList.toggle('dark', theme.isDark)
-  html.style.colorScheme = theme.isDark ? 'dark' : 'light'
 }
 
 function getIframeTemplate(
@@ -113,6 +115,11 @@ function getIframeTemplate(
 
   newDoc.documentElement.dataset.token = token.toString()
   setTheme(newDoc.documentElement, theme)
+
+  const metaColorScheme = newDoc.createElement('meta')
+  metaColorScheme.name = 'color-scheme'
+  metaColorScheme.content = theme.isDark ? 'dark light' : 'light dark'
+  newDoc.head.appendChild(metaColorScheme)
 
   const importmapScript = newDoc.createElement('script')
   importmapScript.type = 'importmap'

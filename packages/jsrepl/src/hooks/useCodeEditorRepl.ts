@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { BabelFileResult } from '@babel/core'
 import { type SourceMapInput, TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
@@ -37,12 +37,9 @@ export default function useCodeEditorRepl(
   const changedModels = useMemo(() => new Set<InstanceType<typeof CodeEditorModel>>(), [])
   const decorationsDisposables = useRef<(() => void)[]>([])
   const previewIframe = useRef<HTMLIFrameElement>()
-  const previewIframeReady = useRef(false)
   const themeRef = useRef(theme)
-
-  useEffect(() => {
-    previewIframe.current = document.getElementById('preview-iframe') as HTMLIFrameElement
-  }, [])
+  const [previewIframeReady, setPreviewIframeReady] = useState(false)
+  const [depsReady, setDepsReady] = useState(false)
 
   const monacoTailwindcss = useRef<MonacoTailwindcss>()
   const configureMonacoTailwindcss =
@@ -174,10 +171,6 @@ export default function useCodeEditorRepl(
   )
 
   const doRepl = useCallback(async () => {
-    if (!previewIframeReady.current || !configureMonacoTailwindcss.current || !babelRef.value) {
-      return
-    }
-
     console.log('doRepl')
 
     iframeToken = (iframeToken + 1) % Number.MAX_VALUE
@@ -193,11 +186,11 @@ export default function useCodeEditorRepl(
       code: jsCode,
       metadata: jsMetadata,
       error: jsError,
-    } = tsxModel.getBabelTransformResult(babelRef.value)
+    } = tsxModel.getBabelTransformResult(babelRef.value!)
 
     const htmlCode = !jsError ? htmlModel.getValue() : ''
     const { code: tailwindConfig, error: tailwindConfigError } = tailwindConfigModel
-      ? tailwindConfigModel.getBabelTransformResult(babelRef.value)
+      ? tailwindConfigModel.getBabelTransformResult(babelRef.value!)
       : { code: null, error: null }
 
     if (tailwindConfigError) {
@@ -216,7 +209,7 @@ export default function useCodeEditorRepl(
         if (monacoTailwindcss.current) {
           monacoTailwindcss.current.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
         } else {
-          monacoTailwindcss.current = configureMonacoTailwindcss.current(monaco, {
+          monacoTailwindcss.current = configureMonacoTailwindcss.current!(monaco, {
             tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
           })
         }
@@ -312,8 +305,8 @@ export default function useCodeEditorRepl(
         event.data.type === 'ready' &&
         event.data.token === -1
       ) {
-        previewIframeReady.current = true
-        doRepl()
+        console.log('jsreplPreview ready')
+        setPreviewIframeReady(true)
         return
       }
 
@@ -355,16 +348,12 @@ export default function useCodeEditorRepl(
         }
       }
     },
-    [
-      payloadMap,
-      allPayloads,
-      babelRef,
-      debouncedUpdateDecorations,
-      doRepl,
-      models,
-      onReplBodyMutation,
-    ]
+    [payloadMap, allPayloads, babelRef, debouncedUpdateDecorations, models, onReplBodyMutation]
   )
+
+  useEffect(() => {
+    previewIframe.current = document.getElementById('preview-iframe') as HTMLIFrameElement
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -394,10 +383,11 @@ export default function useCodeEditorRepl(
     Promise.all([loadBabel(), import('@nag5000/monaco-tailwindcss')]).then(
       ([, { configureMonacoTailwindcss: _configureMonacoTailwindcss }]) => {
         configureMonacoTailwindcss.current = _configureMonacoTailwindcss
-        doRepl()
+        console.log('deps ready')
+        setDepsReady(true)
       }
     )
-  }, [loadBabel, doRepl, models, changedModels])
+  }, [loadBabel, models, changedModels])
 
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {
@@ -414,8 +404,10 @@ export default function useCodeEditorRepl(
 
   useEffect(() => {
     themeRef.current = theme
-    updatePreviewTheme(theme)
-  }, [theme, updatePreviewTheme])
+    if (previewIframeReady) {
+      updatePreviewTheme(theme)
+    }
+  }, [theme, previewIframeReady, updatePreviewTheme])
 
   useEffect(() => {
     window.addEventListener('message', onMessage)
@@ -424,6 +416,12 @@ export default function useCodeEditorRepl(
       window.removeEventListener('message', onMessage)
     }
   }, [onMessage])
+
+  useEffect(() => {
+    if (depsReady && previewIframeReady) {
+      doRepl()
+    }
+  }, [depsReady, previewIframeReady, doRepl])
 
   return { updateDecorations }
 }
