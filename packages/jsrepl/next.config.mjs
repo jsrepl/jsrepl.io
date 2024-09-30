@@ -12,6 +12,20 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
+  headers() {
+    return [
+      {
+        source: '/e.js',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.NEXT_PUBLIC_PREVIEW_URL,
+          },
+        ],
+      },
+    ]
+  },
+
   webpack(config) {
     config.plugins.push(
       Icons({

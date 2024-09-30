@@ -36,6 +36,7 @@ export default function ReplPreview({ pos, size, setSize, shown, mightBeHidden, 
         )}
       >
         <iframe
+          id="preview-iframe"
           src={previewUrl}
           width="100%"
           height="100%"

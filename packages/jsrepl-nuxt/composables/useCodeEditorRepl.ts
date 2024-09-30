@@ -4,18 +4,18 @@ import type {
   TailwindConfigCodeEditorModel,
   TsxCodeEditorModel,
 } from '#imports'
-import { useBabel } from '@/composables/useBabel'
-import { type BabelParseError, isBabelParseError } from '@/types/babel.types'
-import { type ReplPayload, type ThemeDef } from '@/types/repl.types'
-import { cssInject } from '@/utils/css-inject'
-import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
-import { stringifyPayload } from '@/utils/repl-payload'
 import type { BabelFileResult } from '@babel/core'
 import { type SourceMapInput, TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import { defaultTailwindConfigJson } from '~/utils/tailwind-configs'
+import { useBabel } from '@/composables/useBabel'
+import { type BabelParseError, isBabelParseError } from '@/types/babel.types'
+import type { ReplPayload, ThemeDef } from '@/types/repl.types'
+import { cssInject } from '@/utils/css-inject'
+import { getNpmPackageFromImportPath } from '@/utils/npm-packages'
+import { stringifyPayload } from '@/utils/repl-payload'
 
 export function useCodeEditorRepl(
   getEditor: () => monaco.editor.IStandaloneCodeEditor | null,
@@ -40,7 +40,6 @@ export function useCodeEditorRepl(
   let iframeToken = -1
   let delayedUpdateDecorationsTimeoutId: NodeJS.Timeout | undefined
 
-  let decorations: monaco.editor.IEditorDecorationsCollection
   let decorationsDisposables: (() => void)[] = []
   let decorationUniqIndex = 0
   let monacoTailwindcss: MonacoTailwindcss | null = null
@@ -339,7 +338,7 @@ export function useCodeEditorRepl(
     decorationsDisposables = []
 
     oldDecorationsDisposables.forEach((d) => d())
-    decorations = editor.createDecorationsCollection(decorationDefs)
+    const decorations = editor.createDecorationsCollection(decorationDefs)
     decorationsDisposables.push(() => decorations.clear())
 
     const removeStyle = cssInject(cssStyles.join('\n'))

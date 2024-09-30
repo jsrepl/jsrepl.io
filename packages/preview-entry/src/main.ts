@@ -91,7 +91,14 @@ async function onReplMessage(data: ReplMessageData) {
 function onUpdateThemeMessage(data: UpdateThemeMessageData) {
   const { theme } = data
   const html = activeIframe?.contentWindow?.document.documentElement
-  html?.classList.toggle('dark', theme.isDark)
+  if (html) {
+    setTheme(html, theme)
+  }
+}
+
+function setTheme(html: HTMLElement, theme: Pick<ThemeDef, 'id' | 'isDark'>) {
+  html.classList.toggle('dark', theme.isDark)
+  html.style.colorScheme = theme.isDark ? 'dark' : 'light'
 }
 
 function getIframeTemplate(
@@ -105,7 +112,7 @@ function getIframeTemplate(
   const newDoc = document.implementation.createHTMLDocument('JSRepl Preview')
 
   newDoc.documentElement.dataset.token = token.toString()
-  newDoc.documentElement.classList.toggle('dark', theme.isDark)
+  setTheme(newDoc.documentElement, theme)
 
   const importmapScript = newDoc.createElement('script')
   importmapScript.type = 'importmap'

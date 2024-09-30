@@ -37,6 +37,9 @@ importers:
       '@babel/standalone':
         specifier: ^7.24.10
         version: 7.25.6
+      '@jridgewell/trace-mapping':
+        specifier: ^0.3.25
+        version: 0.3.25
       '@mdx-js/loader':
         specifier: ^3.0.1
         version: 3.0.1(webpack@5.94.0(esbuild@0.23.1))
@@ -82,6 +85,9 @@ importers:
       lucide-react:
         specifier: ^0.445.0
         version: 0.445.0(react@18.3.1)
+      monaco-themes:
+        specifier: ^0.4.4
+        version: 0.4.4
       next:
         specifier: 14.2.13
         version: 14.2.13(@babel/core@7.25.2)(@playwright/test@1.47.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -110,6 +116,9 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2
     devDependencies:
+      '@babel/parser':
+        specifier: ^7.25.6
+        version: 7.25.6
       '@chromatic-com/storybook':
         specifier: ^1.9.0
         version: 1.9.0(react@18.3.1)
@@ -197,9 +206,15 @@ importers:
       postcss:
         specifier: ^8
         version: 8.4.45
+      regexp.escape:
+        specifier: ^2.0.1
+        version: 2.0.1
       storybook:
         specifier: ^8.3.2
         version: 8.3.2
+      string-dedent:
+        specifier: ^3.0.1
+        version: 3.0.1
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.11

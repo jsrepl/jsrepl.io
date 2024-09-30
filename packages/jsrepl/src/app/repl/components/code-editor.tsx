@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { createCodeEditorModel } from '@/lib/code-editor-model-factory'
@@ -9,6 +10,7 @@ import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
 import { ModelDef, Theme } from '@/types'
+import styles from './code-editor.module.css'
 
 type Props = {
   className?: string
@@ -29,6 +31,7 @@ export default function CodeEditor({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const updateDecorationsRef = useRef(() => {})
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme } = useTheme()
@@ -82,8 +85,7 @@ export default function CodeEditor({
     editorRef.current?.setModel(currentTextModel)
 
     if (currentTextModel?.uri.toString() === 'file:///index.tsx') {
-      // TODO:
-      // updateDecorations()
+      updateDecorationsRef.current()
     }
   }, [currentTextModel])
 
@@ -126,9 +128,20 @@ export default function CodeEditor({
 
   useCodeEditorTypescript(editorRef, models)
 
+  const { updateDecorations } = useCodeEditorRepl(editorRef, models, {
+    theme,
+    onRepl,
+    onReplBodyMutation,
+  })
+
+  updateDecorationsRef.current = updateDecorations
+
   return (
     <>
-      <div className={cn(className, { 'opacity-0': !isThemeLoaded })} ref={containerRef} />
+      <div
+        className={cn(className, styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
+        ref={containerRef}
+      />
     </>
   )
 }
