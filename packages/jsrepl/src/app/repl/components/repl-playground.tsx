@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useCallback } from 'react'
+import { useEarlyAccessToast } from '@/hooks/useEarlyAccessToast'
+import { useNewVersionToast } from '@/hooks/useNewVersionToast'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
@@ -14,6 +16,8 @@ import Preview from './preview'
 export default function ReplPlayground() {
   const [replState, setReplState, saveReplState] = useReplStoredState()
   const [userState, setUserState] = useUserStoredState()
+  useEarlyAccessToast()
+  useNewVersionToast({ userState, setUserState })
 
   const previewPos = userState.previewPos
   const [previewSize, setPreviewSize] = useReplPreviewSize({ userState })

@@ -1,5 +1,14 @@
 import createMDX from '@next/mdx'
+import { readFileSync } from 'fs'
 import Icons from 'unplugin-icons/webpack'
+
+if (!process.env.NEXT_PUBLIC_APP_VERSION) {
+  const packageJson = readFileSync('package.json', 'utf8')
+  const packageJsonData = JSON.parse(packageJson)
+  process.env.NEXT_PUBLIC_APP_VERSION = packageJsonData.version
+}
+
+console.log('APP VERSION', process.env.NEXT_PUBLIC_APP_VERSION)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
