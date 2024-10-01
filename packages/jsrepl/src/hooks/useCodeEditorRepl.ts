@@ -18,7 +18,7 @@ import { TsxCodeEditorModel } from '@/lib/tsx-code-editor-model'
 import { type BabelParseError, type ReplPayload, type ThemeDef, isBabelParseError } from '@/types'
 
 let iframeToken = -1
-let decorationUniqIndex = 0
+let decorationUniqIndex = -1
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
@@ -66,7 +66,9 @@ export default function useCodeEditorRepl(
       try {
         const { /* result, */ ctx } = payload
         const { lineStart, kind /* lineEnd, colStart, colEnd, source */ } = ctx
-        const uniqClassName = `jsrepl-decor-${decorationUniqIndex++}`
+
+        decorationUniqIndex = (decorationUniqIndex + 1) % Number.MAX_VALUE
+        const uniqClassName = `jsrepl-decor-${decorationUniqIndex}`
 
         const stringifiedPayload = stringifyPayload(payload, babelRef.value!)
         if (stringifiedPayload === null) {
