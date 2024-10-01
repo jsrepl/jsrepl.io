@@ -1,16 +1,16 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import dynamic from 'next/dynamic'
 import { ReadonlyURLSearchParams } from 'next/navigation'
-import Loader from '@/components/loader'
 import { load as loadReplStoredState } from '@/lib/repl-stored-state'
 import { getReplTitle } from '@/lib/repl-title'
-import HeaderBase from './components/header-base'
+import ReplPlaygroundDynamic from './components/repl-playground-dynamic'
 
 type Props = {
   params: object
   searchParams: { [key: string]: string | string[] }
 }
+
+export const dynamic = 'force-dynamic'
 
 export function generateMetadata({ searchParams }: Props): Metadata {
   try {
@@ -30,22 +30,6 @@ export function generateMetadata({ searchParams }: Props): Metadata {
   }
 }
 
-const ReplPlaygroundDynamic = dynamic(() => import('./components/repl-playground'), {
-  loading: () => (
-    <>
-      <HeaderBase />
-      <div className="fixed inset-0 flex items-center justify-center">
-        <Loader width={100} height={100} className="opacity-10" />
-      </div>
-    </>
-  ),
-  ssr: false,
-})
-
 export default function ReplPage() {
-  return (
-    <>
-      <ReplPlaygroundDynamic />
-    </>
-  )
+  return <ReplPlaygroundDynamic />
 }
