@@ -70,6 +70,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.13",
     "eslint-plugin-storybook": "^0.8.0",
@@ -82,5 +83,10 @@
     "tailwindcss": "^3.4.1",
     "unplugin-icons": "^0.19.3",
     "vitest": "^2.0.5"
-  }
+  },
+  "browserslist": [
+    "last 2 chrome versions",
+    "last 2 firefox versions",
+    "last 2 safari versions"
+  ]
 }
