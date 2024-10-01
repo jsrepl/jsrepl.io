@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import IconGithub from '~icons/simple-icons/github'
+import IconGithub from '~icons/simple-icons/github.jsx'
 import { Button } from '@/components/ui/button'
 
 export default function Error404() {

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import Link from 'next/link'
-import IconGithub from '~icons/simple-icons/github'
+import IconGithub from '~icons/simple-icons/github.jsx'
 import { Button } from '@/components/ui/button'
 
 export default function ErrorComponent({

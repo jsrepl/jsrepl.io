@@ -1,7 +1,7 @@
 import React from 'react'
-import { LucidePlus } from 'lucide-react'
 import Link from 'next/link'
-import IconGithub from '~icons/simple-icons/github'
+import { LucidePlus } from 'lucide-react'
+import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import { cn } from '@/lib/utils'
 

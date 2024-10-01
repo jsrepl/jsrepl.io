@@ -9,8 +9,8 @@ import {
   LucidePackage,
   LucideSquareFunction,
 } from 'lucide-react'
-import IconEmail from '~icons/mdi/email-outline'
-import IconGithub from '~icons/mdi/github'
+import IconEmail from '~icons/mdi/email-outline.jsx'
+import IconGithub from '~icons/mdi/github.jsx'
 import { Button } from '@/components/ui/button'
 import Demo from './components/demo'
 import FeatureBox from './components/feature-box'

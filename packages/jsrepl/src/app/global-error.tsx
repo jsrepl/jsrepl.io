@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
+import HeaderBase from '@/app/repl/components/header-base'
 import ErrorComponent from '@/components/error'
-import HeaderBase from './repl/components/header-base'
 
 export default function GlobalError({
   error,
