@@ -92,8 +92,8 @@ importers:
         specifier: 14.2.13
         version: 14.2.13(@babel/core@7.25.2)(@playwright/test@1.47.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
-        specifier: ^0.3.0
-        version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: npm:@nag5000/next-themes@0.3.0-fork.0
+        version: '@nag5000/next-themes@0.3.0-fork.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
       react:
         specifier: ^18
         version: 18.3.1
@@ -1905,6 +1905,12 @@ packages:
     resolution: {integrity: sha512-qMRe/SZ7Kt4Gsyu3dIe2onoQLw49zoV8YkraMZNSB/eBp6Rd2VyFWCjtB1nrPF9DhcX7aV3L+GcWR9FSHAmijw==}
     peerDependencies:
       monaco-editor: '>=0.36'
+
+  '@nag5000/next-themes@0.3.0-fork.0':
+    resolution: {integrity: sha512-yt6OYKj46F4tKpcgQqPXoKtUggXmLwKfRe795wX5LKDpb5vTFO6TqJ2S+olZzM3YDxL1TyRkICXb28lJCD0X3w==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18
+      react-dom: ^16.8 || ^17 || ^18
 
   '@netlify/functions@2.8.1':
     resolution: {integrity: sha512-+6wtYdoz0yE06dSa9XkP47tw5zm6g13QMeCwM3MmHx1vn8hzwFa51JtmfraprdkL7amvb7gaNM+OOhQU1h6T8A==}
@@ -6717,12 +6723,6 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  next-themes@0.3.0:
-    resolution: {integrity: sha512-/QHIrsYpd6Kfk7xakK4svpDI5mmXP0gfvCoJdGpZQ2TOrQZmsW0QxjaiLn8wbIKjtm4BTSqLoix4lxYYOnLJ/w==}
-    peerDependencies:
-      react: ^16.8 || ^17 || ^18
-      react-dom: ^16.8 || ^17 || ^18
-
   next@14.2.13:
     resolution: {integrity: sha512-BseY9YNw8QJSwLYD7hlZzl6QVDoSFHL/URN5K64kVEVpCsSOWeyjbIGK+dZUaRViHTaMQX8aqmnn0PHBbGZezg==}
     engines: {node: '>=18.17.0'}
@@ -10975,6 +10975,11 @@ snapshots:
       monaco-worker-manager: 2.0.1(monaco-editor@0.50.0)
       vscode-languageserver-textdocument: 1.0.12
       vscode-languageserver-types: 3.17.5
+
+  '@nag5000/next-themes@0.3.0-fork.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@netlify/functions@2.8.1':
     dependencies:
@@ -17424,11 +17429,6 @@ snapshots:
   negotiator@0.6.3: {}
 
   neo-async@2.6.2: {}
-
-  next-themes@0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
 
   next@14.2.13(@babel/core@7.25.2)(@playwright/test@1.47.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

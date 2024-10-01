@@ -1,4 +1,5 @@
 import { ThemeProvider as NextThemeProvider } from 'next-themes'
+import { headers } from 'next/headers'
 import { Themes } from '@/lib/themes'
 
 export default function ThemeProvider({
@@ -8,6 +9,8 @@ export default function ThemeProvider({
   forcedTheme?: string
   children: React.ReactNode
 }>) {
+  const nonce = headers().get('x-nonce')!
+
   return (
     <>
       <NextThemeProvider
@@ -19,6 +22,7 @@ export default function ThemeProvider({
         enableColorScheme
         disableTransitionOnChange
         attribute="data-theme"
+        nonce={nonce}
       >
         {children}
       </NextThemeProvider>
