@@ -10,6 +10,11 @@ if (!process.env.NEXT_PUBLIC_APP_VERSION) {
 
 console.log('APP VERSION', process.env.NEXT_PUBLIC_APP_VERSION)
 
+if (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_BRANCH_URL?.includes('jsrepl')) {
+  process.env.NEXT_PUBLIC_PREVIEW_URL =
+    'https://' + process.env.VERCEL_BRANCH_URL.replace('jsrepl', 'jsrepl-preview')
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,

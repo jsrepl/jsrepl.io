@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "preview": "next start",
     "lint": "next lint && tsc",
     "test:vitest": "vitest run",
     "test:vitest:watch": "vitest",

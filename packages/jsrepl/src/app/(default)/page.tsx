@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+import Link from 'next/link'
 import {
   LucideArrowDown,
   LucideArrowRight,
@@ -7,8 +9,6 @@ import {
   LucidePackage,
   LucideSquareFunction,
 } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
 import IconEmail from '~icons/mdi/email-outline'
 import IconGithub from '~icons/mdi/github'
 import { Button } from '@/components/ui/button'
