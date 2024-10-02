@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react'
 import type { ResizableOptions } from '@interactjs/actions/resize/plugin'
 import type { OrBoolean } from '@interactjs/core/types'
 import interact from 'interactjs'
+import './resizable.css'
 
 export default function Resizable({
   size,
@@ -46,9 +47,11 @@ export default function Resizable({
       })
       .on('resizestart', (event) => {
         event.target.style.pointerEvents = 'none'
+        document.documentElement.classList.add('resizable-active')
       })
       .on('resizeend', (event) => {
         event.target.style.pointerEvents = ''
+        document.documentElement.classList.remove('resizable-active')
         onSizeUpdate({ width: event.rect.width, height: event.rect.height })
       })
 
