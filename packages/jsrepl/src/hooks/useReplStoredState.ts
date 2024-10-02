@@ -19,14 +19,6 @@ export function useReplStoredState(): [
   const [state, _setState] = useState<ReplStoredState>(() => load(searchParams))
   const stateRef = useRef(state)
 
-  // useEffect(() => {
-  //   console.log('LOAD EFFECT')
-
-  //   const loadedState = load(searchParams)
-  //   _setState(loadedState)
-  //   stateRef.current = loadedState
-  // }, [searchParams])
-
   const debouncedSave = useMemo(
     () =>
       debounce(() => {
