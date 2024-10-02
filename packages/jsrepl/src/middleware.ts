@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval' ${process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`};
+    script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval' ${process.env.NEXT_PUBLIC_NODE_ENV === 'production' ? '' : `'unsafe-eval'`};
     style-src 'self' https: 'unsafe-inline';
     img-src 'self' blob: data: https://avatars.githubusercontent.com https://github.com https://cdn.buymeacoffee.com;
     font-src 'self';
@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
     frame-ancestors 'none';
     frame-src ${process.env.NEXT_PUBLIC_PREVIEW_URL};
     connect-src 'self' https://esm.sh;
-    upgrade-insecure-requests;
+    ${process.env.NEXT_PUBLIC_NODE_ENV === 'production' /* https://stackoverflow.com/a/71109928 */ ? 'upgrade-insecure-requests;' : ''}
   `
 
   const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, ' ').trim()
