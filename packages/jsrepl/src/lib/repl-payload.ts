@@ -1,4 +1,3 @@
-import type * as Babel from '@babel/standalone'
 import {
   type ReplPayload,
   ReplPayloadCustomKind,
@@ -11,22 +10,15 @@ import {
   type ReplPayloadResultWeakRef,
   type ReplPayloadResultWeakSet,
 } from '@/types'
+import { getBabel } from './get-babel'
 
-let _babel: typeof Babel | null = null
-
-export function stringifyPayload(payload: ReplPayload, babel: typeof Babel): string | null {
-  _babel = babel
-
-  try {
-    const str = _stringifyPayload(payload)
-    if (str && str.length > 100) {
-      return str.slice(0, 100) + '…'
-    }
-
-    return str
-  } finally {
-    _babel = null
+export function stringifyPayload(payload: ReplPayload): string | null {
+  const str = _stringifyPayload(payload)
+  if (str && str.length > 100) {
+    return str.slice(0, 100) + '…'
   }
+
+  return str
 }
 
 function _stringifyPayload(payload: ReplPayload): string | null {
@@ -205,7 +197,7 @@ function stringifyResult(result: ReplPayload['result']): string | null {
 function parseFunction(
   str: string
 ): { name: string; args: string; isAsync: boolean; isArrow: boolean } | null {
-  const babel = _babel!
+  const babel = getBabel()[0].value!
 
   // @ts-expect-error Babel standalone: https://babeljs.io/docs/babel-standalone#internal-packages
   const { parser } = babel.packages as { parser: typeof import('@babel/parser') }

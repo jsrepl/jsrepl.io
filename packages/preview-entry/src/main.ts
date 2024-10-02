@@ -78,7 +78,7 @@ async function onReplMessage(data: ReplMessageData) {
   iframeToLeave.classList.remove('active')
 
   afterJsScriptDeferred = defer()
-  await Promise.race([afterJsScriptDeferred.promise, new Promise((r) => setTimeout(r, 250))])
+  await Promise.race([afterJsScriptDeferred.promise, new Promise((r) => setTimeout(r, 1000))])
   if (currentToken !== token) {
     return
   }
