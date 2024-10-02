@@ -149,6 +149,7 @@ export async function sendRepl({
   return () => {
     clearTimeout(delayedUpdateDecorationsTimeoutId)
     monacoTailwindcss?.dispose()
+    monacoTailwindcss = null
   }
 }
 
