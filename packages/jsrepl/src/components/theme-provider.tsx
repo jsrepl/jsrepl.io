@@ -1,6 +1,7 @@
 import { ThemeProvider as NextThemeProvider } from 'next-themes'
 import { headers } from 'next/headers'
 import { Themes } from '@/lib/themes'
+import { Theme } from '@/types'
 
 export default function ThemeProvider({
   forcedTheme,
@@ -17,7 +18,7 @@ export default function ThemeProvider({
         storageKey="theme"
         enableSystem={false}
         themes={Themes.map((theme) => theme.id)}
-        defaultTheme={Themes[0].id}
+        defaultTheme={Theme.DarkPlus}
         forcedTheme={forcedTheme}
         enableColorScheme
         disableTransitionOnChange
