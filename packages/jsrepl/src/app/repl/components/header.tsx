@@ -58,7 +58,8 @@ export default function ReplHeader({
   ]
 
   function restartRepl() {
-    // TODO: implement
+    const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement
+    previewIframe.src += ''
   }
 
   return (

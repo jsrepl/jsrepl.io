@@ -38,7 +38,7 @@ export default function useCodeEditorRepl(
   const decorationsDisposables = useRef<(() => void)[]>([])
   const previewIframe = useRef<HTMLIFrameElement>()
   const themeRef = useRef(theme)
-  const [previewIframeReady, setPreviewIframeReady] = useState(false)
+  const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
   const [depsReady, setDepsReady] = useState(false)
 
   const monacoTailwindcss = useRef<MonacoTailwindcss>()
@@ -308,7 +308,7 @@ export default function useCodeEditorRepl(
         event.data.token === -1
       ) {
         console.log('jsreplPreview ready')
-        setPreviewIframeReady(true)
+        setPreviewIframeReadyId(event.data.previewId as string)
         return
       }
 
@@ -406,10 +406,10 @@ export default function useCodeEditorRepl(
 
   useEffect(() => {
     themeRef.current = theme
-    if (previewIframeReady) {
+    if (previewIframeReadyId) {
       updatePreviewTheme(theme)
     }
-  }, [theme, previewIframeReady, updatePreviewTheme])
+  }, [theme, previewIframeReadyId, updatePreviewTheme])
 
   useEffect(() => {
     window.addEventListener('message', onMessage)
@@ -420,10 +420,10 @@ export default function useCodeEditorRepl(
   }, [onMessage])
 
   useEffect(() => {
-    if (depsReady && previewIframeReady) {
+    if (depsReady && previewIframeReadyId) {
       doRepl()
     }
-  }, [depsReady, previewIframeReady, doRepl])
+  }, [depsReady, previewIframeReadyId, doRepl])
 
   return { updateDecorations }
 }
