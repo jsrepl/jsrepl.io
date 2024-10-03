@@ -9,7 +9,7 @@ import {
   ReplPayloadResultWeakMap,
   ReplPayloadResultWeakRef,
   ReplPayloadResultWeakSet,
-} from '../../jsrepl/types/repl.types'
+} from '../../jsrepl/src/types'
 import type { PreviewWindow, ReplRawPayload } from './types'
 
 // Traverse everything and replace non-clonable stuff for structured clone algorithm,

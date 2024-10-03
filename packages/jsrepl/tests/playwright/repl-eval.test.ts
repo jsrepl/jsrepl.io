@@ -1,12 +1,9 @@
-import {
-  /*expect,*/
-  test,
-} from '@nuxt/test-utils/playwright'
+import { test } from '@playwright/test'
 import dedent from 'string-dedent'
 import { assertReplLines, monacoLocator, visitPlayground } from './utils'
 
-test('simple expressions', async ({ page, goto }) => {
-  await visitPlayground(goto, {
+test('simple expressions', async ({ page }) => {
+  await visitPlayground(page, {
     activeModel: 'file:///index.tsx',
     showPreview: false,
     models: new Map([

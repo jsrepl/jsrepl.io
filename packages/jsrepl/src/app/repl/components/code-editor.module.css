@@ -1,0 +1,35 @@
+.codeEditor {
+  /* Fix text clipping due to Tailwind CSS preflight styles: `* { box-sizing: border-box; }` */
+  & :global(.monaco-editor .action-widget) {
+    box-sizing: content-box;
+  }
+}
+
+.jsreplDecor {
+  --color: #666;
+
+  &::before {
+    margin: 0 0 0 3em;
+    content: '// → ';
+    color: var(--color);
+  }
+
+  &::after {
+    content: var(--value);
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--color);
+  }
+}
+
+.jsreplDecor-console-warn {
+  --color: rgb(177, 105, 35);
+}
+
+.jsreplDecor-error,
+.jsreplDecor-babel-parse-error,
+.jsreplDecor-console-error {
+  --color: rgb(177, 35, 35);
+}

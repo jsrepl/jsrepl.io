@@ -1,4 +1,5 @@
-import { ReplPayload } from '../../jsrepl/types/repl.types'
+import { ReplPayload } from '../../jsrepl/src/types'
+import { previewId } from './preview-id'
 
 const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 
@@ -14,6 +15,7 @@ export function postMessage(
     window.top!.postMessage(
       {
         source: 'jsreplPreview',
+        previewId,
         token,
         type: data.type,
         payload: data.type === 'repl' ? data.payload : undefined,

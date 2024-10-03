@@ -1,0 +1,24 @@
+import { Meta } from '@storybook/blocks'
+import { Story } from '@storybook/blocks'
+import * as ButtonStories from './Button.stories'
+
+import resolveConfig from 'tailwindcss/resolveConfig'
+import tailwindConfig from '../../tailwind.config.ts'
+
+export const fullConfig = resolveConfig(tailwindConfig)
+export const borderRadius = fullConfig.theme.borderRadius
+
+<div className="[&_div]:text-foreground [&_div]:bg-background flex flex-wrap gap-4 [&_div]:border [&_div]:p-4">
+  <div className="rounded">rounded</div>
+  <div className="rounded-sm">rounded-sm</div>
+  <div className="rounded-md">rounded-md</div>
+  <div className="rounded-lg">rounded-lg</div>
+  <div className="rounded-xl">rounded-xl</div>
+  <div className="rounded-2xl">rounded-2xl</div>
+  <div className="rounded-3xl">rounded-3xl</div>
+</div>
+
+<div hidden>
+  <p>HACK: @storybook/addon-themes doesn't work in MDX files w/o Story</p>
+  <Story of={ButtonStories.None} />
+</div>

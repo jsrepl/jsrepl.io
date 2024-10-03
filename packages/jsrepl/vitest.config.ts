@@ -1,8 +1,10 @@
-import { defineVitestConfig } from '@nuxt/test-utils/config'
-import { configDefaults } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
 
-export default defineVitestConfig({
+export default defineConfig({
+  plugins: [react()],
   test: {
-    exclude: [...configDefaults.exclude, 'tests/playwright/**'],
+    environment: 'jsdom',
+    exclude: ['tests/playwright/**'],
   },
 })

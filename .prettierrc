@@ -4,7 +4,16 @@
   "trailingComma": "es5",
   "printWidth": 100,
 
-  "importOrder": ["^node:", "<THIRD_PARTY_MODULES>", "^[./]"],
+  "importOrder": [
+    "^node:",
+    "^react",
+    "^next",
+    "<THIRD_PARTY_MODULES>",
+    "^\\~icons/",
+    "^\\@/",
+    "^\\.\\./",
+    "^\\./"
+  ],
   "importOrderSortSpecifiers": true,
 
   "plugins": ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],

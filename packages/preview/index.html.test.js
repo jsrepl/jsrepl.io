@@ -17,6 +17,7 @@ test('build index.html', async () => {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark">
     <title>JSRepl Preview</title>
     <script type="module" src="http://localhost:3000/e.js"></script>
   </head>

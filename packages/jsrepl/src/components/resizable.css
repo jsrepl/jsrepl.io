@@ -1,0 +1,4 @@
+html.resizable-active * {
+  pointer-events: none !important;
+  user-select: none !important;
+}

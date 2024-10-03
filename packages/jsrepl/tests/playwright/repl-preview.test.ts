@@ -1,9 +1,9 @@
-import { expect, test } from '@nuxt/test-utils/playwright'
+import { expect, test } from '@playwright/test'
 import dedent from 'string-dedent'
 import { visitPlayground } from './utils'
 
-test('preview', async ({ page, goto }) => {
-  await visitPlayground(goto, {
+test('preview', async ({ page }) => {
+  await visitPlayground(page, {
     activeModel: 'file:///index.tsx',
     showPreview: true,
     models: new Map([

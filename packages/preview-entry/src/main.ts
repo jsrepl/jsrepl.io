@@ -1,4 +1,4 @@
-import type { ThemeDef } from '../../jsrepl/types/repl.types'
+import type { Theme } from '../../jsrepl/src/types'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
@@ -32,6 +32,9 @@ previewEntryWindow.hooks = { setup, afterJsScript }
 previewEntryWindow.addEventListener('message', onMessage)
 
 postMessage(-1, { type: 'ready' })
+const postReadyIntervalId = setInterval(() => {
+  postMessage(-1, { type: 'ready' })
+}, 100)
 
 function createIframe() {
   const el = document.createElement('iframe')
@@ -48,13 +51,13 @@ function onMessage(event: MessageEvent) {
     return
   }
 
+  clearInterval(postReadyIntervalId)
+
   const data = event.data as ReplMessageData | UpdateThemeMessageData
 
   if (data.type === 'repl') {
     onReplMessage(data)
-  }
-
-  if (data.type === 'update-theme') {
+  } else if (data.type === 'update-theme') {
     onUpdateThemeMessage(data)
   }
 }
@@ -75,7 +78,7 @@ async function onReplMessage(data: ReplMessageData) {
   iframeToLeave.classList.remove('active')
 
   afterJsScriptDeferred = defer()
-  await Promise.race([afterJsScriptDeferred.promise, new Promise((r) => setTimeout(r, 250))])
+  await Promise.race([afterJsScriptDeferred.promise, new Promise((r) => setTimeout(r, 1000))])
   if (currentToken !== token) {
     return
   }
@@ -91,7 +94,13 @@ async function onReplMessage(data: ReplMessageData) {
 function onUpdateThemeMessage(data: UpdateThemeMessageData) {
   const { theme } = data
   const html = activeIframe?.contentWindow?.document.documentElement
-  html?.classList.toggle('dark', theme.isDark)
+  if (html) {
+    setTheme(html, theme)
+  }
+}
+
+function setTheme(html: HTMLElement, theme: Pick<Theme, 'id' | 'isDark'>) {
+  html.classList.toggle('dark', theme.isDark)
 }
 
 function getIframeTemplate(
@@ -99,13 +108,18 @@ function getIframeTemplate(
   jsCode: string,
   htmlCode: string,
   cssCode: string,
-  theme: Pick<ThemeDef, 'id' | 'isDark'>,
+  theme: Pick<Theme, 'id' | 'isDark'>,
   token: number
 ) {
   const newDoc = document.implementation.createHTMLDocument('JSRepl Preview')
 
   newDoc.documentElement.dataset.token = token.toString()
-  newDoc.documentElement.classList.toggle('dark', theme.isDark)
+  setTheme(newDoc.documentElement, theme)
+
+  const metaColorScheme = newDoc.createElement('meta')
+  metaColorScheme.name = 'color-scheme'
+  metaColorScheme.content = theme.isDark ? 'dark light' : 'light dark'
+  newDoc.head.appendChild(metaColorScheme)
 
   const importmapScript = newDoc.createElement('script')
   importmapScript.type = 'importmap'

@@ -1,8 +1,7 @@
-import { expect, type test } from '@nuxt/test-utils/playwright'
-import type { Locator, Page } from '@playwright/test'
+import { type Locator, type Page, expect } from '@playwright/test'
 import regexpEscape from 'regexp.escape'
-import { toQueryParams } from '~/composables/useReplStoredState'
-import type { ReplStoredState } from '~/types/repl.types'
+import { toQueryParams } from '@/lib/repl-stored-state'
+import type { ReplStoredState } from '@/types'
 
 type MonacoLocator = Locator
 type MonacoLineLocator = Locator
@@ -32,7 +31,7 @@ export function monacoLineLocator(
 }
 
 export function replDecorLocator(locator: MonacoLocator | MonacoLineLocator): ReplDecorLocator {
-  return locator.locator('.jsrepl-decor')
+  return locator.locator('[class*="jsrepl-decor"]')
 }
 
 export function getReplDecors(replDecorLocator: ReplDecorLocator): Promise<string[]> {
@@ -71,10 +70,7 @@ export async function assertReplLines(
   await Promise.all(promises)
 }
 
-export async function visitPlayground(
-  goto: Parameters<Parameters<typeof test>[2]>[0]['goto'],
-  state: Partial<ReplStoredState>
-) {
+export async function visitPlayground(page: Page, state: Partial<ReplStoredState>) {
   const defaultState: ReplStoredState = {
     models: new Map(),
     activeModel: '',
@@ -82,5 +78,5 @@ export async function visitPlayground(
   }
 
   const qp = toQueryParams({ ...defaultState, ...state })
-  await goto('/repl?' + new URLSearchParams(qp), { waitUntil: 'hydration' })
+  await page.goto('/repl?' + new URLSearchParams(qp))
 }

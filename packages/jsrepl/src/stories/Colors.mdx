@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/blocks'
+import { ColorItem, ColorPalette, Story } from '@storybook/blocks'
+import * as ButtonStories from './Button.stories'
+
+import resolveConfig from 'tailwindcss/resolveConfig'
+import tailwindConfig from '../../tailwind.config.ts'
+
+export const fullConfig = resolveConfig(tailwindConfig)
+export const colors = fullConfig.theme.accentColor
+
+<ColorPalette>
+  <ColorItem title="background" colors={[colors.background]} />
+  <ColorItem title="foreground" colors={[colors.foreground]} />
+  <ColorItem title="editor-background" colors={[colors['editor-background']]} />
+  <ColorItem title="card" colors={[colors.card.DEFAULT]} />
+  <ColorItem title="card-foreground" colors={[colors.card.foreground]} />
+  <ColorItem title="popover" colors={[colors.popover.DEFAULT]} />
+  <ColorItem title="popover-foreground" colors={[colors.popover.foreground]} />
+  <ColorItem title="primary" colors={[colors.primary.DEFAULT]} />
+  <ColorItem title="primary-foreground" colors={[colors.primary.foreground]} />
+  <ColorItem title="secondary" colors={[colors.secondary.DEFAULT]} />
+  <ColorItem title="secondary-foreground" colors={[colors.secondary.foreground]} />
+  <ColorItem title="muted" colors={[colors.muted.DEFAULT]} />
+  <ColorItem title="muted-foreground" colors={[colors.muted.foreground]} />
+  <ColorItem title="accent" colors={[colors.accent.DEFAULT]} />
+  <ColorItem title="accent-foreground" colors={[colors.accent.foreground]} />
+  <ColorItem title="destructive" colors={[colors.destructive.DEFAULT]} />
+  <ColorItem title="destructive-foreground" colors={[colors.destructive.foreground]} />
+  <ColorItem title="border" colors={[colors.border]} />
+  <ColorItem title="input" colors={[colors.input]} />
+  <ColorItem title="ring" colors={[colors.ring]} />
+  <ColorItem title="chart-1" colors={[colors.chart['1']]} />
+  <ColorItem title="chart-2" colors={[colors.chart['2']]} />
+  <ColorItem title="chart-3" colors={[colors.chart['3']]} />
+  <ColorItem title="chart-4" colors={[colors.chart['4']]} />
+  <ColorItem title="chart-5" colors={[colors.chart['5']]} />
+</ColorPalette>
+
+<div hidden>
+  <p>HACK: @storybook/addon-themes doesn't work in MDX files w/o Story</p>
+  <Story of={ButtonStories.None} />
+</div>
