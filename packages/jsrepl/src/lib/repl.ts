@@ -37,8 +37,6 @@ export async function sendRepl({
   previewIframe: HTMLIFrameElement
   theme: Theme
 }): Promise<() => void> {
-  console.log('doRepl')
-
   iframeToken = (iframeToken + 1) % Number.MAX_VALUE
 
   const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
@@ -189,7 +187,6 @@ export async function onPreviewMessage(
     event.data.type === 'ready' &&
     event.data.token === -1
   ) {
-    console.log('jsreplPreview ready')
     setPreviewIframeReadyId(event.data.previewId as string)
     return
   }

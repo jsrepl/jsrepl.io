@@ -4,8 +4,6 @@ import { atou, utoa } from '@/lib/zip'
 import type { ModelDef, ReplStoredState } from '@/types'
 
 export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStoredState {
-  console.log('LOAD')
-
   const modelsQP = searchParams.get('i')
   const activeModelQP = searchParams.get('c')
   const showPreviewQP = searchParams.get('p')
@@ -72,8 +70,6 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
 }
 
 export function save(state: ReplStoredState, router: ReturnType<typeof useRouter>): void {
-  console.log('SAVE')
-
   try {
     const query = toQueryParams(state)
     const searchParams = new URLSearchParams(query)

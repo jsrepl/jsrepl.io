@@ -119,7 +119,6 @@ export default function useCodeEditorRepl(
     Promise.all([loadBabel(), import('@nag5000/monaco-tailwindcss')]).then(
       ([, { configureMonacoTailwindcss: _configureMonacoTailwindcss }]) => {
         configureMonacoTailwindcss.current = _configureMonacoTailwindcss
-        console.log('deps ready')
         setDepsReady(true)
       }
     )
