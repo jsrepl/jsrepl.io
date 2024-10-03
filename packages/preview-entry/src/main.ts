@@ -1,4 +1,4 @@
-import type { ThemeDef } from '../../jsrepl/src/types'
+import type { Theme } from '../../jsrepl/src/types'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
@@ -99,7 +99,7 @@ function onUpdateThemeMessage(data: UpdateThemeMessageData) {
   }
 }
 
-function setTheme(html: HTMLElement, theme: Pick<ThemeDef, 'id' | 'isDark'>) {
+function setTheme(html: HTMLElement, theme: Pick<Theme, 'id' | 'isDark'>) {
   html.classList.toggle('dark', theme.isDark)
 }
 
@@ -108,7 +108,7 @@ function getIframeTemplate(
   jsCode: string,
   htmlCode: string,
   cssCode: string,
-  theme: Pick<ThemeDef, 'id' | 'isDark'>,
+  theme: Pick<Theme, 'id' | 'isDark'>,
   token: number
 ) {
   const newDoc = document.implementation.createHTMLDocument('JSRepl Preview')

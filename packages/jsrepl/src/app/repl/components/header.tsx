@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SetReplStoredState } from '@/hooks/useReplStoredState'
 import { Themes } from '@/lib/themes'
-import { PreviewPosition, type ReplStoredState, type Theme, type UserStoredState } from '@/types'
+import { PreviewPosition, type ReplStoredState, type UserStoredState } from '@/types'
 import HeaderBase from './header-base'
 
 export default function ReplHeader({
@@ -41,8 +41,7 @@ export default function ReplHeader({
   previewShown: boolean
   togglePreview: (force?: boolean) => void
 }) {
-  const { resolvedTheme, setTheme } = useTheme()
-  const themeId = resolvedTheme as Theme
+  const { resolvedTheme: themeId, setTheme } = useTheme()
 
   const modelSwitcherOptions = useMemo(() => {
     return Array.from(replState.models.values()).map((model) => {

@@ -1,4 +1,4 @@
-import type { ReplPayload, ThemeDef } from '../../jsrepl/src/types'
+import type { ReplPayload, Theme } from '../../jsrepl/src/types'
 
 declare global {
   const __JSREPL_ORIGIN__: string
@@ -25,10 +25,10 @@ export type ReplMessageData = {
   htmlCode: string
   cssCode: string
   importmap: ImportMap
-  theme: Pick<ThemeDef, 'id' | 'isDark'>
+  theme: Pick<Theme, 'id' | 'isDark'>
 }
 
 export type UpdateThemeMessageData = {
   type: 'update-theme'
-  theme: Pick<ThemeDef, 'id' | 'isDark'>
+  theme: Pick<Theme, 'id' | 'isDark'>
 }

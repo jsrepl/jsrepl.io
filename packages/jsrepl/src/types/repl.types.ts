@@ -1,4 +1,4 @@
-import type * as monaco from 'monaco-editor'
+import type { BundledTheme } from 'shiki'
 
 export enum ReplPayloadCustomKind {
   DomNode = 'dom-node', // non-cloneable
@@ -102,43 +102,11 @@ export type UserStoredState = {
   previewPos: PreviewPosition
 }
 
-export enum Theme {
-  // Built-in themes
-  Light = 'vs',
-  Dark = 'vs-dark',
-  HighContrastLight = 'hc-light',
-  HighContrastDark = 'hc-black',
-
-  // Shiki themes
-  DarkPlus = 'dark-plus',
-  LightPlus = 'light-plus',
-  GithubDark = 'github-dark',
-  GithubLight = 'github-light',
-  Monokai = 'monokai',
-  Dracula = 'dracula',
-  OneLight = 'one-light',
-}
-
-type ThemeDefBase = {
-  id: Theme
+export type Theme = {
+  id: BundledTheme
   label: string
   isDark: boolean
 }
-
-type ThemeDefBuiltin = ThemeDefBase & {
-  provider: 'builtin'
-}
-
-type ThemeDefCustom = ThemeDefBase & {
-  provider: 'custom'
-  load: () => Promise<monaco.editor.IStandaloneThemeData>
-}
-
-type ThemeDefShiki = ThemeDefBase & {
-  provider: 'shiki'
-}
-
-export type ThemeDef = ThemeDefBuiltin | ThemeDefCustom | ThemeDefShiki
 
 export enum PreviewPosition {
   FloatBottomRight = 'float-bottom-right',

@@ -34,7 +34,6 @@
     "fflate": "^0.8.2",
     "interactjs": "^1.10.27",
     "lucide-react": "^0.445.0",
-    "monaco-themes": "^0.4.4",
     "next": "14.2.13",
     "next-themes": "npm:@nag5000/next-themes@0.3.0-fork.0",
     "react": "^18",

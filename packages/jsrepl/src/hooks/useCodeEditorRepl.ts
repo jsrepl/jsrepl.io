@@ -6,7 +6,7 @@ import { getBabel } from '@/lib/get-babel'
 import { onPreviewMessage, sendRepl, updatePreviewTheme } from '@/lib/repl'
 import { createDecorations } from '@/lib/repl-decorations'
 import { TsxCodeEditorModel } from '@/lib/tsx-code-editor-model'
-import { type ReplPayload, type ThemeDef } from '@/types'
+import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
@@ -15,7 +15,7 @@ export default function useCodeEditorRepl(
     theme,
     onRepl,
     onReplBodyMutation,
-  }: { theme: ThemeDef; onRepl: () => void; onReplBodyMutation: () => void }
+  }: { theme: Theme; onRepl: () => void; onReplBodyMutation: () => void }
 ) {
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])

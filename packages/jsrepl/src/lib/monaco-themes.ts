@@ -6,82 +6,27 @@ import {
   type HighlighterGeneric,
   createHighlighter,
 } from 'shiki'
-import { monacoTypescriptTokenProvider } from '@/lib/monaco-typescript-token-provider'
-import type { ThemeDef } from '@/types'
+import type { Theme } from '@/types'
 
 let shikiHighlighter: HighlighterGeneric<BundledLanguage, BundledTheme> | null = null
 
-const loadedThemes = new Set<ThemeDef['id']>()
-
-export async function loadMonacoTheme(theme: ThemeDef) {
-  if (theme.provider === 'builtin') {
-    if (shikiHighlighter) {
-      shikiHighlighter.dispose()
-      shikiHighlighter = null
-    }
-
-    monaco.languages.setMonarchTokensProvider(
-      'typescript',
-      monacoTypescriptTokenProvider as monaco.languages.IMonarchLanguage
-    )
-
-    return
-  }
-
-  if (theme.provider === 'custom') {
-    if (shikiHighlighter) {
-      shikiHighlighter.dispose()
-      shikiHighlighter = null
-    }
-
-    monaco.languages.setMonarchTokensProvider(
-      'typescript',
-      monacoTypescriptTokenProvider as monaco.languages.IMonarchLanguage
-    )
-
-    if (loadedThemes.has(theme.id)) {
-      return
-    }
-
-    try {
-      const themeData = await theme.load()
-      monaco.editor.defineTheme(theme.id, themeData)
-      loadedThemes.add(theme.id)
-    } catch (e) {
-      console.error('loadMonacoTheme (custom)', e)
-    }
-  }
-
-  if (theme.provider === 'shiki') {
-    try {
-      await loadShikiMonacoTheme(theme.id)
-    } catch (e) {
-      console.error('loadMonacoTheme (shiki)', e)
-    }
-  }
-}
-
-export async function loadShikiMonacoTheme(theme: ThemeDef['id']) {
+export async function loadMonacoTheme(theme: Theme) {
   if (shikiHighlighter) {
-    shikiHighlighter.dispose()
-    shikiHighlighter = null
+    await shikiHighlighter.loadTheme(theme.id as BundledTheme)
+  } else {
+    shikiHighlighter = await createHighlighter({
+      themes: [theme.id],
+      langs: ['json', 'tsx', /*'javascript',*/ 'html', 'css'],
+      langAlias: {
+        typescript: 'tsx',
+      },
+    })
   }
 
-  shikiHighlighter = await createHighlighter({
-    themes: [theme],
-    langs: ['json', 'tsx', /*'javascript',*/ 'html', 'css'],
-    langAlias: {
-      typescript: 'tsx',
-    },
-  })
+  shikiToMonaco(shikiHighlighter, monaco)
 
-  const setTheme = monaco.editor.setTheme
-
-  try {
-    shikiToMonaco(shikiHighlighter, monaco)
-  } finally {
-    // HACK: restore original setTheme, shikiToMonaco overwrites it, but not restores,
-    // so second call `shikiToMonaco` will fail.
-    monaco.editor.setTheme = setTheme
+  return () => {
+    shikiHighlighter?.dispose()
+    shikiHighlighter = null
   }
 }

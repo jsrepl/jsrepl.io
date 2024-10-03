@@ -4,7 +4,7 @@ import type debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { defaultTailwindConfigJson } from '@/lib/tailwind-configs'
-import { type BabelParseError, type ReplPayload, ThemeDef, isBabelParseError } from '@/types'
+import { type BabelParseError, type ReplPayload, type Theme, isBabelParseError } from '@/types'
 import { CssCodeEditorModel } from './css-code-editor-model'
 import { getBabel } from './get-babel'
 import { HtmlCodeEditorModel } from './html-code-editor-model'
@@ -35,7 +35,7 @@ export async function sendRepl({
   payloadMap: Map<number, ReplPayload>
   updateDecorations: () => void
   previewIframe: HTMLIFrameElement
-  theme: ThemeDef
+  theme: Theme
 }): Promise<() => void> {
   console.log('doRepl')
 
@@ -153,7 +153,7 @@ export async function sendRepl({
   }
 }
 
-export async function updatePreviewTheme(previewIframe: HTMLIFrameElement, theme: ThemeDef) {
+export async function updatePreviewTheme(previewIframe: HTMLIFrameElement, theme: Theme) {
   previewIframe.contentWindow!.postMessage(
     {
       source: 'jsrepl',

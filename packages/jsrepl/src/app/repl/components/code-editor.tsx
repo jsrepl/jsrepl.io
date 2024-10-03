@@ -9,7 +9,7 @@ import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { ModelDef, Theme } from '@/types'
+import { ModelDef } from '@/types'
 import styles from './code-editor.module.css'
 
 type Props = {
@@ -34,8 +34,7 @@ export default function CodeEditor({
   const updateDecorationsRef = useRef(() => {})
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
-  const { resolvedTheme } = useTheme()
-  const themeId = resolvedTheme as Theme
+  const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
 
   const models = useMemo(() => {
@@ -112,7 +111,7 @@ export default function CodeEditor({
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {
-      editorRef.current?.updateOptions({ theme: theme.id })
+      monaco.editor.setTheme(theme.id)
       setIsThemeLoaded(true)
     })
   }, [theme])
