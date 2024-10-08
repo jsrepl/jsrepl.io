@@ -3,8 +3,8 @@ import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
-import { CodeEditorModel } from '@/lib/code-editor-model'
-import { createCodeEditorModel } from '@/lib/code-editor-model-factory'
+import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
+import { createCodeEditorModel } from '@/lib/code-editor-models/code-editor-model-factory'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
@@ -43,7 +43,7 @@ export default function CodeEditor({
     modelDefinitions.forEach((modelDef) => {
       const model = createCodeEditorModel(modelDef)
       if (model) {
-        map.set(modelDef.uri, model)
+        map.set(modelDef.path, model)
       }
     })
 
@@ -83,7 +83,8 @@ export default function CodeEditor({
   useEffect(() => {
     editorRef.current?.setModel(currentTextModel)
 
-    if (currentTextModel?.uri.toString() === 'file:///index.tsx') {
+    const lang = currentTextModel?.getLanguageId()
+    if (lang === 'typescript' || lang === 'javascript') {
       updateDecorationsRef.current()
     }
   }, [currentTextModel])

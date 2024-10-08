@@ -4,13 +4,13 @@ import { assertReplLines, monacoLocator, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
   await visitPlayground(page, {
-    activeModel: 'file:///index.tsx',
+    activeModel: '/index.tsx',
     showPreview: false,
     models: new Map([
       [
-        'file:///index.tsx',
+        '/index.tsx',
         {
-          uri: 'file:///index.tsx',
+          path: '/index.tsx',
           content: dedent`
             const n = 1;
             const m = n + 2;
@@ -24,16 +24,16 @@ test('simple expressions', async ({ page }) => {
         },
       ],
       [
-        'file:///index.html',
+        '/index.html',
         {
-          uri: 'file:///index.html',
+          path: '/index.html',
           content: ``,
         },
       ],
       [
-        'file:///index.css',
+        '/index.css',
         {
-          uri: 'file:///index.css',
+          path: '/index.css',
           content: ``,
         },
       ],

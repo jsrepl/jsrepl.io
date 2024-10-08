@@ -2,7 +2,9 @@ import type { ReplStoredState } from '@/types/repl.types'
 
 export function getReplTitle(replStoredState: ReplStoredState): string {
   try {
-    const tsx = replStoredState.models.get('file:///index.tsx')?.content ?? ''
+    // TODO: use index.(ts|tsx|js|jsx) or first js/ts model
+    // TODO: or better rewrite/simplify it to use separate field in ReplStoredState?
+    const tsx = replStoredState.models.get('/index.tsx')?.content ?? ''
     const tsxFirstNonEmptyLine = tsx.match(/.+/)?.[0].trim() ?? ''
 
     if (tsxFirstNonEmptyLine.startsWith('//')) {
@@ -30,7 +32,7 @@ export function getReplTitle(replStoredState: ReplStoredState): string {
       return transformTitle(tsxFirstNonEmptyLine)
     }
 
-    const html = replStoredState.models.get('file:///index.html')?.content ?? ''
+    const html = replStoredState.models.get('/index.html')?.content ?? ''
     const htmlFirstNonEmptyLine = html.match(/.+/)?.[0].trim() ?? ''
 
     if (htmlFirstNonEmptyLine.startsWith('<!--')) {

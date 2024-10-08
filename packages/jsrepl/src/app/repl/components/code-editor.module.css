@@ -29,7 +29,6 @@
 }
 
 .jsreplDecor-error,
-.jsreplDecor-babel-parse-error,
 .jsreplDecor-console-error {
   --color: rgb(177, 35, 35);
 }

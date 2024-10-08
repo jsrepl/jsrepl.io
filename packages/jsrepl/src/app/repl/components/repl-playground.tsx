@@ -7,7 +7,7 @@ import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
-import { CodeEditorModel } from '@/lib/code-editor-model'
+import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { cn } from '@/lib/utils'
 import CodeEditor from './code-editor'
 import Header from './header'
@@ -28,8 +28,8 @@ export default function ReplPlayground() {
 
   const onModelChange = useCallback(
     (editorModel: InstanceType<typeof CodeEditorModel>) => {
-      const uri = editorModel.monacoModel.uri.toString()
-      const modelDef = replState.models.get(uri)
+      const path = editorModel.monacoModel.uri.path
+      const modelDef = replState.models.get(path)
       if (modelDef) {
         modelDef.content = editorModel.getValue()
       }

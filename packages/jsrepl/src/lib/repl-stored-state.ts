@@ -24,22 +24,25 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
     let arr: Array<ModelDef>
 
     if (Array.isArray(models)) {
-      arr = models
+      arr = models.map((model) => ({
+        ...model,
+        path: 'uri' in model ? fixPath(model.uri as string) : model.path,
+      }))
     } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
       // Old format
       arr = [
         {
-          uri: 'file:///index.tsx',
+          path: '/index.tsx',
           // @ts-expect-error: Old format
           content: models.tsx,
         },
         {
-          uri: 'file:///index.html',
+          path: '/index.html',
           // @ts-expect-error: Old format
           content: models.html,
         },
         {
-          uri: 'file:///index.css',
+          path: '/index.css',
           // @ts-expect-error: Old format
           content: models.css,
         },
@@ -48,18 +51,11 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
       arr = []
     }
 
-    state.models = new Map(arr.map((model) => [model.uri, model]))
+    state.models = new Map(arr.map((model) => [model.path, model]))
   }
 
   if (typeof activeModelQP === 'string') {
-    const oldFormatMap = {
-      tsx: 'file:///index.tsx',
-      html: 'file:///index.html',
-      css: 'file:///index.css',
-    }
-
-    state.activeModel =
-      oldFormatMap[activeModelQP as keyof typeof oldFormatMap] ?? 'file:///' + activeModelQP
+    state.activeModel = fixPath(activeModelQP)
   }
 
   if (typeof showPreviewQP === 'string') {
@@ -67,6 +63,25 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
   }
 
   return state
+}
+
+// Convert old paths to new paths
+function fixPath(path: string): string {
+  const oldMap = {
+    tsx: '/index.tsx',
+    html: '/index.html',
+    css: '/index.css',
+    'file:///index.tsx': '/index.tsx',
+    'file:///index.html': '/index.html',
+    'file:///index.css': '/index.css',
+    'file:///tailwind.config.ts': '/tailwind.config.ts',
+    'index.tsx': '/index.tsx',
+    'index.html': '/index.html',
+    'index.css': '/index.css',
+    'tailwind.config.ts': '/tailwind.config.ts',
+  }
+
+  return oldMap[path as keyof typeof oldMap] ?? path
 }
 
 export function save(state: ReplStoredState, router: ReturnType<typeof useRouter>): void {
@@ -83,7 +98,7 @@ export function toQueryParams(state: ReplStoredState): Record<string, string> {
   const { activeModel, showPreview, models } = state
   const modelsArr = Array.from(models.values())
   const modelsQP = serialize(modelsArr)
-  return { i: modelsQP, c: activeModel.replace('file:///', ''), p: showPreview ? '1' : '0' }
+  return { i: modelsQP, c: activeModel, p: showPreview ? '1' : '0' }
 }
 
 function deserialize(serialized: string): unknown {
@@ -97,7 +112,7 @@ function serialize(storedState: unknown): string {
 function getDefaultState(): ReplStoredState {
   return {
     models: getDefaultModels(),
-    activeModel: 'file:///index.tsx',
+    activeModel: '/index.tsx',
     showPreview: true,
   }
 }
@@ -105,30 +120,30 @@ function getDefaultState(): ReplStoredState {
 function getDefaultModels(): ReplStoredState['models'] {
   return new Map([
     [
-      'file:///index.tsx',
+      '/index.tsx',
       {
-        uri: 'file:///index.tsx',
+        path: '/index.tsx',
         content: getDefaultTsx(),
       },
     ],
     [
-      'file:///index.html',
+      '/index.html',
       {
-        uri: 'file:///index.html',
+        path: '/index.html',
         content: getDefaultHtml(),
       },
     ],
     [
-      'file:///index.css',
+      '/index.css',
       {
-        uri: 'file:///index.css',
+        path: '/index.css',
         content: getDefaultCss(),
       },
     ],
     [
-      'file:///tailwind.config.ts',
+      '/tailwind.config.ts',
       {
-        uri: 'file:///tailwind.config.ts',
+        path: '/tailwind.config.ts',
         content: defaultTailwindConfigTs,
       },
     ],

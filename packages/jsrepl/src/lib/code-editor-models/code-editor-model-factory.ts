@@ -3,8 +3,8 @@ import type { ModelDef } from '@/types'
 import { CodeEditorModel } from './code-editor-model'
 import { CssCodeEditorModel } from './css-code-editor-model'
 import { HtmlCodeEditorModel } from './html-code-editor-model'
+import { JsCodeEditorModel } from './js-code-editor-model'
 import { TailwindConfigCodeEditorModel } from './tailwind-config-code-editor-model'
-import { TsxCodeEditorModel } from './tsx-code-editor-model'
 
 export function createCodeEditorModel(
   modelDef: ModelDef
@@ -12,15 +12,15 @@ export function createCodeEditorModel(
   const monacoModel = monaco.editor.createModel(
     modelDef.content,
     getLanguage(modelDef),
-    monaco.Uri.parse(modelDef.uri)
+    monaco.Uri.parse('file://' + modelDef.path)
   )
 
   let model: InstanceType<typeof CodeEditorModel> | null
 
-  if (monacoModel.uri.toString() === 'file:///tailwind.config.ts') {
+  if (monacoModel.uri.path === '/tailwind.config.ts') {
     model = new TailwindConfigCodeEditorModel(monacoModel)
   } else if (monacoModel.getLanguageId() === 'typescript') {
-    model = new TsxCodeEditorModel(monacoModel)
+    model = new JsCodeEditorModel(monacoModel)
   } else if (monacoModel.getLanguageId() === 'html') {
     model = new HtmlCodeEditorModel(monacoModel)
   } else if (monacoModel.getLanguageId() === 'css') {
@@ -34,7 +34,7 @@ export function createCodeEditorModel(
 }
 
 function getLanguage(model: ModelDef): string {
-  const ext = model.uri.split('.').pop()
+  const ext = model.path.split('.').pop()
   if (!ext) {
     return 'plaintext'
   }

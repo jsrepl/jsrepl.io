@@ -1,11 +1,11 @@
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
-import { CodeEditorModel } from '@/lib/code-editor-model'
-import { getBabel } from '@/lib/get-babel'
+import { toast } from 'sonner'
+import { getBundler } from '@/lib/bundler/get-bundler'
+import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { onPreviewMessage, sendRepl, updatePreviewTheme } from '@/lib/repl'
 import { createDecorations } from '@/lib/repl-decorations'
-import { TsxCodeEditorModel } from '@/lib/tsx-code-editor-model'
 import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
@@ -26,27 +26,28 @@ export default function useCodeEditorRepl(
   const themeRef = useRef(theme)
   const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
   const [depsReady, setDepsReady] = useState(false)
-  const configureMonacoTailwindcss =
-    useRef<typeof import('@nag5000/monaco-tailwindcss').configureMonacoTailwindcss>()
-  const [, loadBabel] = useMemo(() => getBabel(), [])
+  const bundler = useMemo(() => getBundler(), [])
 
   const updateDecorations = useCallback(() => {
     const editor = editorRef.current!
-    const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
-    if (!editor || !tsxModel || editor.getModel() !== tsxModel.monacoModel) {
+    const activeModel = editorRef.current?.getModel()
+    if (!editor || !activeModel) {
       return
     }
 
     decorationsDisposable.current?.()
-    const payloads = Array.from(payloadMap.values())
-    decorationsDisposable.current = createDecorations(editor, payloads)
-  }, [editorRef, models, payloadMap])
+    const payloads = Array.from(payloadMap.values()).filter(
+      (payload) => payload.ctx.filePath === activeModel.uri.path
+    )
+    decorationsDisposable.current =
+      payloads.length > 0 ? createDecorations(editor, payloads) : undefined
+  }, [editorRef, payloadMap])
 
+  // TODO: setErrors(), type Error = { text, location? }
   const doRepl = useCallback(async () => {
     try {
       replDisposable.current = await sendRepl({
         models,
-        configureMonacoTailwindcss: configureMonacoTailwindcss.current!,
         changedModels,
         allPayloads,
         payloadMap,
@@ -58,8 +59,18 @@ export default function useCodeEditorRepl(
       changedModels.clear()
       onRepl()
     } catch (e) {
-      if (e !== 'cancelled') {
-        throw e
+      if (e === 'cancelled') {
+        return
+      }
+
+      if (e instanceof Error) {
+        toast.error(e.message, {
+          duration: Infinity,
+        })
+      } else {
+        toast.error('Something went wrong', {
+          duration: Infinity,
+        })
       }
     }
   }, [payloadMap, allPayloads, changedModels, models, onRepl, updateDecorations])
@@ -77,7 +88,7 @@ export default function useCodeEditorRepl(
         setPreviewIframeReadyId,
         allPayloads,
         payloadMap,
-        models,
+        //models,
         debouncedUpdateDecorations,
       })
 
@@ -85,7 +96,7 @@ export default function useCodeEditorRepl(
         onReplBodyMutation()
       }
     },
-    [payloadMap, allPayloads, debouncedUpdateDecorations, models, onReplBodyMutation]
+    [payloadMap, allPayloads, debouncedUpdateDecorations, onReplBodyMutation]
   )
 
   useEffect(() => {
@@ -116,13 +127,17 @@ export default function useCodeEditorRepl(
       changedModels.add(model)
     })
 
-    Promise.all([loadBabel(), import('@nag5000/monaco-tailwindcss')]).then(
-      ([, { configureMonacoTailwindcss: _configureMonacoTailwindcss }]) => {
-        configureMonacoTailwindcss.current = _configureMonacoTailwindcss
-        setDepsReady(true)
+    bundler.setup().then((bundlerSetupResult) => {
+      if (!bundlerSetupResult.ok) {
+        toast.error('Failed to setup bundler', {
+          duration: Infinity,
+        })
+        return
       }
-    )
-  }, [loadBabel, models, changedModels])
+
+      setDepsReady(true)
+    })
+  }, [models, changedModels, bundler])
 
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {

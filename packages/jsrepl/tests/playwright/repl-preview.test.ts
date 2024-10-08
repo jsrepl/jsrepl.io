@@ -4,13 +4,13 @@ import { visitPlayground } from './utils'
 
 test('preview', async ({ page }) => {
   await visitPlayground(page, {
-    activeModel: 'file:///index.tsx',
+    activeModel: '/index.tsx',
     showPreview: true,
     models: new Map([
       [
-        'file:///index.tsx',
+        '/index.tsx',
         {
-          uri: 'file:///index.tsx',
+          path: '/index.tsx',
           content: dedent`
             const now = new Date('2024');
             const foo = document.querySelector('.foo');
@@ -19,18 +19,18 @@ test('preview', async ({ page }) => {
         },
       ],
       [
-        'file:///index.html',
+        '/index.html',
         {
-          uri: 'file:///index.html',
+          path: '/index.html',
           content: dedent`
             <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
           `,
         },
       ],
       [
-        'file:///index.css',
+        '/index.css',
         {
-          uri: 'file:///index.css',
+          path: '/index.css',
           content: ``,
         },
       ],

@@ -1,3 +1,4 @@
+import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
 
 export enum ReplPayloadCustomKind {
@@ -57,17 +58,34 @@ export type ReplPayload = {
   isError: boolean
   result: unknown
   ctx: {
-    id: number
+    id: number | string
+    /**
+     * Starts with 1.
+     */
     lineStart: number
+    /**
+     * Starts with 1.
+     */
     lineEnd: number
+    /**
+     * Starts with 1.
+     */
     colStart: number
+    /**
+     * Starts with 1.
+     */
     colEnd: number
     source: string
+    /**
+     * Path is relative to the root of the project.
+     * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
+     */
+    filePath: string
     kind:
       | 'expression'
       | 'variable'
+      | 'window-error'
       | 'error'
-      | 'babel-parse-error'
       | 'console-log'
       | 'console-debug'
       | 'console-info'
@@ -93,7 +111,11 @@ export type ReplStoredState = {
 }
 
 export type ModelDef = {
-  uri: string
+  /**
+   * Path is relative to the root of the project.
+   * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
+   */
+  path: string
   content: string
 }
 
@@ -112,4 +134,28 @@ export enum PreviewPosition {
   FloatBottomRight = 'float-bottom-right',
   FloatTopRight = 'float-top-right',
   AsideRight = 'aside-right',
+}
+
+export type ImportMap = {
+  imports: Record<string, string>
+}
+
+export type Output = {
+  importmap: ImportMap | null
+  tailwindConfig: string | null
+  /**
+   * Html files. The key is the file path relative to the root, starting with /.
+   */
+  html: Map<string, { text: string }>
+  /**
+   * Css files. The key is the file path relative to the root, starting with /.
+   */
+  css: Map<string, { url: string }>
+  /**
+   * Js files. The key is the file path relative to the root, starting with /.
+   */
+  js: Map<string, { url: string; entryPoint: esbuild.Metafile['outputs'][string]['entryPoint'] }>
+  metadata: {
+    knownConfigRegexes: RegExp[]
+  }
 }

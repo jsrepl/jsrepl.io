@@ -2,7 +2,7 @@ import { RefObject, useCallback, useEffect, useMemo } from 'react'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
-import { CodeEditorModel } from '@/lib/code-editor-model'
+import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
 import { getDtsMap } from '@/lib/dts'
 import { getTypescript } from '@/lib/get-typescript'
@@ -57,8 +57,6 @@ export default function useCodeEditorTypescript(
       models.forEach((model) => {
         let _imports = cachedImports.get(model.monacoModel)
         if (!_imports) {
-          // `modelContext.getValue()` is used here instead of `modelContext.getBabelTransformResult().code`
-          // to preserve unused imports. Babel transform with typescript plugin removes unused imports.
           const sourceFile = ts.createSourceFile(
             model.monacoModel.uri.path,
             model.getValue(),
@@ -78,9 +76,6 @@ export default function useCodeEditorTypescript(
       return
     }
 
-    // `imports` is used here instead of `modelContext.getBabelTransformResult().metadata.importPaths`
-    // to preserve unused imports. Babel transform with typescript plugin removes unused imports.
-    // It's better to eagerly preload types even before import is actually used in the code.
     const packages = new Set(
       Array.from(imports)
         .map((importPath) => getNpmPackageFromImportPath(importPath))

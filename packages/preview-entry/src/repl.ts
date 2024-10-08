@@ -7,11 +7,8 @@ export function setupRepl(win: PreviewWindow, token: number) {
   win.__r = repl.bind({ token, win })
 
   win.addEventListener('error', (event) => {
-    const userScriptLineNo =
-      win.document.documentElement.outerHTML
-        .split('\n')
-        .findIndex((line) => line.includes('<script id="repl-script"')) + 1
-    onWindowError(event, token, userScriptLineNo)
+    console.log('window error', event)
+    onWindowError(event, token)
   })
 }
 
@@ -107,43 +104,25 @@ function checkIsPromise<T, S>(value: PromiseLike<T> | S): value is PromiseLike<T
   )
 }
 
-function onWindowError(event: ErrorEvent, token: number, userScriptLineNo: number) {
+function onWindowError(event: ErrorEvent, token: number) {
   const error = event.error
   const win = event.target as PreviewWindow
 
-  let lineno: number | undefined
-  let colno: number | undefined
-
-  // Normally lineno starts with 1, colno starts with 0 (FIXME: colno starts with 1?)
-  // There are edge cases where they might appear as zero, which usually indicates that the browser couldn't
-  // determine the exact location of the error. For example, SecurityError case when trying to evaluate
-  // "window.top.location.href", in that case lineno is 0, colno is 0 (Google Chrome).
-  if (
-    event.filename === 'about:srcdoc' &&
-    event.lineno != null &&
-    event.lineno > 0 &&
-    event.colno != null
-  ) {
-    lineno = event.lineno - userScriptLineNo
-    colno = event.colno
-  } else {
-    const stacktrace = event.error?.stack ?? ''
-    const match = stacktrace.match(/about:srcdoc:(\d+):(\d+)/)
-    if (match) {
-      lineno = Number(match[1]) - userScriptLineNo
-      colno = Number(match[2])
-    }
-  }
-
   postMessageRepl(token, win, error, true, {
-    id: -1,
-    // Later it will be resolved to the original position taking into account
-    // the sourcemap (see the handler for the kind 'error').
-    lineStart: lineno ?? 1,
-    lineEnd: lineno ?? 1,
-    colStart: colno ?? 0,
-    colEnd: colno ?? 0,
-    source: 'window.onerror',
-    kind: 'error',
+    id: `window-error-${event.filename}-${event.lineno}:${event.colno}`,
+    // Normally lineno and colno start with 1.
+    // There are edge cases where they might appear as zero, which usually indicates that the browser couldn't
+    // determine the exact location of the error. For example, SecurityError case when trying to evaluate
+    // "window.top.location.href", in that case lineno is 0, colno is 0 (Google Chrome).
+    // Later they will be resolved to the original position taking into account
+    // the sourcemap (see the handler for the kind 'window-error').
+    lineStart: event.lineno === 0 ? 1 : event.lineno,
+    lineEnd: event.lineno === 0 ? 1 : event.lineno,
+    colStart: event.colno === 0 ? 1 : event.colno,
+    colEnd: event.colno === 0 ? 1 : event.colno,
+    source: '',
+    // Will be resolved to the original filePath taking into account the sourcemap.
+    filePath: event.filename,
+    kind: 'window-error',
   })
 }

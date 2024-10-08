@@ -45,8 +45,8 @@ export default function ReplHeader({
 
   const modelSwitcherOptions = useMemo(() => {
     return Array.from(replState.models.values()).map((model) => {
-      const label = model.uri.replace('file:///', '')
-      return { value: model.uri, label }
+      const label = model.path.replace(/^\//, '')
+      return { value: model.path, label }
     })
   }, [replState.models])
 

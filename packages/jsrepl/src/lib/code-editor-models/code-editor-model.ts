@@ -1,6 +1,6 @@
 import type * as Monaco from 'monaco-editor'
 
-export class CodeEditorModel {
+export abstract class CodeEditorModel {
   monacoModel: Monaco.editor.ITextModel
   #value: string | null = null
 
