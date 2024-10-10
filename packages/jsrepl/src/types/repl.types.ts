@@ -86,6 +86,7 @@ export type ReplPayload = {
       | 'variable'
       | 'window-error'
       | 'error'
+      | 'warning'
       | 'console-log'
       | 'console-debug'
       | 'console-info'
@@ -155,7 +156,5 @@ export type Output = {
    * Js files. The key is the file path relative to the root, starting with /.
    */
   js: Map<string, { url: string; entryPoint: esbuild.Metafile['outputs'][string]['entryPoint'] }>
-  metadata: {
-    knownConfigRegexes: RegExp[]
-  }
+  // metadata: {}
 }

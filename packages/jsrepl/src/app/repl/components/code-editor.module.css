@@ -24,6 +24,7 @@
   }
 }
 
+.jsreplDecor-warning,
 .jsreplDecor-console-warn {
   --color: rgb(177, 105, 35);
 }

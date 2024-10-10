@@ -1,6 +1,5 @@
-import { type Dispatch, type SetStateAction } from 'react'
 import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
-import type debounce from 'debounce'
+import * as Comlink from 'comlink'
 import type * as esbuild from 'esbuild-wasm'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
@@ -12,21 +11,21 @@ import { CssCodeEditorModel } from '@/lib/code-editor-models/css-code-editor-mod
 import { HtmlCodeEditorModel } from '@/lib/code-editor-models/html-code-editor-model'
 import { JsCodeEditorModel } from '@/lib/code-editor-models/js-code-editor-model'
 import { TailwindConfigCodeEditorModel } from '@/lib/code-editor-models/tailwind-config-code-editor-model'
-import { getOriginalPosition } from '@/lib/sourcemap-utils'
 import { defaultTailwindConfigJson } from '@/lib/tailwind-configs'
 import { type ImportMap, Output, type ReplPayload, type Theme } from '@/types'
+import { type ReplData, replDataRef } from './data'
 
-let iframeToken = -1
-let monacoTailwindcss: MonacoTailwindcss | null = null
-let delayedUpdateDecorationsTimeoutId: NodeJS.Timeout
 const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL!
 
-let __bundle: BuildResult | null = null
-let __output: Output | null = null
+let monacoTailwindcss: MonacoTailwindcss | null = null
+
+// let delayedUpdateDecorationsTimeoutId: NodeJS.Timeout
+let _abortController: AbortController | null = null
+
+const knownConfigRegexes: RegExp[] = [/tailwind\.config\.js$/]
 
 export async function sendRepl({
   models,
-  changedModels,
   allPayloads,
   payloadMap,
   updateDecorations,
@@ -34,15 +33,28 @@ export async function sendRepl({
   theme,
 }: {
   models: Map<string, CodeEditorModel>
-  changedModels: Set<CodeEditorModel>
   allPayloads: Set<ReplPayload>
   payloadMap: Map<number | string, ReplPayload>
   updateDecorations: () => void
   previewIframe: HTMLIFrameElement
   theme: Theme
 }): Promise<() => void> {
-  iframeToken = (iframeToken + 1) % Number.MAX_VALUE
-  const currToken = iframeToken
+  if (_abortController && !_abortController.signal.aborted) {
+    _abortController.abort()
+  }
+
+  const abortController = (_abortController = new AbortController())
+  const checkAborted = () => {
+    if (abortController && abortController.signal.aborted) {
+      throw 'aborted'
+    }
+  }
+
+  const replData: ReplData = (replDataRef.current = {
+    token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
+    bundle: null,
+    output: null,
+  })
 
   const modelsArray = Array.from(models.values())
   const jsModels: JsCodeEditorModel[] = modelsArray.filter(
@@ -52,9 +64,8 @@ export async function sendRepl({
     (model) => model instanceof CssCodeEditorModel
   )
   const htmlModel = models.get('/index.html') as HtmlCodeEditorModel | undefined
-  const tailwindConfigModel = models.get('/tailwind.config.ts') as
-    | TailwindConfigCodeEditorModel
-    | undefined
+  const tailwindConfigModel = (models.get('/tailwind.config.ts') ??
+    models.get('/tailwind.config.js')) as TailwindConfigCodeEditorModel | undefined
 
   // const babel = getBabel()[0].value!
 
@@ -67,36 +78,34 @@ export async function sendRepl({
 
   const previewDocScriptsSrcArray = Array.from(previewDoc.scripts).map((script) => script.src)
 
-  let bundle: BuildResult | null = null
-
-  const bundler = getBundler()
-
+  // TODO: CodeEditorModel's know about cache (getValue returns cached value if file is not changed).
+  // Can we (re)use it for esbuild cache somehow?, so esbuild doesn't need to re-transpile unchanged files?
+  // or it is tricky and maybe not worth it? I mean one file can affect another, etc, they are not independent in general.
   const input: Record<string, string> = {}
+
   const entryPoints: string[] = []
+
+  if (htmlModel) {
+    input[htmlModel.monacoModel.uri.path] = htmlModel.getValue()
+    entryPoints.push(htmlModel.monacoModel.uri.path)
+  }
 
   if (tailwindConfigModel) {
     input[tailwindConfigModel.monacoModel.uri.path] = tailwindConfigModel.getValue()
+    entryPoints.push(tailwindConfigModel.monacoModel.uri.path)
   }
 
   for (const model of jsModels) {
-    const origFilePath = model.monacoModel.uri.path
-    // const { code, error } = model.getBabelTransformResult(babel)
-
-    // if (error) {
-    //   throw new ReplBuildError('transpilation', error, {
-    //     filePath: origFilePath,
-    //   })
-    // }
-
-    const transpiledFilePath = origFilePath
-    input[transpiledFilePath] = model.getValue()
+    const filePath = model.monacoModel.uri.path
+    input[filePath] = model.getValue()
 
     if (
-      previewDocScriptsSrcArray.includes(origFilePath /* /file.ts */) ||
-      previewDocScriptsSrcArray.includes('.' + origFilePath /* ./file.ts */) ||
-      previewDocScriptsSrcArray.includes(origFilePath.replace(/^\//, '') /* file.ts */)
+      // TODO: (???) !htmlModel ||
+      previewDocScriptsSrcArray.includes(filePath /* /file.ts */) ||
+      previewDocScriptsSrcArray.includes('.' + filePath /* ./file.ts */) ||
+      previewDocScriptsSrcArray.includes(filePath.replace(/^\//, '') /* file.ts */)
     ) {
-      entryPoints.push(transpiledFilePath)
+      entryPoints.push(filePath)
     }
   }
 
@@ -125,26 +134,33 @@ export async function sendRepl({
   //   .flat()
   //   .filter((x) => !x.startsWith('./'))
 
-  bundle = await bundler.build({
-    input,
-    options: {
-      bundle: true,
-      //external,
-      packages: 'external',
-      platform: 'neutral',
-      //outdir: 'out',
-      outdir: '.',
-      entryPoints,
-      sourcemap: 'both',
-      metafile: true,
-      jsx: 'automatic',
+  const bundler = getBundler()
+  const bundle: BuildResult = await bundler.build(
+    {
+      input,
+      options: {
+        bundle: true,
+        //external,
+        packages: 'external',
+        platform: 'neutral',
+        //outdir: 'out',
+        outdir: '.',
+        entryPoints,
+        sourcemap: 'both',
+        metafile: true,
+        jsx: 'automatic',
+        loader: {
+          '.html': 'copy',
+        },
+      },
     },
-  })
+    Comlink.proxy(setTailwindConfig),
+    Comlink.proxy(processCSSWithTailwind)
+  )
 
-  // use generator?
-  if (iframeToken !== currToken) {
-    throw 'cancelled'
-  }
+  checkAborted()
+
+  console.log('bundle', bundle)
 
   const output: Output = {
     importmap: null,
@@ -153,14 +169,11 @@ export async function sendRepl({
     js: new Map(),
     css: new Map(),
     html: new Map(),
-    metadata: {
-      knownConfigRegexes: [/tailwind\.config\.js$/],
-    },
+    // metadata: {},
   }
 
-  __bundle = bundle
-  __output = output
-  console.log('bundle', bundle)
+  replData.bundle = bundle
+  replData.output = output
 
   if (!bundle.ok) {
     allPayloads.clear()
@@ -169,32 +182,21 @@ export async function sendRepl({
     const bundleErrors: esbuild.Message[] = [
       ...(bundle.error?.errors ?? []),
       ...(bundle.result?.errors ?? []),
-      // TODO: add warnings as well
+    ]
+
+    const bundleWarnings: esbuild.Message[] = [
+      ...(bundle.error?.warnings ?? []),
+      ...(bundle.result?.warnings ?? []),
     ]
 
     for (const error of bundleErrors) {
-      let filePath = error.location?.file ?? ''
-      if (filePath && !filePath.startsWith('/')) {
-        filePath = '/' + filePath
-      }
+      const payload = getPayloadFromEsbuildMessage(error, 'error')
+      allPayloads.add(payload)
+      payloadMap.set(payload.ctx.id, payload)
+    }
 
-      const payload: ReplPayload = {
-        isPromise: false,
-        promiseInfo: undefined,
-        isError: true,
-        result: error.text,
-        ctx: {
-          id: `bundle-error-${error.id}-${error.location?.file}-${error.location?.line}:${error.location?.column}`,
-          lineStart: error.location?.line ?? 1,
-          lineEnd: error.location?.line ?? 1,
-          colStart: (error.location?.column ?? 0) + 1,
-          colEnd: (error.location?.column ?? 0) + 1,
-          source: '',
-          filePath,
-          kind: 'error',
-        },
-      }
-
+    for (const warning of bundleWarnings) {
+      const payload = getPayloadFromEsbuildMessage(warning, 'warning')
       allPayloads.add(payload)
       payloadMap.set(payload.ctx.id, payload)
     }
@@ -210,51 +212,15 @@ export async function sendRepl({
   }
 
   if (bundle.ok) {
-    // TODO: process only if "@tailwind" is used in css
-    const tailwindConfig = bundle?.result?.outputFiles?.find(
-      (x) => x.path === '/tailwind.config.js'
-    )?.text
-
-    // TODO: process only if "@tailwind" is used in css
-    if (!monacoTailwindcss || (tailwindConfigModel && changedModels.has(tailwindConfigModel))) {
-      if (monacoTailwindcss) {
-        monacoTailwindcss.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
-      } else {
-        const { configureMonacoTailwindcss } = await import('@nag5000/monaco-tailwindcss')
-        // use generator?
-        if (iframeToken !== currToken) {
-          throw 'cancelled'
-        }
-        monacoTailwindcss = configureMonacoTailwindcss(monaco, {
-          tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
-        })
-      }
-    }
-
-    const tailwindContent =
-      bundle?.result?.outputFiles
-        ?.filter(
-          (x) =>
-            ['.js', '.html'].some((ext) => x.path.endsWith(ext)) &&
-            !output.metadata.knownConfigRegexes.some((regex) => regex.test(x.path))
-        )
-        ?.map((x) => ({
-          content: x.text,
-          extension: x.path.split('.').pop() ?? '',
-        })) ?? []
-
     const cssFiles = bundle?.result?.outputFiles?.filter((x) => x.path.endsWith('.css')) ?? []
 
     // TODO: process only if "@tailwind" is used in css
+    // TODO: Promise.all
     for (const cssFile of cssFiles) {
-      const css = await processCSSWithTailwind(monacoTailwindcss!, cssFile.text, tailwindContent)
+      const css = cssFile.text
       output.css.set(cssFile.path, {
         url: 'data:text/css;base64,' + btoa(css),
       })
-
-      if (iframeToken !== currToken) {
-        throw 'cancelled'
-      }
     }
 
     allPayloads.clear()
@@ -289,7 +255,7 @@ export async function sendRepl({
     for (const outputFile of bundle.result?.outputFiles ?? []) {
       if (
         outputFile.path.endsWith('.js') &&
-        !output.metadata.knownConfigRegexes.some((regex) => regex.test(outputFile.path))
+        !knownConfigRegexes.some((regex) => regex.test(outputFile.path))
       ) {
         const url = 'data:text/javascript;base64,' + btoa(outputFile.text)
 
@@ -313,30 +279,30 @@ export async function sendRepl({
 
     console.log('output', output)
 
-    const srcdoc = getIframeTemplate(previewDoc, output, theme, iframeToken)
+    const srcdoc = getIframeTemplate(previewDoc, output, theme, replData.token)
 
     previewIframe.contentWindow!.postMessage(
       {
         source: 'jsrepl',
         type: 'repl',
-        token: iframeToken,
+        token: replData.token,
         srcdoc,
       },
       previewUrl
     )
 
-    clearTimeout(delayedUpdateDecorationsTimeoutId)
-    delayedUpdateDecorationsTimeoutId = setTimeout(() => {
-      updateDecorations()
-    }, 1000)
+    // clearTimeout(delayedUpdateDecorationsTimeoutId)
+    // delayedUpdateDecorationsTimeoutId = setTimeout(() => {
+    //   updateDecorations()
+    // }, 1000)
   }
 
   return () => {
-    clearTimeout(delayedUpdateDecorationsTimeoutId)
+    // clearTimeout(delayedUpdateDecorationsTimeoutId)
     monacoTailwindcss?.dispose()
     monacoTailwindcss = null
-    __bundle = null
-    __output = null
+    // replData.bundle = null
+    // replData.output = null
   }
 }
 
@@ -420,127 +386,60 @@ function getIframeTemplate(
   return newDoc.documentElement.outerHTML
 }
 
-export async function updatePreviewTheme(previewIframe: HTMLIFrameElement, theme: Theme) {
-  previewIframe.contentWindow!.postMessage(
-    {
-      source: 'jsrepl',
-      type: 'update-theme',
-      theme: {
-        id: theme.id,
-        isDark: theme.isDark,
-      },
-    },
-    previewUrl
-  )
-}
+async function setTailwindConfig(tailwindConfig: string) {
+  console.log('setTailwindConfig')
 
-export async function onPreviewMessage(
-  event: MessageEvent,
-  {
-    setPreviewIframeReadyId,
-    allPayloads,
-    payloadMap,
-    //models,
-    debouncedUpdateDecorations,
-  }: {
-    setPreviewIframeReadyId: Dispatch<SetStateAction<string | null>>
-    allPayloads: Set<ReplPayload>
-    payloadMap: Map<number | string, ReplPayload>
-    //models: Map<string, CodeEditorModel>
-    debouncedUpdateDecorations: debounce.DebouncedFunction<() => void>
-  }
-) {
-  if (
-    event.origin === previewUrl &&
-    event.data?.source === 'jsreplPreview' &&
-    event.data.type === 'ready' &&
-    event.data.token === -1
-  ) {
-    setPreviewIframeReadyId(event.data.previewId as string)
-    return
+  if (monacoTailwindcss) {
+    console.log('setTailwindConfig setTailwindConfig')
+    monacoTailwindcss.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
+  } else {
+    console.log('setTailwindConfig configureMonacoTailwindcss')
+    const { configureMonacoTailwindcss } = await import('@nag5000/monaco-tailwindcss')
+    monacoTailwindcss = configureMonacoTailwindcss(monaco, {
+      tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
+    })
   }
 
-  if (
-    event.origin === previewUrl &&
-    event.data?.source === 'jsreplPreview' &&
-    event.data.token === iframeToken
-  ) {
-    if (event.data.type === 'repl') {
-      const payload = event.data.payload as ReplPayload
-
-      if (payload.ctx.kind === 'window-error') {
-        // const babel = getBabel()[0].value!
-        // const tsxModel = models.get('/index.tsx') as TsxCodeEditorModel
-        //const { sourcemap } = tsxModel.getBabelTransformResult(babel)
-
-        // base64 url -> output file path
-        const filePath = Array.from(__output!.js.entries()).find(
-          ([, { url }]) => url === payload.ctx.filePath
-        )?.[0]
-        const sourcemap = filePath
-          ? __bundle?.result?.outputFiles?.find((x) => x.path === filePath + '.map')?.text
-          : undefined
-
-        if (sourcemap) {
-          const { line, column, source } = getOriginalPosition(
-            sourcemap,
-            payload.ctx.lineStart,
-            payload.ctx.colStart
-          )
-
-          if (line && source) {
-            payload.ctx.lineStart = line
-            payload.ctx.lineEnd = line
-            payload.ctx.colStart = column ?? 1
-            payload.ctx.colEnd = column ?? 1
-            payload.ctx.filePath = '/' + source
-
-            allPayloads.add(payload)
-            payloadMap.set(payload.ctx.id, payload)
-          }
-        }
-      } else {
-        allPayloads.add(payload)
-        payloadMap.set(payload.ctx.id, payload)
-      }
-    }
-
-    if (event.data.type === 'repl' || event.data.type === 'script-complete') {
-      clearTimeout(delayedUpdateDecorationsTimeoutId)
-      debouncedUpdateDecorations()
-    }
-  }
+  console.log('setTailwindConfig done')
 }
 
 async function processCSSWithTailwind(
-  monacoTailwindcss: MonacoTailwindcss,
   css: string,
   content: { content: string; extension: string }[]
 ): Promise<string> {
-  try {
-    const result = await monacoTailwindcss.generateStylesFromContent(css, content)
-    console.log('tailwind css result', result)
-    return result
-  } catch (e) {
-    console.error('tailwind css error', e)
-    return ''
+  if (!monacoTailwindcss) {
+    throw new Error('monacoTailwindcss is not initialized')
   }
+
+  const result = await monacoTailwindcss.generateStylesFromContent(css, content)
+  return result
 }
 
-export class ReplBuildError extends Error {
-  constructor(
-    public readonly code: string,
-    public readonly cause: Error,
-    public readonly location?: {
-      /**
-       * Path is relative to the root of the project.
-       * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
-       */
-      filePath: string
-      line?: number
-      column?: number
-    }
-  ) {
-    super(`Failed to build REPL (${code})`)
+function getPayloadFromEsbuildMessage(
+  msg: esbuild.Message,
+  kind: 'error' | 'warning'
+): ReplPayload {
+  let filePath = msg.location?.file ?? ''
+  if (filePath && !filePath.startsWith('/')) {
+    filePath = '/' + filePath
   }
+
+  const payload: ReplPayload = {
+    isPromise: false,
+    promiseInfo: undefined,
+    isError: true,
+    result: msg.text,
+    ctx: {
+      id: `bundle-${kind}-${msg.id}-${msg.location?.file}-${msg.location?.line}:${msg.location?.column}`,
+      lineStart: msg.location?.line ?? 1,
+      lineEnd: msg.location?.line ?? 1,
+      colStart: (msg.location?.column ?? 0) + 1,
+      colEnd: (msg.location?.column ?? 0) + 1,
+      source: '',
+      filePath,
+      kind,
+    },
+  }
+
+  return payload
 }

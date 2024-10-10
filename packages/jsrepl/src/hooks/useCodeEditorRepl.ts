@@ -4,8 +4,10 @@ import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
-import { onPreviewMessage, sendRepl, updatePreviewTheme } from '@/lib/repl'
 import { createDecorations } from '@/lib/repl-decorations'
+import { onPreviewMessage } from '@/lib/repl/on-preview-message'
+import { sendRepl } from '@/lib/repl/send-repl'
+import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
 import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
@@ -19,6 +21,7 @@ export default function useCodeEditorRepl(
 ) {
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
+  // TODO: remove it, unused?
   const changedModels = useMemo(() => new Set<InstanceType<typeof CodeEditorModel>>(), [])
   const decorationsDisposable = useRef<() => void>()
   const replDisposable = useRef<() => void>()
@@ -48,7 +51,6 @@ export default function useCodeEditorRepl(
     try {
       replDisposable.current = await sendRepl({
         models,
-        changedModels,
         allPayloads,
         payloadMap,
         updateDecorations,
@@ -59,10 +61,11 @@ export default function useCodeEditorRepl(
       changedModels.clear()
       onRepl()
     } catch (e) {
-      if (e === 'cancelled') {
+      if (e === 'aborted') {
         return
       }
 
+      console.error(e)
       if (e instanceof Error) {
         toast.error(e.message, {
           duration: Infinity,

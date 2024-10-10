@@ -7,14 +7,18 @@ import { babelParseErrorToEsbuildError } from './utils'
 
 const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 
-export const JSReplEsbuildPlugin: esbuild.Plugin = {
-  name: 'jsrepl',
+const replTransformCache = new Map<string, string>()
+const replTransformCacheMaxSize = 5
+
+export const JsEsbuildPlugin: esbuild.Plugin = {
+  name: 'jsrepl-js',
   setup(build) {
     build.onLoad({ filter: /\.(ts|tsx|js|jsx)$/ }, onLoadCallback)
   },
 }
 
 function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefined {
+  console.log('JSReplEsbuildPlugin onLoadCallback')
   assert(args.path.startsWith('/'), 'path expected to start with "/"')
 
   if (skipPaths.some((regex) => regex.test(args.path))) {
@@ -22,13 +26,13 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
   }
 
   try {
-    const code = fs.readFileSync(args.path, { encoding: 'utf8' })
-    const result = transform(code, args.path)
-    const ext = args.path.split('.').pop() as esbuild.Loader
+    const contents = fs.readFileSync(args.path, { encoding: 'utf8' })
+    const transformed = replTransform(contents, args.path)
+    const ext = args.path.split('.').pop()
 
     return {
-      contents: result.code ?? '',
-      loader: ext,
+      contents: transformed,
+      loader: ext as esbuild.Loader,
     }
   } catch (error) {
     return {
@@ -43,7 +47,12 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
   }
 }
 
-function transform(code: string, filePath: string) {
+function replTransform(code: string, filePath: string): string {
+  const cached = replTransformCache.get(code)
+  if (cached !== undefined) {
+    return cached
+  }
+
   const jsReplPreset = {
     plugins: [replPlugin],
   }
@@ -63,10 +72,18 @@ function transform(code: string, filePath: string) {
         : null,
     ].filter((x) => x !== null),
     // TODO: keep only inline sourcemaps
-    sourceMaps: 'both',
+    //sourceMaps: 'both',
+    sourceMaps: 'inline',
   })
 
-  return output
+  const result = output.code ?? ''
+
+  replTransformCache.set(code, result)
+  while (replTransformCache.size > replTransformCacheMaxSize) {
+    replTransformCache.delete(replTransformCache.keys().next().value)
+  }
+
+  return result
 }
 
 function isNewlyCreatedPath(path: NodePath) {

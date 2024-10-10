@@ -1,5 +1,5 @@
 // https://github.com/esbuild/esbuild.github.io/blob/main/src/try/fs.ts
-// Added: readFileSync
+// Added: readFileSync, writeFileSync, existsSync, readdirSync
 
 // This file contains a hack to get the "esbuild-wasm" package to run in the
 // browser with file system support. Although there is no API for this, it
@@ -84,6 +84,26 @@ class Stats {
 
   isFile(): boolean {
     return this.mode === StatsMode.IFREG
+  }
+}
+
+class Dirent {
+  declare name: string
+  declare parentPath: string
+  #mode: number
+
+  constructor(name: string, parentPath: string, entry: Entry) {
+    this.name = name
+    this.parentPath = parentPath
+    this.#mode = entry.kind_ === Kind.File ? StatsMode.IFREG : StatsMode.IFDIR
+  }
+
+  isDirectory(): boolean {
+    return this.#mode === StatsMode.IFDIR
+  }
+
+  isFile(): boolean {
+    return this.#mode === StatsMode.IFREG
   }
 }
 
@@ -305,6 +325,23 @@ export const fs = {
     if (entry.kind_ !== Kind.File) throw EISDIR
     return decoder.decode(entry.content_)
   },
+
+  writeFileSync(path: string, data: string): void {
+    const entry = getEntryFromPath(path)
+    if (entry.kind_ !== Kind.File) throw EISDIR
+    entry.content_ = encoder.encode(data)
+  },
+
+  existsSync(path: string): boolean {
+    try {
+      getEntryFromPath(path)
+      return true
+    } catch {
+      return false
+    }
+  },
+
+  readdirSync,
 }
 
 // @ts-expect-error -- ignore
@@ -382,4 +419,39 @@ function writeToStderr(buffer: Uint8Array, offset: number, length: number): void
   stderrSinceReset += decoder.decode(
     offset === 0 && length === buffer.length ? buffer : buffer.slice(offset, offset + length)
   )
+}
+
+function readdirSync(
+  path: string,
+  options?: { withFileTypes?: true; recursive?: boolean }
+): Dirent[]
+
+function readdirSync(
+  path: string,
+  options?: { withFileTypes?: false; recursive?: boolean }
+): string[]
+
+function readdirSync(
+  path: string,
+  options?: { withFileTypes?: boolean; recursive?: boolean }
+): string[] | Dirent[] {
+  const entry = getEntryFromPath(path)
+  if (entry.kind_ !== Kind.Directory) throw ENOTDIR
+
+  const dirents: Dirent[] = []
+  const normalizedPath = absoluteNormalizedPath(path)
+
+  for (const [name, child] of entry.children_) {
+    dirents.push(new Dirent(name, normalizedPath, child))
+
+    if (options?.recursive && child.kind_ === Kind.Directory) {
+      const children: Dirent[] = fs.readdirSync(normalizedPath + '/' + name, {
+        withFileTypes: true,
+        recursive: true,
+      })
+      dirents.push(...children)
+    }
+  }
+
+  return options?.withFileTypes ? dirents : dirents.map((dirent) => dirent.name)
 }

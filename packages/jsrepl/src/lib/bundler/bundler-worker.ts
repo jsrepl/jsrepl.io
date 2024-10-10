@@ -1,9 +1,9 @@
 import * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel } from '@/lib/get-babel'
+import { CssEsbuildPlugin } from './css-esbuild-plugin'
 import { resetFileSystem, stderrSinceReset } from './fs'
-import { JSReplEsbuildPlugin } from './jsrepl-esbuild-plugin'
-import { TailwindConfigEsbuildPlugin } from './tailwind-config-esbuild-plugin'
+import { JsEsbuildPlugin } from './js-esbuild-plugin'
 
 let initialized = false
 
@@ -31,10 +31,18 @@ type BuildError = Error & {
   warnings?: esbuild.Message[]
 }
 
-async function build(data: {
-  input: Record<string, string>
-  options: Omit<esbuild.BuildOptions, 'plugins'>
-}) {
+async function build(
+  data: {
+    input: Record<string, string>
+    options: Omit<esbuild.BuildOptions, 'plugins'>
+  },
+  setTailwindConfig: ((tailwindConfig: string) => Promise<void>) & Comlink.ProxyMarked,
+  processCSSWithTailwind: ((
+    css: string,
+    content: { content: string; extension: string }[]
+  ) => Promise<string>) &
+    Comlink.ProxyMarked
+) {
   if (!initialized) {
     throw new Error('not initialized')
   }
@@ -48,7 +56,7 @@ async function build(data: {
     resetFileSystem(input)
     result = await esbuild.build({
       ...options,
-      plugins: [JSReplEsbuildPlugin, TailwindConfigEsbuildPlugin],
+      plugins: [JsEsbuildPlugin, CssEsbuildPlugin({ setTailwindConfig, processCSSWithTailwind })],
     })
   } catch (err) {
     error = err as BuildError
