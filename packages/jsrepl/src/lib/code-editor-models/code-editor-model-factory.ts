@@ -4,7 +4,6 @@ import { CodeEditorModel } from './code-editor-model'
 import { CssCodeEditorModel } from './css-code-editor-model'
 import { HtmlCodeEditorModel } from './html-code-editor-model'
 import { JsCodeEditorModel } from './js-code-editor-model'
-import { TailwindConfigCodeEditorModel } from './tailwind-config-code-editor-model'
 
 export function createCodeEditorModel(
   modelDef: ModelDef
@@ -17,9 +16,7 @@ export function createCodeEditorModel(
 
   let model: InstanceType<typeof CodeEditorModel> | null
 
-  if (monacoModel.uri.path === '/tailwind.config.ts') {
-    model = new TailwindConfigCodeEditorModel(monacoModel)
-  } else if (monacoModel.getLanguageId() === 'typescript') {
+  if (monacoModel.getLanguageId() === 'typescript') {
     model = new JsCodeEditorModel(monacoModel)
   } else if (monacoModel.getLanguageId() === 'html') {
     model = new HtmlCodeEditorModel(monacoModel)

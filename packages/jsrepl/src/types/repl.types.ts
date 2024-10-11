@@ -1,4 +1,3 @@
-import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
 
 export enum ReplPayloadCustomKind {
@@ -77,7 +76,7 @@ export type ReplPayload = {
     colEnd: number
     source: string
     /**
-     * Path is relative to the root of the project.
+     * Path relative to the root of the project, starting with '/'.
      * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
      */
     filePath: string
@@ -139,22 +138,4 @@ export enum PreviewPosition {
 
 export type ImportMap = {
   imports: Record<string, string>
-}
-
-export type Output = {
-  importmap: ImportMap | null
-  tailwindConfig: string | null
-  /**
-   * Html files. The key is the file path relative to the root, starting with /.
-   */
-  html: Map<string, { text: string }>
-  /**
-   * Css files. The key is the file path relative to the root, starting with /.
-   */
-  css: Map<string, { url: string }>
-  /**
-   * Js files. The key is the file path relative to the root, starting with /.
-   */
-  js: Map<string, { url: string; entryPoint: esbuild.Metafile['outputs'][string]['entryPoint'] }>
-  // metadata: {}
 }

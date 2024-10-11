@@ -108,6 +108,12 @@ function onWindowError(event: ErrorEvent, token: number) {
   const error = event.error
   const win = event.target as PreviewWindow
 
+  const filePath = event.filename.startsWith('data:')
+    ? // base64 url -> bundle output file path
+      Array.from(win.document.scripts).find((script) => script.src === event.filename)?.dataset
+        .path ?? ''
+    : event.filename
+
   postMessageRepl(token, win, error, true, {
     id: `window-error-${event.filename}-${event.lineno}:${event.colno}`,
     // Normally lineno and colno start with 1.
@@ -122,7 +128,7 @@ function onWindowError(event: ErrorEvent, token: number) {
     colEnd: event.colno === 0 ? 1 : event.colno,
     source: '',
     // Will be resolved to the original filePath taking into account the sourcemap.
-    filePath: event.filename,
+    filePath,
     kind: 'window-error',
   })
 }

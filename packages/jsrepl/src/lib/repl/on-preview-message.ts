@@ -12,13 +12,11 @@ export function onPreviewMessage(
     setPreviewIframeReadyId,
     allPayloads,
     payloadMap,
-    //models,
     debouncedUpdateDecorations,
   }: {
     setPreviewIframeReadyId: Dispatch<SetStateAction<string | null>>
     allPayloads: Set<ReplPayload>
     payloadMap: Map<number | string, ReplPayload>
-    //models: Map<string, CodeEditorModel>
     debouncedUpdateDecorations: debounce.DebouncedFunction<() => void>
   }
 ) {
@@ -41,14 +39,7 @@ export function onPreviewMessage(
       const payload = event.data.payload as ReplPayload
 
       if (payload.ctx.kind === 'window-error') {
-        // const babel = getBabel()[0].value!
-        // const tsxModel = models.get('/index.tsx') as TsxCodeEditorModel
-        //const { sourcemap } = tsxModel.getBabelTransformResult(babel)
-
-        // base64 url -> output file path
-        const filePath = Array.from(replDataRef.current.output?.js.entries() ?? []).find(
-          ([, { url }]) => url === payload.ctx.filePath
-        )?.[0]
+        const filePath = payload.ctx.filePath
         const sourcemap = filePath
           ? replDataRef.current.bundle?.result?.outputFiles?.find(
               (x) => x.path === filePath + '.map'
@@ -80,7 +71,6 @@ export function onPreviewMessage(
     }
 
     if (event.data.type === 'repl' || event.data.type === 'script-complete') {
-      // clearTimeout(delayedUpdateDecorationsTimeoutId)
       debouncedUpdateDecorations()
     }
   }
