@@ -21,8 +21,6 @@ export default function useCodeEditorRepl(
 ) {
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
-  // TODO: remove it, unused?
-  const changedModels = useMemo(() => new Set<InstanceType<typeof CodeEditorModel>>(), [])
   const decorationsDisposable = useRef<() => void>()
   const replDisposable = useRef<() => void>()
   const previewIframe = useRef<HTMLIFrameElement>()
@@ -58,7 +56,6 @@ export default function useCodeEditorRepl(
         theme: themeRef.current,
       })
 
-      changedModels.clear()
       onRepl()
     } catch (e) {
       if (e === 'aborted') {
@@ -76,7 +73,7 @@ export default function useCodeEditorRepl(
         })
       }
     }
-  }, [payloadMap, allPayloads, changedModels, models, onRepl, updateDecorations])
+  }, [payloadMap, allPayloads, models, onRepl, updateDecorations])
 
   const debouncedDoRepl = useMemo(() => debounce(doRepl, 300), [doRepl])
 
@@ -126,10 +123,6 @@ export default function useCodeEditorRepl(
   }, [debouncedUpdateDecorations])
 
   useEffect(() => {
-    models.forEach((model) => {
-      changedModels.add(model)
-    })
-
     bundler.setup().then((bundlerSetupResult) => {
       if (!bundlerSetupResult.ok) {
         toast.error('Failed to setup bundler', {
@@ -140,12 +133,11 @@ export default function useCodeEditorRepl(
 
       setDepsReady(true)
     })
-  }, [models, changedModels, bundler])
+  }, [models, bundler])
 
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
-        changedModels.add(model)
         debouncedDoRepl()
       })
     })
@@ -153,7 +145,7 @@ export default function useCodeEditorRepl(
     return () => {
       disposables.forEach((disposable) => disposable.dispose())
     }
-  }, [models, debouncedDoRepl, changedModels])
+  }, [models, debouncedDoRepl])
 
   useEffect(() => {
     themeRef.current = theme
