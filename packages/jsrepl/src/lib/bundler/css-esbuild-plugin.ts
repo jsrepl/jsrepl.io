@@ -92,7 +92,7 @@ async function onTailwindConfigLoadCallback(
 
       tailwindConfigCache.set(contents, transformedCode)
       while (tailwindConfigCache.size > tailwindConfigCacheMaxSize) {
-        tailwindConfigCache.delete(tailwindConfigCache.keys().next().value)
+        tailwindConfigCache.delete(tailwindConfigCache.keys().next().value as string)
       }
     }
 

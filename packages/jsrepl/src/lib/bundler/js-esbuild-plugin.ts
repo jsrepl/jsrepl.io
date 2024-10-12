@@ -66,13 +66,10 @@ function replTransform(code: string, filePath: string): string {
     presets: [[jsReplPreset, {}]],
     plugins: [
       // Allow Babel to parse TypeScript without transforming it
-      // TODO: do it only for ts/tsx files
       filePath.endsWith('.ts') || filePath.endsWith('.tsx')
         ? ['syntax-typescript', { isTSX: filePath.endsWith('.tsx') }]
         : null,
     ].filter((x) => x !== null),
-    // TODO: keep only inline sourcemaps
-    //sourceMaps: 'both',
     sourceMaps: 'inline',
   })
 
@@ -80,7 +77,7 @@ function replTransform(code: string, filePath: string): string {
 
   replTransformCache.set(code, result)
   while (replTransformCache.size > replTransformCacheMaxSize) {
-    replTransformCache.delete(replTransformCache.keys().next().value)
+    replTransformCache.delete(replTransformCache.keys().next().value as string)
   }
 
   return result
@@ -96,13 +93,6 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
 
   return {
     visitor: {
-      // ImportDeclaration(path) {
-      //   const importPath = path.node.source.value
-      //   const metadata = this.file.metadata as BabelTransformResultMetadata
-      //   metadata.importPaths ??= []
-      //   metadata.importPaths.push(importPath)
-      // },
-
       CallExpression(path) {
         if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
           return

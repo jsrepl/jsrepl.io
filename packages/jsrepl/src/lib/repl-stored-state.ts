@@ -3,10 +3,13 @@ import { defaultTailwindConfigTs } from '@/lib/tailwind-configs'
 import { atou, utoa } from '@/lib/zip'
 import type { ModelDef, ReplStoredState } from '@/types'
 
+const SCHEMA_VERSION = '1'
+
 export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStoredState {
   const modelsQP = searchParams.get('i')
   const activeModelQP = searchParams.get('c')
   const showPreviewQP = searchParams.get('p')
+  const versionQP = searchParams.get('v')
 
   let models: Array<ModelDef> | null = null
 
@@ -52,6 +55,14 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
     }
 
     state.models = new Map(arr.map((model) => [model.path, model]))
+
+    if (!versionQP) {
+      const indexhtml = state.models.get('/index.html')!
+      indexhtml.content += `\n\n<script type="module" src="/index.tsx"></script>`
+
+      const indextsx = state.models.get('/index.tsx')!
+      indextsx.content = `import './index.css'\n\n${indextsx.content}`
+    }
   }
 
   if (typeof activeModelQP === 'string') {
@@ -98,7 +109,7 @@ export function toQueryParams(state: ReplStoredState): Record<string, string> {
   const { activeModel, showPreview, models } = state
   const modelsArr = Array.from(models.values())
   const modelsQP = serialize(modelsArr)
-  return { i: modelsQP, c: activeModel, p: showPreview ? '1' : '0' }
+  return { i: modelsQP, c: activeModel, p: showPreview ? '1' : '0', v: SCHEMA_VERSION }
 }
 
 function deserialize(serialized: string): unknown {

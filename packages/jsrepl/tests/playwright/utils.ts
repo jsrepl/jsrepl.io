@@ -70,7 +70,11 @@ export async function assertReplLines(
   await Promise.all(promises)
 }
 
-export async function visitPlayground(page: Page, state: Partial<ReplStoredState>) {
+export async function visitPlayground(
+  page: Page,
+  state: Partial<ReplStoredState>,
+  options: { stateSchemaVersion?: string } = {}
+) {
   const defaultState: ReplStoredState = {
     models: new Map(),
     activeModel: '',
@@ -78,5 +82,14 @@ export async function visitPlayground(page: Page, state: Partial<ReplStoredState
   }
 
   const qp = toQueryParams({ ...defaultState, ...state })
+
+  if (options.stateSchemaVersion !== undefined) {
+    if (options.stateSchemaVersion !== '') {
+      qp.v = options.stateSchemaVersion
+    } else {
+      delete qp.v
+    }
+  }
+
   await page.goto('/repl?' + new URLSearchParams(qp))
 }
