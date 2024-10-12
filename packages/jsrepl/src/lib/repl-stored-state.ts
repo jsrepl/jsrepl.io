@@ -164,7 +164,10 @@ function getDefaultModels(): ReplStoredState['models'] {
 function getDefaultHtml(): string {
   return `<div class="flex items-center justify-center h-full dark:text-stone-100">
   <time id="clock" class="text-5xl font-bold"></time>
-</div>`
+</div>
+
+<script type="module" src="/index.tsx"></script>
+`
 }
 
 function getDefaultCss(): string {
@@ -186,11 +189,13 @@ body {
 ::before,
 ::after {
   box-sizing: border-box;
-}`
+}
+`
 }
 
 function getDefaultTsx(): string {
   return `import { format } from 'date-fns';
+import './index.css';
 
 let now = new Date();
 
