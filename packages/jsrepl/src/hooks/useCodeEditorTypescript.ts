@@ -109,7 +109,7 @@ export default function useCodeEditorTypescript(
       const { signal } = abortController
       modelPackages.set(packageName, { abortController })
 
-      // TODO: await Promise.all of addedPackages?
+      // TODO: do it in parallel
       const dtsMap = await getDtsMap(packageName, tsRef.value!, { signal })
       debugLog(DebugLog.DTS, packageName, 'dtsMap', dtsMap)
 

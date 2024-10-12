@@ -18,7 +18,6 @@ export const JsEsbuildPlugin: esbuild.Plugin = {
 }
 
 function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefined {
-  console.log('JSReplEsbuildPlugin onLoadCallback')
   assert(args.path.startsWith('/'), 'path expected to start with "/"')
 
   if (skipPaths.some((regex) => regex.test(args.path))) {

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { type BuildResult } from '@/lib/bundler/bundler-worker'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
+import { DebugLog, debugLog } from '@/lib/debug-log'
 import { defaultTailwindConfigJson } from '@/lib/tailwind-configs'
 import { ImportMap, type ReplPayload, type Theme } from '@/types'
 import { type ReplData, replDataRef } from './data'
@@ -118,8 +119,8 @@ export async function sendRepl({
     },
   }
 
-  console.log('input', input)
-  console.log('options', options)
+  debugLog(DebugLog.REPL, 'esbuild input', input)
+  debugLog(DebugLog.REPL, 'esbuild options', options)
 
   const bundle: BuildResult = await bundler.build(
     {
@@ -132,8 +133,8 @@ export async function sendRepl({
 
   checkAborted()
 
-  console.log('bundle', bundle)
   replData.bundle = bundle
+  debugLog(DebugLog.REPL, 'esbuild bundle', bundle)
 
   allPayloads.clear()
   payloadMap.clear()
@@ -316,20 +317,14 @@ function processPreviewDoc(
 }
 
 async function setTailwindConfig(tailwindConfig: string) {
-  console.log('setTailwindConfig')
-
   if (monacoTailwindcss) {
-    console.log('setTailwindConfig setTailwindConfig')
     monacoTailwindcss.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
   } else {
-    console.log('setTailwindConfig configureMonacoTailwindcss')
     const { configureMonacoTailwindcss } = await import('@nag5000/monaco-tailwindcss')
     monacoTailwindcss = configureMonacoTailwindcss(monaco, {
       tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
     })
   }
-
-  console.log('setTailwindConfig done')
 }
 
 async function processCSSWithTailwind(

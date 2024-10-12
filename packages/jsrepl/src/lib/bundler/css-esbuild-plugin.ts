@@ -57,7 +57,6 @@ async function onTailwindConfigLoadCallback(
   build: esbuild.PluginBuild,
   setTailwindConfig: ((tailwindConfig: string) => Promise<void>) & Comlink.ProxyMarked
 ): Promise<esbuild.OnLoadResult | null | undefined> {
-  console.log('onTailwindConfigLoadCallback', args.pluginData)
   let transformFailure: esbuild.TransformFailure | undefined
 
   try {
@@ -97,9 +96,7 @@ async function onTailwindConfigLoadCallback(
     }
 
     if (lastAppliedTailwindConfig !== transformedCode) {
-      console.log('applying config')
       await setTailwindConfig(transformedCode)
-      console.log('applying config done')
       lastAppliedTailwindConfig = transformedCode
     }
 
@@ -140,7 +137,6 @@ async function onCssLoadCallback(
   ) => Promise<string>) &
     Comlink.ProxyMarked
 ): Promise<esbuild.OnLoadResult | null | undefined> {
-  console.log('onCssLoadCallback', args.pluginData)
   try {
     const contents = fs.readFileSync(args.path, { encoding: 'utf8' })
     if (!/@(apply|tailwind)/.test(contents)) {

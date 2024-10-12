@@ -7,7 +7,6 @@ export function setupRepl(win: PreviewWindow, token: number) {
   win.__r = repl.bind({ token, win })
 
   win.addEventListener('error', (event) => {
-    console.log('window error', event)
     onWindowError(event, token)
   })
 }
