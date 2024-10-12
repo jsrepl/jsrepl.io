@@ -1,3 +1,4 @@
+import { consoleLogStyles } from '../../jsrepl/src/lib/console-utils'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
@@ -115,7 +116,7 @@ function setup(previewWindow: PreviewWindow, token: number) {
     })
   }
 
-  previewWindow.console.debug('%cREPL begin (%s)', 'font-weight: bold;', token)
+  console.debug('%cREPL%cREPL begin (%s)', consoleLogStyles.debug, 'font-weight: bold;', token)
 }
 
 function afterJsScript(_window: PreviewWindow, token: number) {

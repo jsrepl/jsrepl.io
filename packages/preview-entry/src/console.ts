@@ -1,40 +1,5 @@
 import type { PreviewWindow } from './types'
 
-const consoleLogCommonStyles = [
-  'border-radius: 2px',
-  'padding: 1px 4px',
-  'margin-right: 8px',
-  'border: 1px solid',
-]
-
-const consoleLogStyles = {
-  log: [
-    ...consoleLogCommonStyles,
-    'color: light-dark(#000, #FFF)',
-    'background-color: light-dark(#EEE, #4b4b4b)',
-  ].join(';'),
-  debug: [
-    ...consoleLogCommonStyles,
-    'color: light-dark(#000, #FFF)',
-    'background-color: light-dark(#93e0ff, #004697)',
-  ].join(';'),
-  info: [
-    ...consoleLogCommonStyles,
-    'color: light-dark(#000, #FFF)',
-    'background-color: light-dark(#EEE, #4b4b4b)',
-  ].join(';'),
-  warn: [
-    ...consoleLogCommonStyles,
-    'color: light-dark(#000, #FFF)',
-    'background-color: light-dark(#EEE, #4b4b4b)',
-  ].join(';'),
-  error: [
-    ...consoleLogCommonStyles,
-    'color: light-dark(#000, #FFF)',
-    'background-color: light-dark(#EEE, #4b4b4b)',
-  ].join(';'),
-}
-
 export function setupConsole(win: PreviewWindow) {
   const origConsole = {
     log: win.console.log.bind(win.console),
@@ -53,18 +18,9 @@ export function setupConsole(win: PreviewWindow) {
 
 function consoleLog(
   origFn: (...args: unknown[]) => void,
-  level: 'log' | 'debug' | 'info' | 'warn' | 'error',
+  _level: 'log' | 'debug' | 'info' | 'warn' | 'error',
   ...args: unknown[]
 ) {
-  const firstArg = args[0]
-  if (
-    typeof firstArg === 'string' &&
-    ['%s', '%d', '%i', '%o', '%O', '%c', '%f'].some((x) => firstArg.includes(x))
-  ) {
-    args = [`%cREPL%c${firstArg}`, consoleLogStyles[level], '', ...args.slice(1)]
-  } else {
-    args = [`%cREPL%c`, consoleLogStyles[level], '', ...args]
-  }
-
+  // TODO: Implement console UI
   return origFn(...args)
 }
