@@ -62,7 +62,7 @@ export default function ReplHeader({
 
   return (
     <HeaderBase>
-      <div className="flex">
+      <div className="-my-px flex flex-1 overflow-x-auto overflow-y-hidden">
         {modelSwitcherOptions.map((modelOption) => (
           <span key={modelOption.value} className="group relative inline-flex items-center">
             <Button
