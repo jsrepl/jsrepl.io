@@ -1,4 +1,4 @@
-import { consoleLogStyles } from './console-utils'
+import { consoleLogRepl } from './console-utils'
 
 export enum DebugLog {
   TS = 'ts',
@@ -13,6 +13,6 @@ const debugFlags =
 
 export function debugLog(key: DebugLog, ...args: unknown[]) {
   if (debugFlags?.includes(key)) {
-    console.debug('%cDEBUG%c %s', consoleLogStyles.debug, 'font-weight: 400;', ...args)
+    consoleLogRepl('debug', '[DEBUG]', ...args)
   }
 }

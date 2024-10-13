@@ -2,13 +2,13 @@ import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import type * as esbuild from 'esbuild-wasm'
 import * as monaco from 'monaco-editor'
-import { toast } from 'sonner'
 import { type BuildResult } from '@/lib/bundler/bundler-worker'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
 import { defaultTailwindConfigJson } from '@/lib/tailwind-configs'
-import { ImportMap, type ReplPayload, type Theme } from '@/types'
+import { type ImportMap, type ReplInfo, type ReplPayload, type Theme } from '@/types'
+import { consoleLogRepl } from '../console-utils'
 import { type ReplData, replDataRef } from './data'
 
 const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL!
@@ -31,7 +31,7 @@ export async function sendRepl({
   updateDecorations: () => void
   previewIframe: HTMLIFrameElement
   theme: Theme
-}): Promise<() => void> {
+}): Promise<ReplInfo> {
   if (_abortController && !_abortController.signal.aborted) {
     _abortController.abort()
   }
@@ -139,6 +139,28 @@ export async function sendRepl({
   allPayloads.clear()
   payloadMap.clear()
 
+  const bundleErrors: esbuild.Message[] = [
+    ...(bundle.error?.errors ?? []),
+    ...(bundle.result?.errors ?? []),
+  ]
+
+  const bundleWarnings: esbuild.Message[] = [
+    ...(bundle.error?.warnings ?? []),
+    ...(bundle.result?.warnings ?? []),
+  ]
+
+  for (const error of bundleErrors) {
+    const payload = getPayloadFromEsbuildMessage(error, 'error')
+    allPayloads.add(payload)
+    payloadMap.set(payload.ctx.id, payload)
+  }
+
+  for (const warning of bundleWarnings) {
+    const payload = getPayloadFromEsbuildMessage(warning, 'warning')
+    allPayloads.add(payload)
+    payloadMap.set(payload.ctx.id, payload)
+  }
+
   if (bundle.ok) {
     processPreviewDoc(previewDoc, {
       bundle,
@@ -159,42 +181,20 @@ export async function sendRepl({
       },
       previewUrl
     )
-  } else {
-    const bundleErrors: esbuild.Message[] = [
-      ...(bundle.error?.errors ?? []),
-      ...(bundle.result?.errors ?? []),
-    ]
+  }
 
-    const bundleWarnings: esbuild.Message[] = [
-      ...(bundle.error?.warnings ?? []),
-      ...(bundle.result?.warnings ?? []),
-    ]
-
-    for (const error of bundleErrors) {
-      const payload = getPayloadFromEsbuildMessage(error, 'error')
-      allPayloads.add(payload)
-      payloadMap.set(payload.ctx.id, payload)
-    }
-
-    for (const warning of bundleWarnings) {
-      const payload = getPayloadFromEsbuildMessage(warning, 'warning')
-      allPayloads.add(payload)
-      payloadMap.set(payload.ctx.id, payload)
-    }
-
-    if (bundle.error) {
-      toast.error(bundle.error.message, {
-        duration: Infinity,
-      })
-    }
-
+  if (bundle.error) {
+    consoleLogRepl('error', bundle.error.message)
     updateDecorations()
   }
 
-  return () => {
-    monacoTailwindcss?.dispose()
-    monacoTailwindcss = null
+  const replInfo: ReplInfo = {
+    ok: bundle.ok,
+    errors: bundleErrors,
+    warnings: bundleWarnings,
   }
+
+  return replInfo
 }
 
 function processPreviewDoc(
@@ -366,4 +366,9 @@ function getPayloadFromEsbuildMessage(
   }
 
   return payload
+}
+
+export function dispose() {
+  monacoTailwindcss?.dispose()
+  monacoTailwindcss = null
 }

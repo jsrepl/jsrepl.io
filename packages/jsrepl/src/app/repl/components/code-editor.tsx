@@ -9,7 +9,7 @@ import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { ModelDef } from '@/types'
+import { type ModelDef, type ReplInfo } from '@/types'
 import styles from './code-editor.module.css'
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
   modelDefinitions: Map<string, ModelDef>
   activeModel: string
   onModelChange: (model: CodeEditorModel) => void
-  onRepl: () => void
+  onRepl: (replInfo: ReplInfo) => void
   onReplBodyMutation: () => void
 }
 

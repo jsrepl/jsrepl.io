@@ -10,7 +10,9 @@ export function useReplPreviewShown({
 }): [
   boolean,
   (force?: boolean) => void,
-  { mightBeHidden: boolean; onRepl: () => void; onReplBodyMutation: () => void },
+  mightBeHidden: boolean,
+  onRepl: () => void,
+  onReplBodyMutation: () => void,
 ] {
   const [mightBeHidden, setMightBeHidden] = useState(false)
   const hideTimeoutId = useRef<NodeJS.Timeout>()
@@ -49,5 +51,5 @@ export function useReplPreviewShown({
     }
   }, [])
 
-  return [shown, toggle, { mightBeHidden, onRepl, onReplBodyMutation }]
+  return [shown, toggle, mightBeHidden, onRepl, onReplBodyMutation]
 }

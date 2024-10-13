@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useEarlyAccessToast } from '@/hooks/useEarlyAccessToast'
 import { useNewVersionToast } from '@/hooks/useNewVersionToast'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
@@ -9,11 +9,14 @@ import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { cn } from '@/lib/utils'
+import { type ReplInfo } from '@/types'
 import CodeEditor from './code-editor'
+import { ErrorsNotification } from './errors-notification'
 import Header from './header'
 import Preview from './preview'
 
 export default function ReplPlayground() {
+  const [replInfo, setReplInfo] = useState<ReplInfo | null>(null)
   const [replState, setReplState, saveReplState] = useReplStoredState()
   const [userState, setUserState] = useUserStoredState()
   useEarlyAccessToast()
@@ -21,7 +24,13 @@ export default function ReplPlayground() {
 
   const previewPos = userState.previewPos
   const [previewSize, setPreviewSize] = useReplPreviewSize({ userState })
-  const [previewShown, togglePreview, previewShownProps] = useReplPreviewShown({
+  const [
+    previewShown,
+    togglePreview,
+    previewMightBeHidden,
+    onPreviewRepl,
+    onPreviewReplBodyMutation,
+  ] = useReplPreviewShown({
     replState,
     setReplState,
   })
@@ -39,6 +48,14 @@ export default function ReplPlayground() {
     [replState.models, saveReplState]
   )
 
+  const onRepl = useCallback(
+    (replInfo: ReplInfo) => {
+      setReplInfo(replInfo)
+      onPreviewRepl()
+    },
+    [onPreviewRepl]
+  )
+
   return (
     <>
       <Header
@@ -48,6 +65,7 @@ export default function ReplPlayground() {
         setUserState={setUserState}
         previewShown={previewShown}
         togglePreview={togglePreview}
+        replInfo={replInfo}
       />
 
       <main className="bg-background relative min-h-0 flex-1">
@@ -62,8 +80,8 @@ export default function ReplPlayground() {
             modelDefinitions={replState.models}
             activeModel={replState.activeModel}
             onModelChange={onModelChange}
-            onRepl={previewShownProps.onRepl}
-            onReplBodyMutation={previewShownProps.onReplBodyMutation}
+            onRepl={onRepl}
+            onReplBodyMutation={onPreviewReplBodyMutation}
           />
 
           <Preview
@@ -71,10 +89,12 @@ export default function ReplPlayground() {
             size={previewSize}
             setSize={setPreviewSize}
             shown={previewShown}
-            mightBeHidden={previewShownProps.mightBeHidden}
+            mightBeHidden={previewMightBeHidden}
             toggle={togglePreview}
           />
         </div>
+
+        <ErrorsNotification replInfo={replInfo} />
       </main>
     </>
   )

@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SetReplStoredState } from '@/hooks/useReplStoredState'
 import { Themes } from '@/lib/themes'
-import { PreviewPosition, type ReplStoredState, type UserStoredState } from '@/types'
+import { cn } from '@/lib/utils'
+import { PreviewPosition, type ReplInfo, type ReplStoredState, type UserStoredState } from '@/types'
 import HeaderBase from './header-base'
 
 export default function ReplHeader({
@@ -33,6 +34,7 @@ export default function ReplHeader({
   setUserState,
   previewShown,
   togglePreview,
+  replInfo,
 }: {
   replState: ReplStoredState
   setReplState: SetReplStoredState
@@ -40,15 +42,25 @@ export default function ReplHeader({
   setUserState: React.Dispatch<React.SetStateAction<UserStoredState>>
   previewShown: boolean
   togglePreview: (force?: boolean) => void
+  replInfo: ReplInfo | null
 }) {
   const { resolvedTheme: themeId, setTheme } = useTheme()
 
   const modelSwitcherOptions = useMemo(() => {
     return Array.from(replState.models.values()).map((model) => {
       const label = model.path.replace(/^\//, '')
-      return { value: model.path, label }
+      return {
+        value: model.path,
+        label,
+        errorCount:
+          replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === model.path)
+            .length ?? 0,
+        warningCount:
+          replInfo?.warnings.filter((e) => e.location?.file && '/' + e.location.file === model.path)
+            .length ?? 0,
+      }
     })
-  }, [replState.models])
+  }, [replState.models, replInfo])
 
   const previewPositionOptions = [
     { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
@@ -73,7 +85,13 @@ export default function ReplHeader({
               className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer px-4 py-2 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner"
               onClick={() => setReplState((prev) => ({ ...prev, activeModel: modelOption.value }))}
             >
-              <span className="relative opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
+              <span
+                className={cn(
+                  'relative opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80',
+                  modelOption.warningCount > 0 && 'text-yellow-500',
+                  modelOption.errorCount > 0 && 'text-red-500'
+                )}
+              >
                 {modelOption.label}
               </span>
             </Button>

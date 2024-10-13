@@ -4,11 +4,12 @@ import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
+import { consoleLogRepl } from '@/lib/console-utils'
 import { createDecorations } from '@/lib/repl-decorations'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
-import { sendRepl } from '@/lib/repl/send-repl'
+import { dispose as disposeSendRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
-import { type ReplPayload, type Theme } from '@/types'
+import { type ReplInfo, type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
@@ -17,12 +18,11 @@ export default function useCodeEditorRepl(
     theme,
     onRepl,
     onReplBodyMutation,
-  }: { theme: Theme; onRepl: () => void; onReplBodyMutation: () => void }
+  }: { theme: Theme; onRepl: (replInfo: ReplInfo) => void; onReplBodyMutation: () => void }
 ) {
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
   const decorationsDisposable = useRef<() => void>()
-  const replDisposable = useRef<() => void>()
   const previewIframe = useRef<HTMLIFrameElement>()
   const themeRef = useRef(theme)
   const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
@@ -44,10 +44,9 @@ export default function useCodeEditorRepl(
       payloads.length > 0 ? createDecorations(editor, payloads) : undefined
   }, [editorRef, payloadMap])
 
-  // TODO: setErrors(), type Error = { text, location? }
   const doRepl = useCallback(async () => {
     try {
-      replDisposable.current = await sendRepl({
+      const replInfo = await sendRepl({
         models,
         allPayloads,
         payloadMap,
@@ -56,22 +55,18 @@ export default function useCodeEditorRepl(
         theme: themeRef.current,
       })
 
-      onRepl()
+      onRepl(replInfo)
     } catch (e) {
       if (e === 'aborted') {
         return
       }
 
+      const msg = `Unexpected error bundling repl: ${e instanceof Error ? e.message : 'Something went wrong'}`
+      consoleLogRepl('error', msg)
       console.error(e)
-      if (e instanceof Error) {
-        toast.error(e.message, {
-          duration: Infinity,
-        })
-      } else {
-        toast.error('Something went wrong', {
-          duration: Infinity,
-        })
-      }
+      toast.error(msg, {
+        duration: Infinity,
+      })
     }
   }, [payloadMap, allPayloads, models, onRepl, updateDecorations])
 
@@ -106,7 +101,7 @@ export default function useCodeEditorRepl(
   useEffect(() => {
     return () => {
       decorationsDisposable.current?.()
-      replDisposable.current?.()
+      disposeSendRepl()
     }
   }, [])
 

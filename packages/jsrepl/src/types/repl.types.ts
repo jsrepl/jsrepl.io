@@ -1,3 +1,4 @@
+import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
 
 export enum ReplPayloadCustomKind {
@@ -138,4 +139,10 @@ export enum PreviewPosition {
 
 export type ImportMap = {
   imports: Record<string, string>
+}
+
+export type ReplInfo = {
+  ok: boolean
+  errors: esbuild.Message[]
+  warnings: esbuild.Message[]
 }
