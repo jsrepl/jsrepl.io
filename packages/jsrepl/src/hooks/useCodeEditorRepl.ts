@@ -1,7 +1,8 @@
-import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
+import { ReplInfoContext } from '@/context/repl-info-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
@@ -9,13 +10,15 @@ import { createDecorations } from '@/lib/repl-decorations'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { dispose as disposeSendRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
-import { type ReplInfo, type ReplPayload, type Theme } from '@/types'
+import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>,
-  { theme, onRepl }: { theme: Theme; onRepl: (replInfo: ReplInfo) => void }
+  { theme }: { theme: Theme }
 ) {
+  const { setReplInfo } = useContext(ReplInfoContext)!
+
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
   const decorationsDisposable = useRef<() => void>()
@@ -51,7 +54,7 @@ export default function useCodeEditorRepl(
         theme: themeRef.current,
       })
 
-      onRepl(replInfo)
+      setReplInfo(replInfo)
     } catch (e) {
       if (e === 'aborted') {
         return
@@ -64,7 +67,7 @@ export default function useCodeEditorRepl(
         duration: Infinity,
       })
     }
-  }, [payloadMap, allPayloads, models, onRepl, updateDecorations])
+  }, [payloadMap, allPayloads, models, setReplInfo, updateDecorations])
 
   const debouncedDoRepl = useMemo(() => debounce(doRepl, 300), [doRepl])
 

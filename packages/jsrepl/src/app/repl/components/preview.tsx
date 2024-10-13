@@ -1,3 +1,4 @@
+import { useContext } from 'react'
 import { LucideEllipsisVertical, LucideRotateCw, LucideX } from 'lucide-react'
 import Resizable from '@/components/resizable'
 import { Button } from '@/components/ui/button'
@@ -10,18 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ReplStateContext } from '@/context/repl-state-context'
+import { UserStateContext } from '@/context/user-state-context'
+import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { cn } from '@/lib/utils'
-import { PreviewPosition, UserStoredState } from '@/types'
-
-type Props = {
-  pos: PreviewPosition
-  size: { width: number; height: number }
-  setSize: (size: { width: number; height: number }) => void
-  shown: boolean
-  toggle: (force?: boolean) => void
-  userState: UserStoredState
-  setUserState: React.Dispatch<React.SetStateAction<UserStoredState>>
-}
+import { PreviewPosition } from '@/types'
 
 const previewPositionOptions = [
   { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
@@ -29,16 +23,13 @@ const previewPositionOptions = [
   { value: PreviewPosition.AsideRight, label: 'Dock to right' },
 ]
 
-export default function ReplPreview({
-  pos,
-  size,
-  setSize,
-  shown,
-  toggle,
-  userState,
-  setUserState,
-}: Props) {
+export default function ReplPreview() {
   const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL
+
+  const { replState, setReplState } = useContext(ReplStateContext)!
+  const { userState, setUserState } = useContext(UserStateContext)!
+  const [size, setSize] = useReplPreviewSize({ userState })
+  const pos = userState.previewPos
 
   return (
     <div
@@ -46,7 +37,7 @@ export default function ReplPreview({
         pos === 'aside-right' && 'relative',
         pos === 'float-bottom-right' && 'absolute bottom-1 right-4 z-10',
         pos === 'float-top-right' && 'absolute right-4 top-1 z-10',
-        !shown && 'pointer-events-none !absolute !-left-full !right-auto opacity-0'
+        !replState.showPreview && 'pointer-events-none !absolute !-left-full !right-auto opacity-0'
       )}
     >
       {/* iframe must not be .sr-only or .hidden, otherwise timers will be throttled */}
@@ -113,7 +104,7 @@ export default function ReplPreview({
                 variant="ghost"
                 size="none"
                 className="text-secondary-foreground/60 h-6 w-6 p-0.5 ring-inset"
-                onClick={() => toggle(false)}
+                onClick={() => setReplState((prev) => ({ ...prev, showPreview: false }))}
               >
                 <LucideX size={18} />
               </Button>

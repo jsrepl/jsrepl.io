@@ -118,6 +118,7 @@ export type ModelDef = {
    */
   path: string
   content: string
+  visible: boolean
 }
 
 export type UserStoredState = {

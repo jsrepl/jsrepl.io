@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { useTheme } from 'next-themes'
 import {
-  LucideEllipsisVertical,
   LucideEye,
   LucideMoon,
   LucidePalette,
   LucideShare2,
   LucideSun,
+  LucideX,
 } from 'lucide-react'
 import ShareRepl from '@/components/share-repl'
 import { Button } from '@/components/ui/button'
@@ -21,44 +21,57 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SetReplStoredState } from '@/hooks/useReplStoredState'
+import { ReplInfoContext } from '@/context/repl-info-context'
+import { ReplStateContext } from '@/context/repl-state-context'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { type ReplInfo, type ReplStoredState, type UserStoredState } from '@/types'
 import HeaderBase from './header-base'
 
-export default function ReplHeader({
-  replState,
-  setReplState,
-  previewShown,
-  togglePreview,
-  replInfo,
-}: {
-  replState: ReplStoredState
-  setReplState: SetReplStoredState
-  userState: UserStoredState
-  setUserState: React.Dispatch<React.SetStateAction<UserStoredState>>
-  previewShown: boolean
-  togglePreview: (force?: boolean) => void
-  replInfo: ReplInfo | null
-}) {
+export default function ReplHeader() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
+  const { replState, setReplState } = useContext(ReplStateContext)!
+  const { replInfo } = useContext(ReplInfoContext)!
 
   const modelSwitcherOptions = useMemo(() => {
-    return Array.from(replState.models.values()).map((model) => {
-      const label = model.path.replace(/^\//, '')
-      return {
-        value: model.path,
-        label,
-        errorCount:
-          replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === model.path)
-            .length ?? 0,
-        warningCount:
-          replInfo?.warnings.filter((e) => e.location?.file && '/' + e.location.file === model.path)
-            .length ?? 0,
-      }
-    })
+    return Array.from(replState.models.values())
+      .filter((model) => model.visible)
+      .map((model) => {
+        const label = model.path.replace(/^\//, '')
+        return {
+          value: model.path,
+          label,
+          errorCount:
+            replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === model.path)
+              .length ?? 0,
+          warningCount:
+            replInfo?.warnings.filter(
+              (e) => e.location?.file && '/' + e.location.file === model.path
+            ).length ?? 0,
+        }
+      })
   }, [replState.models, replInfo])
+
+  const closeModelTab = useCallback(
+    (path: string) => {
+      setReplState((prev) => {
+        const models = new Map(
+          prev.models.set(path, {
+            ...prev.models.get(path)!,
+            visible: false,
+          })
+        )
+
+        const activeModel = Array.from(models.values()).find((model) => model.visible)?.path ?? ''
+
+        return {
+          ...prev,
+          models,
+          activeModel,
+        }
+      })
+    },
+    [setReplState]
+  )
 
   return (
     <HeaderBase>
@@ -69,7 +82,7 @@ export default function ReplHeader({
               variant="none"
               size="none"
               data-active={replState.activeModel === modelOption.value}
-              className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer px-4 py-2 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner"
+              className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer mr-4 px-4 py-2 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner"
               onClick={() => setReplState((prev) => ({ ...prev, activeModel: modelOption.value }))}
             >
               <span
@@ -83,22 +96,14 @@ export default function ReplHeader({
               </span>
             </Button>
 
-            {false && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="none"
-                    className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px cursor-default self-center p-0.5 aria-expanded:visible peer-data-[active=true]:visible"
-                  >
-                    <LucideEllipsisVertical size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>{/* TODO */}</DropdownMenuLabel>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <Button
+              variant="ghost"
+              size="none"
+              className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px self-center p-0.5 group-hover:visible aria-expanded:visible peer-data-[active=true]:visible"
+              onClick={() => closeModelTab(modelOption.value)}
+            >
+              <LucideX size={16} />
+            </Button>
           </span>
         ))}
       </div>
@@ -106,10 +111,10 @@ export default function ReplHeader({
       <div className="ml-auto flex items-center self-center">
         <Button
           size="icon-sm"
-          variant={previewShown ? 'secondary' : 'ghost'}
+          variant={replState.showPreview ? 'secondary' : 'ghost'}
           className="text-secondary-foreground/60 mr-1"
           title="Toggle preview window"
-          onClick={() => togglePreview()}
+          onClick={() => setReplState((prev) => ({ ...prev, showPreview: !prev.showPreview }))}
         >
           <LucideEye size={20} />
         </Button>

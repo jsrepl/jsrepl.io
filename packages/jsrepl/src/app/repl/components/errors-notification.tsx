@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { LucideCircleAlert, LucideTriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -6,9 +6,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { type ReplInfo } from '@/types'
+import { ReplInfoContext } from '@/context/repl-info-context'
 
-export function ErrorsNotification({ replInfo }: { replInfo: ReplInfo | null }) {
+export function ErrorsNotification() {
+  const { replInfo } = useContext(ReplInfoContext)!
+
   return (
     <>
       {replInfo && !replInfo.ok && (

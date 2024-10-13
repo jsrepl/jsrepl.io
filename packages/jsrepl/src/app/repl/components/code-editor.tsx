@@ -1,65 +1,98 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import { ReplStateContext } from '@/context/repl-state-context'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { createCodeEditorModel } from '@/lib/code-editor-models/code-editor-model-factory'
+import { deepEqual } from '@/lib/equal'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { type ModelDef, type ReplInfo } from '@/types'
+import { ModelDef } from '@/types'
 import styles from './code-editor.module.css'
 
 type Props = {
   className?: string
-  modelDefinitions: Map<string, ModelDef>
-  activeModel: string
-  onModelChange: (model: CodeEditorModel) => void
-  onRepl: (replInfo: ReplInfo) => void
 }
 
-export default function CodeEditor({
-  className,
-  modelDefinitions,
-  activeModel,
-  onModelChange,
-  onRepl,
-}: Props) {
+export default function CodeEditor({ className }: Props) {
+  console.log('CodeEditor render')
+
+  const { replState, saveReplState } = useContext(ReplStateContext)!
+
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const updateDecorationsRef = useRef(() => {})
+  const modelDefsSliceRef = useRef<Pick<ModelDef, 'path' | 'content'>[]>([])
+  const modelsDisposables = useRef<(() => void)[]>([])
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
 
+  if (
+    !deepEqual(
+      Array.from(replState.models.values()).map((modelDef) => ({
+        path: modelDef.path,
+        content: modelDef.content,
+      })),
+      modelDefsSliceRef.current.map((modelDef) => ({
+        path: modelDef.path,
+        content: modelDef.content,
+      }))
+    )
+  ) {
+    modelDefsSliceRef.current = Array.from(replState.models.values())
+  }
+
+  const modelDefsSlice = modelDefsSliceRef.current
+
   const models = useMemo(() => {
+    console.log('models useMemo')
+
+    modelsDisposables.current.forEach((disposable) => disposable())
+    modelsDisposables.current = []
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
 
-    modelDefinitions.forEach((modelDef) => {
+    modelDefsSlice.forEach((modelDef) => {
       const model = createCodeEditorModel(modelDef)
       if (model) {
         map.set(modelDef.path, model)
+        modelsDisposables.current.push(() => model.monacoModel.dispose())
       }
     })
 
     return map
-  }, [modelDefinitions])
+  }, [modelDefsSlice])
+
+  useEffect(() => {
+    return () => {
+      modelsDisposables.current.forEach((disposable) => disposable())
+    }
+  }, [])
 
   useEffect(() => {
     setupMonaco()
     setupTailwindCSS()
   }, [])
 
-  useEffect(() => {
-    return () => {
-      models.forEach((model) => {
-        model.monacoModel.dispose()
-      })
-    }
-  }, [models])
+  const onModelChange = useCallback(
+    (editorModel: InstanceType<typeof CodeEditorModel>) => {
+      console.log('onModelChange', editorModel)
+
+      const path = editorModel.monacoModel.uri.path
+      const modelDef = replState.models.get(path)
+      if (modelDef) {
+        modelDef.content = editorModel.getValue()
+      }
+
+      saveReplState()
+    },
+    [replState.models, saveReplState]
+  )
 
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {
@@ -74,8 +107,8 @@ export default function CodeEditor({
   }, [models, onModelChange])
 
   const currentTextModel = useMemo(
-    () => models.get(activeModel)?.monacoModel ?? null,
-    [models, activeModel]
+    () => models.get(replState.activeModel)?.monacoModel ?? null,
+    [models, replState.activeModel]
   )
 
   useEffect(() => {
@@ -110,6 +143,7 @@ export default function CodeEditor({
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {
+      console.log('set theme is loaded')
       monaco.editor.setTheme(theme.id)
       setIsThemeLoaded(true)
     })
@@ -126,11 +160,7 @@ export default function CodeEditor({
 
   useCodeEditorTypescript(editorRef, models)
 
-  const { updateDecorations } = useCodeEditorRepl(editorRef, models, {
-    theme,
-    onRepl,
-  })
-
+  const { updateDecorations } = useCodeEditorRepl(editorRef, models, { theme })
   updateDecorationsRef.current = updateDecorations
 
   return (

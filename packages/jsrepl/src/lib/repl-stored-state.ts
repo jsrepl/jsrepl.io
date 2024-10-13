@@ -30,6 +30,7 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
       arr = models.map((model) => ({
         ...model,
         path: 'uri' in model ? fixPath(model.uri as string) : model.path,
+        visible: model.visible ?? true,
       }))
     } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
       // Old format
@@ -38,16 +39,19 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
           path: '/index.tsx',
           // @ts-expect-error: Old format
           content: models.tsx,
+          visible: true,
         },
         {
           path: '/index.html',
           // @ts-expect-error: Old format
           content: models.html,
+          visible: true,
         },
         {
           path: '/index.css',
           // @ts-expect-error: Old format
           content: models.css,
+          visible: true,
         },
       ]
     } else {
@@ -135,6 +139,7 @@ function getDefaultModels(): ReplStoredState['models'] {
       {
         path: '/index.tsx',
         content: getDefaultTsx(),
+        visible: true,
       },
     ],
     [
@@ -142,6 +147,7 @@ function getDefaultModels(): ReplStoredState['models'] {
       {
         path: '/index.html',
         content: getDefaultHtml(),
+        visible: true,
       },
     ],
     [
@@ -149,6 +155,7 @@ function getDefaultModels(): ReplStoredState['models'] {
       {
         path: '/index.css',
         content: getDefaultCss(),
+        visible: true,
       },
     ],
     [
@@ -156,6 +163,7 @@ function getDefaultModels(): ReplStoredState['models'] {
       {
         path: '/tailwind.config.ts',
         content: defaultTailwindConfigTs,
+        visible: false,
       },
     ],
   ])

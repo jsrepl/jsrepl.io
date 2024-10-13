@@ -6,13 +6,10 @@ import { HtmlCodeEditorModel } from './html-code-editor-model'
 import { JsCodeEditorModel } from './js-code-editor-model'
 
 export function createCodeEditorModel(
-  modelDef: ModelDef
+  modelDef: Pick<ModelDef, 'path' | 'content'>
 ): InstanceType<typeof CodeEditorModel> | null {
-  const monacoModel = monaco.editor.createModel(
-    modelDef.content,
-    getLanguage(modelDef),
-    monaco.Uri.parse('file://' + modelDef.path)
-  )
+  const uri = monaco.Uri.parse('file://' + modelDef.path)
+  const monacoModel = monaco.editor.createModel(modelDef.content, getLanguage(modelDef.path), uri)
 
   let model: InstanceType<typeof CodeEditorModel> | null
 
@@ -30,8 +27,8 @@ export function createCodeEditorModel(
   return model
 }
 
-function getLanguage(model: ModelDef): string {
-  const ext = model.path.split('.').pop()
+function getLanguage(path: string): string {
+  const ext = path.split('.').pop()
   if (!ext) {
     return 'plaintext'
   }

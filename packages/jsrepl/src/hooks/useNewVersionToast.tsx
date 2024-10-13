@@ -1,15 +1,10 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
+import React, { useContext, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import { UserStateContext } from '@/context/user-state-context'
 import { parseVersion } from '@/lib/semver'
-import type { UserStoredState } from '@/types'
 
-export function useNewVersionToast({
-  userState,
-  setUserState,
-}: {
-  userState: UserStoredState
-  setUserState: Dispatch<SetStateAction<UserStoredState>>
-}) {
+export function useNewVersionToast() {
+  const { userState, setUserState } = useContext(UserStateContext)!
   const userVersionRef = useRef(userState.version)
 
   useEffect(() => {
