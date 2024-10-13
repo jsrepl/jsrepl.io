@@ -14,11 +14,7 @@ import { type ReplInfo, type ReplPayload, type Theme } from '@/types'
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>,
-  {
-    theme,
-    onRepl,
-    onReplBodyMutation,
-  }: { theme: Theme; onRepl: (replInfo: ReplInfo) => void; onReplBodyMutation: () => void }
+  { theme, onRepl }: { theme: Theme; onRepl: (replInfo: ReplInfo) => void }
 ) {
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
@@ -86,12 +82,8 @@ export default function useCodeEditorRepl(
         //models,
         debouncedUpdateDecorations,
       })
-
-      if (event.data.type === 'body-mutation') {
-        onReplBodyMutation()
-      }
     },
-    [payloadMap, allPayloads, debouncedUpdateDecorations, onReplBodyMutation]
+    [payloadMap, allPayloads, debouncedUpdateDecorations]
   )
 
   useEffect(() => {

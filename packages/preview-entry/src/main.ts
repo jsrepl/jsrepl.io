@@ -100,30 +100,10 @@ function onUpdateThemeMessage(data: UpdateThemeMessageData) {
 function setup(previewWindow: PreviewWindow, token: number) {
   setupRepl(previewWindow, token)
   setupConsole(previewWindow)
-
-  if (previewWindow.document.body.hasChildNodes()) {
-    bodyMutation(token)
-  } else {
-    const observer = new previewWindow.MutationObserver(() => {
-      observer.disconnect()
-      bodyMutation(token)
-    })
-
-    observer.observe(previewWindow.document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-    })
-  }
-
   consoleLogRepl('debug', `%c REPL begin (${token})`, 'font-weight: bold;')
 }
 
 function afterJsScript(_window: PreviewWindow, token: number) {
   postMessage(token, { type: 'script-complete' })
   afterJsScriptDeferred?.resolve()
-}
-
-function bodyMutation(token: number) {
-  postMessage(token, { type: 'body-mutation' })
 }

@@ -4,9 +4,9 @@ import React, { useMemo } from 'react'
 import { useTheme } from 'next-themes'
 import {
   LucideEllipsisVertical,
+  LucideEye,
   LucideMoon,
   LucidePalette,
-  LucideRotateCw,
   LucideShare2,
   LucideSun,
 } from 'lucide-react'
@@ -24,14 +24,12 @@ import {
 import { SetReplStoredState } from '@/hooks/useReplStoredState'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { PreviewPosition, type ReplInfo, type ReplStoredState, type UserStoredState } from '@/types'
+import { type ReplInfo, type ReplStoredState, type UserStoredState } from '@/types'
 import HeaderBase from './header-base'
 
 export default function ReplHeader({
   replState,
   setReplState,
-  userState,
-  setUserState,
   previewShown,
   togglePreview,
   replInfo,
@@ -61,17 +59,6 @@ export default function ReplHeader({
       }
     })
   }, [replState.models, replInfo])
-
-  const previewPositionOptions = [
-    { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
-    { value: PreviewPosition.FloatBottomRight, label: 'Floating: bottom right' },
-    { value: PreviewPosition.AsideRight, label: 'Dock to right' },
-  ]
-
-  function restartRepl() {
-    const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement
-    previewIframe.src += ''
-  }
 
   return (
     <HeaderBase>
@@ -116,51 +103,17 @@ export default function ReplHeader({
         ))}
       </div>
 
-      <div className="ml-10 flex max-[840px]:ml-2">
-        <span className="group relative inline-flex items-center">
-          <Button
-            variant="none"
-            size="none"
-            data-active={previewShown}
-            className="data-[active=true]:border-border data-[active=true]:bg-editor-background group peer border border-transparent py-1.5 pl-4 pr-8 before:absolute before:inset-0 data-[active=true]:shadow-inner"
-            onClick={() => togglePreview()}
-          >
-            <span className="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
-              Preview
-            </span>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="none"
-                className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px cursor-default self-center p-0.5 aria-expanded:visible peer-data-[active=true]:visible"
-              >
-                <LucideEllipsisVertical size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Preview Position</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup
-                value={userState.previewPos}
-                onValueChange={(value) =>
-                  setUserState((prev) => ({ ...prev, previewPos: value as PreviewPosition }))
-                }
-              >
-                {previewPositionOptions.map((option) => (
-                  <DropdownMenuRadioItem key={option.value} value={option.value}>
-                    {option.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </span>
-      </div>
-
       <div className="ml-auto flex items-center self-center">
+        <Button
+          size="icon-sm"
+          variant={previewShown ? 'secondary' : 'ghost'}
+          className="text-secondary-foreground/60 mr-1"
+          title="Toggle preview window"
+          onClick={() => togglePreview()}
+        >
+          <LucideEye size={20} />
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -189,16 +142,6 @@ export default function ReplHeader({
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          className="text-secondary-foreground/60"
-          title="Restart REPL"
-          onClick={() => restartRepl()}
-        >
-          <LucideRotateCw size={18} />
-        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

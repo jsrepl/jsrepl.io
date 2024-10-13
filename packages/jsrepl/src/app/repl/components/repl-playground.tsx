@@ -24,13 +24,7 @@ export default function ReplPlayground() {
 
   const previewPos = userState.previewPos
   const [previewSize, setPreviewSize] = useReplPreviewSize({ userState })
-  const [
-    previewShown,
-    togglePreview,
-    previewMightBeHidden,
-    onPreviewRepl,
-    onPreviewReplBodyMutation,
-  ] = useReplPreviewShown({
+  const [previewShown, togglePreview] = useReplPreviewShown({
     replState,
     setReplState,
   })
@@ -48,13 +42,9 @@ export default function ReplPlayground() {
     [replState.models, saveReplState]
   )
 
-  const onRepl = useCallback(
-    (replInfo: ReplInfo) => {
-      setReplInfo(replInfo)
-      onPreviewRepl()
-    },
-    [onPreviewRepl]
-  )
+  const onRepl = useCallback((replInfo: ReplInfo) => {
+    setReplInfo(replInfo)
+  }, [])
 
   return (
     <>
@@ -81,7 +71,6 @@ export default function ReplPlayground() {
             activeModel={replState.activeModel}
             onModelChange={onModelChange}
             onRepl={onRepl}
-            onReplBodyMutation={onPreviewReplBodyMutation}
           />
 
           <Preview
@@ -89,8 +78,9 @@ export default function ReplPlayground() {
             size={previewSize}
             setSize={setPreviewSize}
             shown={previewShown}
-            mightBeHidden={previewMightBeHidden}
             toggle={togglePreview}
+            userState={userState}
+            setUserState={setUserState}
           />
         </div>
 

@@ -18,7 +18,6 @@ type Props = {
   activeModel: string
   onModelChange: (model: CodeEditorModel) => void
   onRepl: (replInfo: ReplInfo) => void
-  onReplBodyMutation: () => void
 }
 
 export default function CodeEditor({
@@ -27,7 +26,6 @@ export default function CodeEditor({
   activeModel,
   onModelChange,
   onRepl,
-  onReplBodyMutation,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
@@ -131,7 +129,6 @@ export default function CodeEditor({
   const { updateDecorations } = useCodeEditorRepl(editorRef, models, {
     theme,
     onRepl,
-    onReplBodyMutation,
   })
 
   updateDecorationsRef.current = updateDecorations

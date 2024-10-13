@@ -5,11 +5,7 @@ const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 
 export function postMessage(
   token: number,
-  data:
-    | { type: 'repl'; payload: ReplPayload }
-    | { type: 'ready' }
-    | { type: 'script-complete' }
-    | { type: 'body-mutation' }
+  data: { type: 'repl'; payload: ReplPayload } | { type: 'ready' } | { type: 'script-complete' }
 ) {
   try {
     window.top!.postMessage(
