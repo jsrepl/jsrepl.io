@@ -33,39 +33,35 @@ export default function ReplHeader() {
   const { replInfo } = useContext(ReplInfoContext)!
 
   const modelSwitcherOptions = useMemo(() => {
-    return Array.from(replState.models.values())
-      .filter((model) => model.visible)
-      .map((model) => {
-        const label = model.path.replace(/^\//, '')
-        return {
-          value: model.path,
-          label,
-          errorCount:
-            replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === model.path)
-              .length ?? 0,
-          warningCount:
-            replInfo?.warnings.filter(
-              (e) => e.location?.file && '/' + e.location.file === model.path
-            ).length ?? 0,
-        }
-      })
-  }, [replState.models, replInfo])
+    return replState.openedModels.map((path) => {
+      const label = path.replace(/^\//, '')
+      return {
+        value: path,
+        label,
+        errorCount:
+          replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === path)
+            .length ?? 0,
+        warningCount:
+          replInfo?.warnings.filter((e) => e.location?.file && '/' + e.location.file === path)
+            .length ?? 0,
+      }
+    })
+  }, [replState.openedModels, replInfo])
 
   const closeModelTab = useCallback(
     (path: string) => {
       setReplState((prev) => {
-        const models = new Map(
-          prev.models.set(path, {
-            ...prev.models.get(path)!,
-            visible: false,
-          })
-        )
+        const index = prev.openedModels.indexOf(path)
+        if (index === -1) {
+          return prev
+        }
 
-        const activeModel = Array.from(models.values()).find((model) => model.visible)?.path ?? ''
+        const openedModels = prev.openedModels.filter((p) => p !== path)
+        const activeModel = openedModels[index] ?? openedModels[openedModels.length - 1] ?? ''
 
         return {
           ...prev,
-          models,
+          openedModels,
           activeModel,
         }
       })

@@ -1,88 +1,70 @@
 import { useRouter, useSearchParams } from 'next/navigation'
+import * as ReplFS from '@/lib/repl-fs'
 import { defaultTailwindConfigTs } from '@/lib/tailwind-configs'
 import { atou, utoa } from '@/lib/zip'
-import type { ModelDef, ReplStoredState } from '@/types'
+import type { ReplStoredState } from '@/types'
 
 const SCHEMA_VERSION = '1'
 
+type OldModelDef = {
+  /**
+   * Path is relative to the root of the project.
+   * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
+   */
+  path: string
+  content: string
+}
+
 export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStoredState {
-  const modelsQP = searchParams.get('i')
-  const activeModelQP = searchParams.get('c')
-  const showPreviewQP = searchParams.get('p')
-  const versionQP = searchParams.get('v')
-
-  let models: Array<ModelDef> | null = null
-
-  if (typeof modelsQP === 'string') {
-    try {
-      models = deserialize(modelsQP) as Array<ModelDef>
-    } catch (e) {
-      console.error('load error', e)
-    }
-  }
-
-  const state = getDefaultState()
-
-  if (models) {
-    let arr: Array<ModelDef>
-
-    if (Array.isArray(models)) {
-      arr = models.map((model) => ({
-        ...model,
-        path: 'uri' in model ? fixPath(model.uri as string) : model.path,
-        visible: model.visible ?? true,
-      }))
-    } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
-      // Old format
-      arr = [
-        {
-          path: '/index.tsx',
-          // @ts-expect-error: Old format
-          content: models.tsx,
-          visible: true,
-        },
-        {
-          path: '/index.html',
-          // @ts-expect-error: Old format
-          content: models.html,
-          visible: true,
-        },
-        {
-          path: '/index.css',
-          // @ts-expect-error: Old format
-          content: models.css,
-          visible: true,
-        },
-      ]
-    } else {
-      arr = []
-    }
-
-    state.models = new Map(arr.map((model) => [model.path, model]))
+  try {
+    const versionQP = searchParams.get('v')
+    const state = getDefaultState()
 
     if (!versionQP) {
-      const indexhtml = state.models.get('/index.html')!
-      indexhtml.content += `\n\n<script type="module" src="/index.tsx"></script>`
-
-      const indextsx = state.models.get('/index.tsx')!
-      indextsx.content = `import './index.css'\n\n${indextsx.content}`
+      loadSchemaV0(searchParams, state)
+    } else if (versionQP === SCHEMA_VERSION) {
+      loadSchemaCurrent(searchParams, state)
     }
+
+    return state
+  } catch (e) {
+    console.error('load error', e)
+    return getDefaultState()
+  }
+}
+
+function loadSchemaCurrent(
+  searchParams: ReturnType<typeof useSearchParams>,
+  state: ReplStoredState
+) {
+  const fsQP = searchParams.get('f')
+  const openedModelsQP = searchParams.get('o')
+  const activeModelQP = searchParams.get('a')
+  const showPreviewQP = searchParams.get('p')
+
+  if (typeof fsQP === 'string') {
+    state.fs = ReplFS.FS.fromJSON(deserialize(fsQP) as ReplFS.FSJson)
+  }
+
+  if (typeof openedModelsQP === 'string') {
+    state.openedModels = deserialize(openedModelsQP) as string[]
   }
 
   if (typeof activeModelQP === 'string') {
-    state.activeModel = fixPath(activeModelQP)
+    state.activeModel = activeModelQP
   }
 
   if (typeof showPreviewQP === 'string') {
     state.showPreview = showPreviewQP === '1'
   }
-
-  return state
 }
 
-// Convert old paths to new paths
-function fixPath(path: string): string {
-  const oldMap = {
+function loadSchemaV0(searchParams: ReturnType<typeof useSearchParams>, state: ReplStoredState) {
+  const activeModelQP = searchParams.get('c')
+  const showPreviewQP = searchParams.get('p')
+  const modelsQP = searchParams.get('i')
+
+  const oldPathMap: Record<string, string> = {
     tsx: '/index.tsx',
     html: '/index.html',
     css: '/index.css',
@@ -96,7 +78,74 @@ function fixPath(path: string): string {
     'tailwind.config.ts': '/tailwind.config.ts',
   }
 
-  return oldMap[path as keyof typeof oldMap] ?? path
+  let models: Array<OldModelDef> | { tsx: string; html: string; css: string } | null = null
+
+  if (typeof modelsQP === 'string') {
+    models = deserialize(modelsQP) as
+      | Array<OldModelDef>
+      | { tsx: string; html: string; css: string }
+  }
+
+  if (Array.isArray(models)) {
+    models = models.map((model) => ({
+      ...model,
+      path: 'uri' in model ? oldPathMap[model.uri as string] ?? model.uri : model.path,
+    }))
+  } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
+    // Old format
+    models = [
+      {
+        path: '/index.tsx',
+        content: models.tsx,
+      },
+      {
+        path: '/index.html',
+        content: models.html,
+      },
+      {
+        path: '/index.css',
+        content: models.css,
+      },
+    ]
+  } else {
+    models = null
+  }
+
+  if (models) {
+    const indextsx = models.find((model) => model.path === '/index.tsx')!
+    indextsx.content = `import './index.css'\n\n${indextsx.content}`
+
+    const indexhtml = models.find((model) => model.path === '/index.html')!
+    indexhtml.content += `\n\n<script type="module" src="/index.tsx"></script>`
+
+    const indexcss = models.find((model) => model.path === '/index.css')!
+
+    state.fs = ReplFS.FS.fromJSON({
+      'index.tsx': {
+        content: indextsx.content,
+        kind: ReplFS.Kind.File,
+      },
+      'index.html': {
+        content: indexhtml.content,
+        kind: ReplFS.Kind.File,
+      },
+      'index.css': {
+        content: indexcss.content,
+        kind: ReplFS.Kind.File,
+      },
+    })
+
+    state.activeModel = '/index.tsx'
+    state.openedModels = ['/index.tsx', '/index.html', '/index.css']
+  }
+
+  if (typeof activeModelQP === 'string') {
+    state.activeModel = oldPathMap[activeModelQP] ?? activeModelQP
+  }
+
+  if (typeof showPreviewQP === 'string') {
+    state.showPreview = showPreviewQP === '1'
+  }
 }
 
 export function save(state: ReplStoredState, router: ReturnType<typeof useRouter>): void {
@@ -110,10 +159,14 @@ export function save(state: ReplStoredState, router: ReturnType<typeof useRouter
 }
 
 export function toQueryParams(state: ReplStoredState): Record<string, string> {
-  const { activeModel, showPreview, models } = state
-  const modelsArr = Array.from(models.values())
-  const modelsQP = serialize(modelsArr)
-  return { i: modelsQP, c: activeModel, p: showPreview ? '1' : '0', v: SCHEMA_VERSION }
+  const { activeModel, showPreview, fs, openedModels } = state
+  return {
+    f: serialize(fs.toJSON()),
+    o: serialize(openedModels),
+    a: activeModel,
+    p: showPreview ? '1' : '0',
+    v: SCHEMA_VERSION,
+  }
 }
 
 function deserialize(serialized: string): unknown {
@@ -126,47 +179,32 @@ function serialize(storedState: unknown): string {
 
 function getDefaultState(): ReplStoredState {
   return {
-    models: getDefaultModels(),
-    activeModel: '/index.tsx',
+    fs: getDefaultFs(),
+    openedModels: ['/index.ts', '/index.html', '/index.css'],
+    activeModel: '/index.ts',
     showPreview: true,
   }
 }
 
-function getDefaultModels(): ReplStoredState['models'] {
-  return new Map([
-    [
-      '/index.tsx',
-      {
-        path: '/index.tsx',
-        content: getDefaultTsx(),
-        visible: true,
-      },
-    ],
-    [
-      '/index.html',
-      {
-        path: '/index.html',
-        content: getDefaultHtml(),
-        visible: true,
-      },
-    ],
-    [
-      '/index.css',
-      {
-        path: '/index.css',
-        content: getDefaultCss(),
-        visible: true,
-      },
-    ],
-    [
-      '/tailwind.config.ts',
-      {
-        path: '/tailwind.config.ts',
-        content: defaultTailwindConfigTs,
-        visible: false,
-      },
-    ],
-  ])
+function getDefaultFs(): ReplStoredState['fs'] {
+  return ReplFS.FS.fromJSON({
+    'index.ts': {
+      content: getDefaultTs(),
+      kind: ReplFS.Kind.File,
+    },
+    'index.html': {
+      content: getDefaultHtml(),
+      kind: ReplFS.Kind.File,
+    },
+    'index.css': {
+      content: getDefaultCss(),
+      kind: ReplFS.Kind.File,
+    },
+    'tailwind.config.ts': {
+      content: defaultTailwindConfigTs,
+      kind: ReplFS.Kind.File,
+    },
+  })
 }
 
 function getDefaultHtml(): string {
@@ -201,7 +239,7 @@ body {
 `
 }
 
-function getDefaultTsx(): string {
+function getDefaultTs(): string {
   return `import { format } from 'date-fns';
 import './index.css';
 

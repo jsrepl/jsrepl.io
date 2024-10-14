@@ -1,5 +1,6 @@
 import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
+import * as ReplFS from '@/lib/repl-fs'
 
 export enum ReplPayloadCustomKind {
   DomNode = 'dom-node', // non-cloneable
@@ -106,22 +107,22 @@ type ReplNonPromiseFields = {
 }
 
 export type ReplStoredState = {
-  models: Map<string, ModelDef>
+  fs: ReplFS.FS
+  /**
+   * Array of absolute paths to the opened models. Paths start with '/'.
+   */
+  openedModels: string[]
+  /**
+   * Absolute path to the active model, starting with '/'.
+   */
   activeModel: string
   showPreview: boolean
 }
 
-export type ModelDef = {
-  /**
-   * Path is relative to the root of the project.
-   * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
-   */
-  path: string
-  content: string
-  visible: boolean
-}
-
 export type UserStoredState = {
+  /**
+   * Last used App version. It used to show New Version toast.
+   */
   version: string | undefined
   previewPos: PreviewPosition
 }

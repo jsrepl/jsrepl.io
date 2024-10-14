@@ -1,55 +1,19 @@
 import type { ReplStoredState } from '@/types/repl.types'
 
 export function getReplTitle(replStoredState: ReplStoredState): string {
+  let title: string | undefined
+
   try {
-    // TODO: use index.(ts|tsx|js|jsx) or first js/ts model
-    // TODO: or better rewrite/simplify it to use separate field in ReplStoredState?
-    const tsx = replStoredState.models.get('/index.tsx')?.content ?? ''
-    const tsxFirstNonEmptyLine = tsx.match(/.+/)?.[0].trim() ?? ''
-
-    if (tsxFirstNonEmptyLine.startsWith('//')) {
-      const comment = tsx
-        .match(/(\/\/[^\n]*\n?)+/)?.[0]
-        .replace(/^\s*\/\/\s*/, '')
-        .replace(/\n\s*\/\//, '')
-        .trim()
-      if (comment) {
-        return transformTitle(comment)
-      }
-    }
-
-    if (tsxFirstNonEmptyLine.startsWith('/*')) {
-      const comment = tsx
-        .match(/\/\*([\s\S]*?)\*\//)?.[1]
-        .replace(/\n(\s+\*)?/g, '')
-        .trim()
-      if (comment) {
-        return transformTitle(comment)
-      }
-    }
-
-    if (tsxFirstNonEmptyLine) {
-      return transformTitle(tsxFirstNonEmptyLine)
-    }
-
-    const html = replStoredState.models.get('/index.html')?.content ?? ''
-    const htmlFirstNonEmptyLine = html.match(/.+/)?.[0].trim() ?? ''
-
-    if (htmlFirstNonEmptyLine.startsWith('<!--')) {
-      const comment = html.match(/<!--([\s\S]*?)-->/)?.[1].trim()
-      if (comment) {
-        return transformTitle(comment)
-      }
-    }
-
-    if (htmlFirstNonEmptyLine) {
-      return transformTitle(htmlFirstNonEmptyLine)
+    const readme = replStoredState.fs.getFile('/README.md')
+    title = readme?.content.match(/^#+\s+(.+)/)?.[1]
+    if (title) {
+      title = transformTitle(title)
     }
   } catch {
     // ignore
   }
 
-  return 'JSREPL'
+  return title || 'JSREPL'
 }
 
 function transformTitle(title: string) {

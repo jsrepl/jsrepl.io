@@ -1,10 +1,13 @@
 import type * as Monaco from 'monaco-editor'
+import * as ReplFS from '@/lib/repl-fs'
 
-export abstract class CodeEditorModel {
+export class CodeEditorModel {
+  file: ReplFS.File
   monacoModel: Monaco.editor.ITextModel
   #value: string | null = null
 
-  constructor(model: Monaco.editor.ITextModel) {
+  constructor(file: ReplFS.File, model: Monaco.editor.ITextModel) {
+    this.file = file
     this.monacoModel = model
 
     this.monacoModel.onDidChangeContent(() => {

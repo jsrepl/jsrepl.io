@@ -6,12 +6,11 @@ import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
 import { createCodeEditorModel } from '@/lib/code-editor-models/code-editor-model-factory'
-import { deepEqual } from '@/lib/equal'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
+import * as ReplFS from '@/lib/repl-fs'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { ModelDef } from '@/types'
 import styles from './code-editor.module.css'
 
 type Props = {
@@ -26,29 +25,11 @@ export default function CodeEditor({ className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const updateDecorationsRef = useRef(() => {})
-  const modelDefsSliceRef = useRef<Pick<ModelDef, 'path' | 'content'>[]>([])
   const modelsDisposables = useRef<(() => void)[]>([])
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
-
-  if (
-    !deepEqual(
-      Array.from(replState.models.values()).map((modelDef) => ({
-        path: modelDef.path,
-        content: modelDef.content,
-      })),
-      modelDefsSliceRef.current.map((modelDef) => ({
-        path: modelDef.path,
-        content: modelDef.content,
-      }))
-    )
-  ) {
-    modelDefsSliceRef.current = Array.from(replState.models.values())
-  }
-
-  const modelDefsSlice = modelDefsSliceRef.current
 
   const models = useMemo(() => {
     console.log('models useMemo')
@@ -57,16 +38,16 @@ export default function CodeEditor({ className }: Props) {
     modelsDisposables.current = []
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
 
-    modelDefsSlice.forEach((modelDef) => {
-      const model = createCodeEditorModel(modelDef)
-      if (model) {
-        map.set(modelDef.path, model)
+    replState.fs.walk('/', (path, entry) => {
+      if (entry.kind === ReplFS.Kind.File) {
+        const model = createCodeEditorModel({ path, file: entry })
+        map.set(path, model)
         modelsDisposables.current.push(() => model.monacoModel.dispose())
       }
     })
 
     return map
-  }, [modelDefsSlice])
+  }, [replState.fs])
 
   useEffect(() => {
     return () => {
@@ -82,16 +63,10 @@ export default function CodeEditor({ className }: Props) {
   const onModelChange = useCallback(
     (editorModel: InstanceType<typeof CodeEditorModel>) => {
       console.log('onModelChange', editorModel)
-
-      const path = editorModel.monacoModel.uri.path
-      const modelDef = replState.models.get(path)
-      if (modelDef) {
-        modelDef.content = editorModel.getValue()
-      }
-
+      editorModel.file.content = editorModel.getValue()
       saveReplState()
     },
-    [replState.models, saveReplState]
+    [saveReplState]
   )
 
   useEffect(() => {

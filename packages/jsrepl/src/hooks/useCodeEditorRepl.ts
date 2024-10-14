@@ -8,7 +8,7 @@ import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model
 import { consoleLogRepl } from '@/lib/console-utils'
 import { createDecorations } from '@/lib/repl-decorations'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
-import { dispose as disposeSendRepl, sendRepl } from '@/lib/repl/send-repl'
+import { sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
 import { type ReplPayload, type Theme } from '@/types'
 
@@ -96,7 +96,6 @@ export default function useCodeEditorRepl(
   useEffect(() => {
     return () => {
       decorationsDisposable.current?.()
-      disposeSendRepl()
     }
   }, [])
 

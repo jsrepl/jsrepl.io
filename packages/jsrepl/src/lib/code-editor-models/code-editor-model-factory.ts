@@ -1,29 +1,17 @@
 import * as monaco from 'monaco-editor'
-import type { ModelDef } from '@/types'
+import * as ReplFS from '@/lib/repl-fs'
 import { CodeEditorModel } from './code-editor-model'
-import { CssCodeEditorModel } from './css-code-editor-model'
-import { HtmlCodeEditorModel } from './html-code-editor-model'
-import { JsCodeEditorModel } from './js-code-editor-model'
 
-export function createCodeEditorModel(
-  modelDef: Pick<ModelDef, 'path' | 'content'>
-): InstanceType<typeof CodeEditorModel> | null {
-  const uri = monaco.Uri.parse('file://' + modelDef.path)
-  const monacoModel = monaco.editor.createModel(modelDef.content, getLanguage(modelDef.path), uri)
-
-  let model: InstanceType<typeof CodeEditorModel> | null
-
-  if (monacoModel.getLanguageId() === 'typescript') {
-    model = new JsCodeEditorModel(monacoModel)
-  } else if (monacoModel.getLanguageId() === 'html') {
-    model = new HtmlCodeEditorModel(monacoModel)
-  } else if (monacoModel.getLanguageId() === 'css') {
-    model = new CssCodeEditorModel(monacoModel)
-  } else {
-    console.error('Unsupported model', modelDef)
-    model = null
-  }
-
+export function createCodeEditorModel({
+  path,
+  file,
+}: {
+  path: string
+  file: ReplFS.File
+}): InstanceType<typeof CodeEditorModel> {
+  const uri = monaco.Uri.parse('file://' + path)
+  const monacoModel = monaco.editor.createModel(file.content, getLanguage(path), uri)
+  const model = new CodeEditorModel(file, monacoModel)
   return model
 }
 
