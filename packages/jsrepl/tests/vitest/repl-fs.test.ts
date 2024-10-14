@@ -1,6 +1,5 @@
-// packages/jsrepl/src/types/repl-fs.test.ts
 import { describe, expect, it } from 'vitest'
-import { FS, Kind } from '../../src/lib/repl-fs'
+import { FS, Kind } from '@/lib/repl-fs'
 
 describe('FS', () => {
   it('should create a new file system', () => {

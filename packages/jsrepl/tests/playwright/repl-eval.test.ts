@@ -1,29 +1,28 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
+import * as ReplFS from '@/lib/repl-fs'
 import { assertReplLines, monacoLocator, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
   await visitPlayground(page, {
+    openedModels: ['/test.ts'],
     activeModel: '/test.ts',
     showPreview: false,
-    models: new Map([
-      [
-        '/test.ts',
-        {
-          path: '/test.ts',
-          content: dedent`
-              const n = 1;
-              const m = n + 2;
+    fs: ReplFS.FS.fromJSON({
+      'test.ts': {
+        kind: ReplFS.Kind.File,
+        content: dedent`
+          const n = 1;
+          const m = n + 2;
 
-              const a = 'foo';
-              const b = a + 'bar';
+          const a = 'foo';
+          const b = a + 'bar';
 
-              let now = new Date('2024');
-              now.toISOString();
-            `,
-        },
-      ],
-    ]),
+          let now = new Date('2024');
+          now.toISOString();
+        `,
+      },
+    }),
   })
 
   const monaco = monacoLocator(page)

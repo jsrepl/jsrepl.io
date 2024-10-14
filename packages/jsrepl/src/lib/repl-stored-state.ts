@@ -4,9 +4,7 @@ import { defaultTailwindConfigTs } from '@/lib/tailwind-configs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
 
-const SCHEMA_VERSION = '1'
-
-type OldModelDef = {
+export type OldModelDefV0 = {
   /**
    * Path is relative to the root of the project.
    * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
@@ -14,6 +12,14 @@ type OldModelDef = {
   path: string
   content: string
 }
+
+export type OldReplStoredStateV0 = {
+  activeModel: string
+  models: Array<OldModelDefV0>
+  showPreview: boolean
+}
+
+const SCHEMA_VERSION = '1'
 
 export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStoredState {
   try {
@@ -78,11 +84,11 @@ function loadSchemaV0(searchParams: ReturnType<typeof useSearchParams>, state: R
     'tailwind.config.ts': '/tailwind.config.ts',
   }
 
-  let models: Array<OldModelDef> | { tsx: string; html: string; css: string } | null = null
+  let models: Array<OldModelDefV0> | { tsx: string; html: string; css: string } | null = null
 
   if (typeof modelsQP === 'string') {
     models = deserialize(modelsQP) as
-      | Array<OldModelDef>
+      | Array<OldModelDefV0>
       | { tsx: string; html: string; css: string }
   }
 
@@ -166,6 +172,15 @@ export function toQueryParams(state: ReplStoredState): Record<string, string> {
     a: activeModel,
     p: showPreview ? '1' : '0',
     v: SCHEMA_VERSION,
+  }
+}
+
+export function toQueryParamsV0(state: OldReplStoredStateV0): Record<string, string> {
+  const { activeModel, models, showPreview } = state
+  return {
+    c: activeModel,
+    i: serialize(models),
+    p: showPreview ? '1' : '0',
   }
 }
 

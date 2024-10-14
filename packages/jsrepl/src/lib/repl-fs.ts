@@ -1,3 +1,5 @@
+import { assert } from '@/lib/assert'
+
 export class FS {
   root: Directory = {
     kind: Kind.Directory,
@@ -6,8 +8,9 @@ export class FS {
 
   static fromJSON(json: FSJson) {
     const fs = new FS()
-    for (const [path, entry] of Object.entries(json)) {
-      fs.root.children.set(path, entry)
+    for (const [name, entry] of Object.entries(json)) {
+      assert(!name.includes('/'), 'file name should not start with a slash or contain slashes')
+      fs.root.children.set(name, entry)
     }
     return fs
   }

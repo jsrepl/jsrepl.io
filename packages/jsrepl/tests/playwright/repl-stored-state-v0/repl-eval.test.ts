@@ -1,48 +1,35 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
-import { assertReplLines, monacoLocator, visitPlayground } from '../utils'
+import { assertReplLines, monacoLocator, visitPlaygroundV0 } from '../utils'
 
 test('simple expressions', async ({ page }) => {
-  await visitPlayground(
-    page,
-    {
-      activeModel: '/index.tsx',
-      showPreview: false,
-      models: new Map([
-        [
-          '/index.tsx',
-          {
-            path: '/index.tsx',
-            content: dedent`
-              const n = 1;
-              const m = n + 2;
+  await visitPlaygroundV0(page, {
+    activeModel: '/index.tsx',
+    showPreview: false,
+    models: [
+      {
+        path: '/index.tsx',
+        content: dedent`
+          const n = 1;
+          const m = n + 2;
 
-              const a = 'foo';
-              const b = a + 'bar';
+          const a = 'foo';
+          const b = a + 'bar';
 
-              let now = new Date('2024');
-              now.toISOString();
-            `,
-          },
-        ],
-        [
-          '/index.html',
-          {
-            path: '/index.html',
-            content: ``,
-          },
-        ],
-        [
-          '/index.css',
-          {
-            path: '/index.css',
-            content: ``,
-          },
-        ],
-      ]),
-    },
-    { stateSchemaVersion: '' }
-  )
+          let now = new Date('2024');
+          now.toISOString();
+        `,
+      },
+      {
+        path: '/index.html',
+        content: ``,
+      },
+      {
+        path: '/index.css',
+        content: ``,
+      },
+    ],
+  })
 
   const monaco = monacoLocator(page)
   await assertReplLines(monaco, [
