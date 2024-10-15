@@ -146,26 +146,37 @@ export class FS {
    * Walk through the file system.
    * @param path - Absolute path to the directory.
    * @param callback - Callback function that is called for each entry. Return `false` to stop the walk.
+   *                   Return arbitrary data to pass it to the next callback down the tree.
    */
-  walk(path: string, callback: (path: string, entry: Entry) => boolean | void) {
+  walk(
+    path: string,
+    callback: (path: string, entry: Entry, pipedData?: unknown) => void | false | unknown,
+    pipedDataInitial?: unknown
+  ) {
     path = this.#normalizePath(path)
     const entry = this.getEntry(path)
     if (!entry) {
       throw new Error(`Path "${path}" does not exist.`)
     }
 
-    this.#walk(path === '/' ? '' : path, entry, callback)
+    this.#walk(path, entry, callback, pipedDataInitial)
   }
 
-  #walk(path: string, entry: Entry, callback: (path: string, entry: Entry) => boolean | void) {
-    const result = callback(path, entry)
-    if (result === false) {
+  #walk(
+    path: string,
+    entry: Entry,
+    callback: (path: string, entry: Entry, pipedCallbackResult?: unknown) => void | false | unknown,
+    pipedCallbackResult: unknown
+  ) {
+    const callbackResult = callback(path, entry, pipedCallbackResult)
+    if (callbackResult === false) {
       return
     }
 
     if (entry.kind === Kind.Directory) {
+      const parentPath = path === '/' ? '' : path
       for (const [name, child] of entry.children) {
-        this.#walk(path + '/' + name, child, callback)
+        this.#walk(parentPath + '/' + name, child, callback, callbackResult)
       }
     }
   }

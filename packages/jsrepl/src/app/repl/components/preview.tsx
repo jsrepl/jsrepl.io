@@ -23,7 +23,7 @@ const previewPositionOptions = [
   { value: PreviewPosition.AsideRight, label: 'Dock to right' },
 ]
 
-export default function ReplPreview() {
+export default function ReplPreview({ className }: { className?: string }) {
   const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL
 
   const { replState, setReplState } = useContext(ReplStateContext)!
@@ -34,7 +34,8 @@ export default function ReplPreview() {
   return (
     <div
       className={cn(
-        pos === 'aside-right' && 'relative',
+        className,
+        pos === 'aside-right' && 'relative min-w-0 [grid-area:right-sidebar]',
         pos === 'float-bottom-right' && 'absolute bottom-1 right-4 z-10',
         pos === 'float-top-right' && 'absolute right-4 top-1 z-10',
         !replState.showPreview && 'pointer-events-none !absolute !-left-full !right-auto opacity-0'
@@ -46,21 +47,27 @@ export default function ReplPreview() {
         onSizeUpdate={setSize}
         edges={{ left: true, top: pos === 'float-bottom-right', bottom: pos === 'float-top-right' }}
         className={cn(
-          pos === 'aside-right' && '!h-full pl-2',
+          pos === 'aside-right' && 'bg-secondary !h-full max-w-full border-l pl-2',
           (pos === 'float-bottom-right' || pos === 'float-top-right') &&
             'max-h-[calc(100vh-0.25rem-var(--hh))] max-w-[calc(100vw-1rem)] p-4'
         )}
       >
         <div
           className={cn(
-            'bg-secondary flex h-full w-full flex-col overflow-hidden',
+            'flex h-full w-full flex-col overflow-hidden',
             (pos === 'float-bottom-right' || pos === 'float-top-right') &&
-              'border-border rounded border opacity-90 shadow-lg',
-            pos === 'aside-right' && 'border-l'
+              'border-border bg-secondary rounded border opacity-90 shadow-lg'
           )}
         >
-          <div className="border-border/50 flex items-center gap-2 border-b pl-1.5 pr-0.5 text-sm leading-6">
-            <span className="text-muted-foreground">Preview</span>
+          <div
+            className={cn(
+              'flex items-center gap-2 pl-1.5 pr-0.5 text-sm leading-6',
+              pos === 'aside-right' && 'h-repl-header px-2'
+            )}
+          >
+            <span className={cn('text-muted-foreground', pos === 'aside-right' && 'font-semibold')}>
+              Preview
+            </span>
             <div className="ml-auto flex items-center">
               <Button
                 variant="ghost"

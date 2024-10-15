@@ -227,7 +227,7 @@ function getDefaultHtml(): string {
   <time id="clock" class="text-5xl font-bold"></time>
 </div>
 
-<script type="module" src="/index.tsx"></script>
+<script type="module" src="/index.ts"></script>
 `
 }
 

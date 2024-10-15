@@ -3,10 +3,10 @@
 import React from 'react'
 import { useEarlyAccessToast } from '@/hooks/useEarlyAccessToast'
 import { useNewVersionToast } from '@/hooks/useNewVersionToast'
+import ActivityBar from './activity-bar'
 import CodeEditor from './code-editor'
-import { ErrorsNotification } from './errors-notification'
 import GridLayout from './grid-layout'
-import Header from './header'
+import LeftSidebar from './left-sidebar'
 import Preview from './preview'
 
 export default function ReplPlaygroundMain() {
@@ -17,15 +17,13 @@ export default function ReplPlaygroundMain() {
 
   return (
     <>
-      <Header />
-
       <main className="bg-background relative min-h-0 flex-1">
         <GridLayout>
-          <CodeEditor className="min-w-0" />
+          <ActivityBar />
+          <LeftSidebar />
+          <CodeEditor />
           <Preview />
         </GridLayout>
-
-        <ErrorsNotification />
       </main>
     </>
   )

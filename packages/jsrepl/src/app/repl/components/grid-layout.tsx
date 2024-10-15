@@ -1,17 +1,10 @@
-import { useContext } from 'react'
-import { ReplStateContext } from '@/context/repl-state-context'
-import { UserStateContext } from '@/context/user-state-context'
 import { cn } from '@/lib/utils'
 
 export default function GridLayout({ children }: { children: React.ReactNode }) {
-  const { userState } = useContext(UserStateContext)!
-  const { replState } = useContext(ReplStateContext)!
-
   return (
     <div
       className={cn(
-        'grid h-full grid-rows-1',
-        userState.previewPos === 'aside-right' && replState.showPreview && 'grid-cols-[1fr,auto]'
+        'grid h-full grid-cols-[auto,auto,1fr,auto] grid-rows-1 [grid-template-areas:"activity-bar_left-sidebar_editor_right-sidebar"]'
       )}
     >
       {children}

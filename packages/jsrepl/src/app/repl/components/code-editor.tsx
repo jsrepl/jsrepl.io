@@ -11,13 +11,11 @@ import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import * as ReplFS from '@/lib/repl-fs'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
+import CodeEditorHeader from './code-editor-header'
 import styles from './code-editor.module.css'
+import { ErrorsNotification } from './errors-notification'
 
-type Props = {
-  className?: string
-}
-
-export default function CodeEditor({ className }: Props) {
+export default function CodeEditor({ className }: { className?: string }) {
   console.log('CodeEditor render')
 
   const { replState, saveReplState } = useContext(ReplStateContext)!
@@ -140,10 +138,14 @@ export default function CodeEditor({ className }: Props) {
 
   return (
     <>
-      <div
-        className={cn(className, styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
-        ref={containerRef}
-      />
+      <div className={cn(className, 'relative flex min-w-24 flex-col [grid-area:editor]')}>
+        <CodeEditorHeader />
+        <div
+          ref={containerRef}
+          className={cn('min-h-0 flex-1', styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
+        />
+        <ErrorsNotification />
+      </div>
     </>
   )
 }

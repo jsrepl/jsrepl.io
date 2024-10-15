@@ -121,10 +121,12 @@ export type ReplStoredState = {
 
 export type UserStoredState = {
   /**
-   * Last used App version. It used to show New Version toast.
+   * Last used App version. It is used to show New Version toast.
    */
   version: string | undefined
   previewPos: PreviewPosition
+  showLeftSidebar: boolean
+  leftSidebarWidth: number
 }
 
 export type Theme = {

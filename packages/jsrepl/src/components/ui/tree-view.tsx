@@ -1,6 +1,6 @@
 'use client'
 
-// https://github.com/MrLightful/shadcn-tree-view
+// Based on https://github.com/MrLightful/shadcn-tree-view
 import React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { cva } from 'class-variance-authority'
@@ -16,6 +16,7 @@ const selectedTreeVariants = cva('before:opacity-100 before:bg-accent/70 text-ac
 interface TreeDataItem {
   id: string
   name: string
+  textClassName?: string
   icon?: React.ElementType
   selectedIcon?: React.ElementType
   openIcon?: React.ElementType
@@ -26,7 +27,7 @@ interface TreeDataItem {
 
 type TreeProps = React.HTMLAttributes<HTMLDivElement> & {
   data: TreeDataItem[] | TreeDataItem
-  initialSelectedItemId?: string
+  selectedItemId?: string
   onSelectChange?: (item: TreeDataItem | undefined) => void
   expandAll?: boolean
   defaultNodeIcon?: React.ElementType
@@ -36,7 +37,7 @@ type TreeProps = React.HTMLAttributes<HTMLDivElement> & {
 const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
   {
     data,
-    initialSelectedItemId,
+    selectedItemId,
     onSelectChange,
     expandAll,
     defaultLeafIcon,
@@ -46,13 +47,8 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
   },
   ref
 ) {
-  const [selectedItemId, setSelectedItemId] = React.useState<string | undefined>(
-    initialSelectedItemId
-  )
-
   const handleSelectChange = React.useCallback(
     (item: TreeDataItem | undefined) => {
-      setSelectedItemId(item?.id)
       if (onSelectChange) {
         onSelectChange(item)
       }
@@ -61,13 +57,13 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
   )
 
   const expandedItemIds = React.useMemo(() => {
-    if (!initialSelectedItemId) {
+    if (!selectedItemId && !expandAll) {
       return [] as string[]
     }
 
     const ids: string[] = []
 
-    function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string) {
+    function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string | undefined) {
       if (items instanceof Array) {
         for (let i = 0; i < items.length; i++) {
           ids.push(items[i]!.id)
@@ -83,9 +79,9 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
       }
     }
 
-    walkTreeItems(data, initialSelectedItemId)
+    walkTreeItems(data, selectedItemId)
     return ids
-  }, [data, expandAll, initialSelectedItemId])
+  }, [data, expandAll, selectedItemId])
 
   return (
     <div className={cn('relative overflow-hidden p-2', className)}>
@@ -188,7 +184,7 @@ const TreeNode = ({
             isOpen={value.includes(item.id)}
             default={defaultNodeIcon}
           />
-          <span className="truncate text-sm">{item.name}</span>
+          <span className={cn('truncate text-sm', item.textClassName)}>{item.name}</span>
           <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
         </AccordionTrigger>
         <AccordionContent className="ml-4 border-l pl-1">
@@ -234,7 +230,7 @@ const TreeLeaf = React.forwardRef<
       {...props}
     >
       <TreeIcon item={item} isSelected={selectedItemId === item.id} default={defaultLeafIcon} />
-      <span className="flex-grow truncate text-sm">{item.name}</span>
+      <span className={cn('flex-grow truncate text-sm', item.textClassName)}>{item.name}</span>
       <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
     </div>
   )
