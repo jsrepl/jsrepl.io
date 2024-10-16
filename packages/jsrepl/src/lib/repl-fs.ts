@@ -1,22 +1,8 @@
-import { assert } from '@/lib/assert'
-
 export class FS {
-  root: Directory = {
-    kind: Kind.Directory,
-    children: new Map(),
-  }
+  root: Directory
 
-  static fromJSON(json: FSJson) {
-    const fs = new FS()
-    for (const [name, entry] of Object.entries(json)) {
-      assert(!name.includes('/'), 'file name should not start with a slash or contain slashes')
-      fs.root.children.set(name, entry)
-    }
-    return fs
-  }
-
-  toJSON(): FSJson {
-    return Object.fromEntries(this.root.children)
+  constructor(root: Directory = { kind: Kind.Directory, children: {} }) {
+    this.root = root
   }
 
   /**
@@ -33,7 +19,7 @@ export class FS {
     let entry: Entry | undefined = this.root
     while (parts.length > 0) {
       const part = parts.shift()!
-      entry = entry.kind === Kind.Directory ? entry.children.get(part) : undefined
+      entry = entry.kind === Kind.Directory ? entry.children[part] : undefined
       if (!entry) {
         return null
       }
@@ -59,7 +45,8 @@ export class FS {
       return false
     }
 
-    return dir.children.delete(entryName)
+    const result = delete dir.children[entryName]
+    return result
   }
 
   /**
@@ -90,13 +77,13 @@ export class FS {
     let dir: Directory = this.root
     while (parts.length > 0) {
       const part = parts.shift()!
-      let child = dir.children.get(part)
+      let child = dir.children[part]
       if (!child) {
         const newDir: Directory = {
           kind: Kind.Directory,
-          children: new Map(),
+          children: {},
         }
-        dir.children.set(part, newDir)
+        dir.children[part] = newDir
         child = newDir
       }
 
@@ -127,7 +114,7 @@ export class FS {
 
     const dir = this.mkdirRecursive(dirPath)
 
-    const existingEntry = dir.children.get(fileName)
+    const existingEntry = dir.children[fileName]
     if (existingEntry?.kind === Kind.Directory) {
       throw new Error(`Path "${path}" is a directory.`)
     }
@@ -137,9 +124,29 @@ export class FS {
       content,
     }
 
-    dir.children.set(fileName, file)
+    dir.children[fileName] = file
 
     return file
+  }
+
+  renameEntry(path: string, newPath: string): string {
+    const entry = this.getEntry(path)
+    if (!entry) {
+      throw new Error(`Path "${path}" does not exist.`)
+    }
+
+    if (!this.removeEntry(path)) {
+      throw new Error(`Failed to remove "${path}".`)
+    }
+
+    newPath = this.#normalizePath(newPath)
+    const lastSlashIndex = newPath.lastIndexOf('/')
+    const newName = newPath.slice(lastSlashIndex + 1)
+    const newParentDirPath = newPath.slice(0, lastSlashIndex)
+    const newParentDir = this.mkdirRecursive(newParentDirPath)
+    newParentDir.children[newName] = entry
+
+    return newPath
   }
 
   /**
@@ -148,35 +155,26 @@ export class FS {
    * @param callback - Callback function that is called for each entry. Return `false` to stop the walk.
    *                   Return arbitrary data to pass it to the next callback down the tree.
    */
-  walk(
-    path: string,
-    callback: (path: string, entry: Entry, pipedData?: unknown) => void | false | unknown,
-    pipedDataInitial?: unknown
-  ) {
+  walk(path: string, callback: (path: string, entry: Entry) => void | false) {
     path = this.#normalizePath(path)
     const entry = this.getEntry(path)
     if (!entry) {
       throw new Error(`Path "${path}" does not exist.`)
     }
 
-    this.#walk(path, entry, callback, pipedDataInitial)
+    this.#walk(path, entry, callback)
   }
 
-  #walk(
-    path: string,
-    entry: Entry,
-    callback: (path: string, entry: Entry, pipedCallbackResult?: unknown) => void | false | unknown,
-    pipedCallbackResult: unknown
-  ) {
-    const callbackResult = callback(path, entry, pipedCallbackResult)
+  #walk(path: string, entry: Entry, callback: (path: string, entry: Entry) => void | false) {
+    const callbackResult = callback(path, entry)
     if (callbackResult === false) {
       return
     }
 
     if (entry.kind === Kind.Directory) {
       const parentPath = path === '/' ? '' : path
-      for (const [name, child] of entry.children) {
-        this.#walk(parentPath + '/' + name, child, callback, callbackResult)
+      for (const [name, child] of Object.entries(entry.children)) {
+        this.#walk(parentPath + '/' + name, child, callback)
       }
     }
   }
@@ -212,10 +210,5 @@ export interface Directory {
   /**
    * Key is an entry name (not a path) w/o leading and trailing slashes.
    */
-  children: Map<string, Entry>
+  children: Record<string, Entry>
 }
-
-/**
- * Key is an entry name (not a path) w/o leading and trailing slashes.
- */
-export type FSJson = Record<string, Entry>

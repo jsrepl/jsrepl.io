@@ -4,8 +4,7 @@ import * as monaco from 'monaco-editor'
 import { ReplStateContext } from '@/context/repl-state-context'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
-import type { CodeEditorModel } from '@/lib/code-editor-models/code-editor-model'
-import { createCodeEditorModel } from '@/lib/code-editor-models/code-editor-model-factory'
+import { CodeEditorModel } from '@/lib/code-editor-model'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import * as ReplFS from '@/lib/repl-fs'
@@ -24,6 +23,7 @@ export default function CodeEditor({ className }: { className?: string }) {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const updateDecorationsRef = useRef(() => {})
   const modelsDisposables = useRef<(() => void)[]>([])
+  const monacoModelMap = useRef<Map<string, monaco.editor.IModel>>(new Map())
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
@@ -34,15 +34,32 @@ export default function CodeEditor({ className }: { className?: string }) {
 
     modelsDisposables.current.forEach((disposable) => disposable())
     modelsDisposables.current = []
+
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
 
     replState.fs.walk('/', (path, entry) => {
       if (entry.kind === ReplFS.Kind.File) {
-        const model = createCodeEditorModel({ path, file: entry })
+        let monacoModel = monacoModelMap.current.get(path)
+        if (!monacoModel) {
+          const uri = monaco.Uri.parse('file://' + path)
+          monacoModel = monaco.editor.createModel(entry.content, getMonacoLanguage(path), uri)
+          monacoModelMap.current.set(path, monacoModel)
+        }
+
+        const model = new CodeEditorModel(entry, monacoModel)
         map.set(path, model)
-        modelsDisposables.current.push(() => model.monacoModel.dispose())
+
+        modelsDisposables.current.push(() => model.dispose())
       }
     })
+
+    for (const path of monacoModelMap.current.keys()) {
+      if (!map.has(path)) {
+        const monacoModel = monacoModelMap.current.get(path)!
+        monacoModel.dispose()
+        monacoModelMap.current.delete(path)
+      }
+    }
 
     return map
   }, [replState.fs])
@@ -50,6 +67,9 @@ export default function CodeEditor({ className }: { className?: string }) {
   useEffect(() => {
     return () => {
       modelsDisposables.current.forEach((disposable) => disposable())
+      modelsDisposables.current = []
+      monacoModelMap.current.forEach((model) => model.dispose())
+      monacoModelMap.current = new Map()
     }
   }, [])
 
@@ -220,4 +240,24 @@ async function setupTailwindCSS() {
       },
     },
   })
+}
+
+function getMonacoLanguage(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase()
+  if (!ext) {
+    return 'plaintext'
+  }
+
+  const language = {
+    tsx: 'typescript',
+    ts: 'typescript',
+    js: 'javascript',
+    jsx: 'javascript',
+    json: 'json',
+    html: 'html',
+    css: 'css',
+    md: 'markdown',
+  }[ext]
+
+  return language ?? 'plaintext'
 }

@@ -26,7 +26,8 @@ export default function LeftSidebar() {
             size={size}
             onSizeUpdate={setSize}
             edges={{ right: true }}
-            className="!h-full max-w-full border-r pr-2"
+            margin={3}
+            className="flex !h-full max-w-full flex-col border-r pr-px"
           >
             <FilesPanel />
           </Resizable>

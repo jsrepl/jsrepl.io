@@ -114,6 +114,7 @@ export type ReplStoredState = {
   openedModels: string[]
   /**
    * Absolute path to the active model, starting with '/'.
+   * In case of no active model use '' (empty string).
    */
   activeModel: string
   showPreview: boolean

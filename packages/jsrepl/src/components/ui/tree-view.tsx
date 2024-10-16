@@ -4,7 +4,6 @@
 import React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { cva } from 'class-variance-authority'
-import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const treeVariants = cva(
@@ -17,6 +16,8 @@ interface TreeDataItem {
   id: string
   name: string
   textClassName?: string
+  customText?: React.ReactNode
+  title?: string
   icon?: React.ElementType
   selectedIcon?: React.ElementType
   openIcon?: React.ElementType
@@ -177,6 +178,7 @@ const TreeNode = ({
             handleSelectChange(item)
             item.onClick?.()
           }}
+          title={item.title}
         >
           <TreeIcon
             item={item}
@@ -184,10 +186,18 @@ const TreeNode = ({
             isOpen={value.includes(item.id)}
             default={defaultNodeIcon}
           />
-          <span className={cn('truncate text-sm', item.textClassName)}>{item.name}</span>
-          <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
+          {item.customText ? (
+            item.customText
+          ) : (
+            <>
+              <span className={cn('flex-grow truncate text-start text-sm', item.textClassName)}>
+                {item.name}
+              </span>
+              <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
+            </>
+          )}
         </AccordionTrigger>
-        <AccordionContent className="ml-4 border-l pl-1">
+        <AccordionContent className="ml-3.5 border-l pl-1">
           <TreeItem
             data={item.children ? item.children : item}
             selectedItemId={selectedItemId}
@@ -218,7 +228,7 @@ const TreeLeaf = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'ml-5 flex cursor-pointer items-center py-2 text-left before:right-1',
+        'flex cursor-pointer items-center py-2 text-left before:right-1',
         treeVariants(),
         className,
         selectedItemId === item.id && selectedTreeVariants()
@@ -227,11 +237,18 @@ const TreeLeaf = React.forwardRef<
         handleSelectChange(item)
         item.onClick?.()
       }}
+      title={item.title}
       {...props}
     >
       <TreeIcon item={item} isSelected={selectedItemId === item.id} default={defaultLeafIcon} />
-      <span className={cn('flex-grow truncate text-sm', item.textClassName)}>{item.name}</span>
-      <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
+      {item.customText ? (
+        item.customText
+      ) : (
+        <>
+          <span className={cn('flex-grow truncate text-sm', item.textClassName)}>{item.name}</span>
+          <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
+        </>
+      )}
     </div>
   )
 })
@@ -243,13 +260,9 @@ const AccordionTrigger = React.forwardRef<
   <AccordionPrimitive.Header>
     <AccordionPrimitive.Trigger
       ref={ref}
-      className={cn(
-        'flex w-full flex-1 items-center py-2 transition-all first:[&[data-state=open]>svg]:rotate-90',
-        className
-      )}
+      className={cn('flex w-full flex-1 items-center py-2 transition-all', className)}
       {...props}
     >
-      <ChevronRight className="text-accent-foreground/50 mr-1 h-4 w-4 shrink-0 transition-transform duration-200" />
       {children}
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
@@ -268,7 +281,7 @@ const AccordionContent = React.forwardRef<
     )}
     {...props}
   >
-    <div className="pb-1 pt-0">{children}</div>
+    <div className="pb-1 pt-0 has-[>[role='tree']>ul:empty]:pb-[0.1px]">{children}</div>
   </AccordionPrimitive.Content>
 ))
 AccordionContent.displayName = AccordionPrimitive.Content.displayName
@@ -303,7 +316,12 @@ const TreeActions = ({
   isSelected: boolean
 }) => {
   return (
-    <div className={cn(isSelected ? 'block' : 'hidden', 'absolute right-3 group-hover:block')}>
+    <div
+      className={cn(
+        isSelected ? 'visible' : 'invisible absolute right-2',
+        '-my-8 group-focus-within:visible group-focus-within:static group-hover:visible group-hover:static has-[[aria-expanded="true"]]:visible has-[[aria-expanded="true"]]:static'
+      )}
+    >
       {children}
     </div>
   )

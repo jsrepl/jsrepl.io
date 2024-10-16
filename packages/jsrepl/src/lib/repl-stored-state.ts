@@ -49,7 +49,7 @@ function loadSchemaCurrent(
   const showPreviewQP = searchParams.get('p')
 
   if (typeof fsQP === 'string') {
-    state.fs = ReplFS.FS.fromJSON(deserialize(fsQP) as ReplFS.FSJson)
+    state.fs = new ReplFS.FS(deserialize(fsQP) as ReplFS.Directory)
   }
 
   if (typeof openedModelsQP === 'string') {
@@ -126,18 +126,21 @@ function loadSchemaV0(searchParams: ReturnType<typeof useSearchParams>, state: R
 
     const indexcss = models.find((model) => model.path === '/index.css')!
 
-    state.fs = ReplFS.FS.fromJSON({
-      'index.tsx': {
-        content: indextsx.content,
-        kind: ReplFS.Kind.File,
-      },
-      'index.html': {
-        content: indexhtml.content,
-        kind: ReplFS.Kind.File,
-      },
-      'index.css': {
-        content: indexcss.content,
-        kind: ReplFS.Kind.File,
+    state.fs = new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.tsx': {
+          content: indextsx.content,
+          kind: ReplFS.Kind.File,
+        },
+        'index.html': {
+          content: indexhtml.content,
+          kind: ReplFS.Kind.File,
+        },
+        'index.css': {
+          content: indexcss.content,
+          kind: ReplFS.Kind.File,
+        },
       },
     })
 
@@ -167,7 +170,7 @@ export function save(state: ReplStoredState, router: ReturnType<typeof useRouter
 export function toQueryParams(state: ReplStoredState): Record<string, string> {
   const { activeModel, showPreview, fs, openedModels } = state
   return {
-    f: serialize(fs.toJSON()),
+    f: serialize(fs.root),
     o: serialize(openedModels),
     a: activeModel,
     p: showPreview ? '1' : '0',
@@ -202,22 +205,25 @@ function getDefaultState(): ReplStoredState {
 }
 
 function getDefaultFs(): ReplStoredState['fs'] {
-  return ReplFS.FS.fromJSON({
-    'index.ts': {
-      content: getDefaultTs(),
-      kind: ReplFS.Kind.File,
-    },
-    'index.html': {
-      content: getDefaultHtml(),
-      kind: ReplFS.Kind.File,
-    },
-    'index.css': {
-      content: getDefaultCss(),
-      kind: ReplFS.Kind.File,
-    },
-    'tailwind.config.ts': {
-      content: defaultTailwindConfigTs,
-      kind: ReplFS.Kind.File,
+  return new ReplFS.FS({
+    kind: ReplFS.Kind.Directory,
+    children: {
+      'index.ts': {
+        content: getDefaultTs(),
+        kind: ReplFS.Kind.File,
+      },
+      'index.html': {
+        content: getDefaultHtml(),
+        kind: ReplFS.Kind.File,
+      },
+      'index.css': {
+        content: getDefaultCss(),
+        kind: ReplFS.Kind.File,
+      },
+      'tailwind.config.ts': {
+        content: defaultTailwindConfigTs,
+        kind: ReplFS.Kind.File,
+      },
     },
   })
 }

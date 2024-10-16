@@ -5,14 +5,24 @@ export class CodeEditorModel {
   file: ReplFS.File
   monacoModel: Monaco.editor.ITextModel
   #value: string | null = null
+  #disposables: Array<() => void> = []
 
   constructor(file: ReplFS.File, model: Monaco.editor.ITextModel) {
     this.file = file
     this.monacoModel = model
 
-    this.monacoModel.onDidChangeContent(() => {
+    const disposable = this.monacoModel.onDidChangeContent(() => {
       this.#invalidateCache()
     })
+    this.#disposables.push(() => disposable.dispose())
+  }
+
+  /**
+   * Disposes event listeners, attached to the monaco model.
+   * NOTE: it does not dispose the monaco model itself.
+   */
+  dispose() {
+    this.#disposables.forEach((disposable) => disposable())
   }
 
   getValue(): string {
