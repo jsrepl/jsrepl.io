@@ -9,10 +9,15 @@ import { babelParseErrorToEsbuildError } from './utils'
 const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 
 const replTransformCache = new Cache()
+let exprKey = 0
 
 export const JsEsbuildPlugin: esbuild.Plugin = {
   name: 'jsrepl-js',
   setup(build) {
+    build.onStart(() => {
+      exprKey = 0
+    })
+
     build.onLoad({ filter: /\.(ts|tsx|js|jsx)$/ }, onLoadCallback)
   },
 }
@@ -85,7 +90,6 @@ function isNewlyCreatedPath(path: NodePath) {
 
 function replPlugin({ types: t }: { types: typeof types }): PluginObj {
   const processedNodes = new WeakSet()
-  let exprKey = 0
 
   return {
     visitor: {
