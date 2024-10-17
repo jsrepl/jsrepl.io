@@ -2,13 +2,13 @@ import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
 import * as esbuild from 'esbuild-wasm'
 import { assert } from '@/lib/assert'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
+import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
 const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 
-const replTransformCache = new Map<string, string>()
-const replTransformCacheMaxSize = 5
+const replTransformCache = new Cache()
 
 export const JsEsbuildPlugin: esbuild.Plugin = {
   name: 'jsrepl-js',
@@ -47,7 +47,7 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
 }
 
 function replTransform(code: string, filePath: string): string {
-  const cached = replTransformCache.get(code)
+  const cached = replTransformCache.get(code, filePath)
   if (cached !== undefined) {
     return cached
   }
@@ -74,10 +74,7 @@ function replTransform(code: string, filePath: string): string {
 
   const result = output.code ?? ''
 
-  replTransformCache.set(code, result)
-  while (replTransformCache.size > replTransformCacheMaxSize) {
-    replTransformCache.delete(replTransformCache.keys().next().value as string)
-  }
+  replTransformCache.set(code, filePath, result)
 
   return result
 }

@@ -3,11 +3,11 @@ import type * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { defer } from '../promise-with-resolvers'
+import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
-const tailwindConfigCache = new Map<string, string>()
-const tailwindConfigCacheMaxSize = 5
+const tailwindConfigCache = new Cache()
 
 let tailwindContent: { content: string; extension: string }[] | null = null
 let tailwindConfigReadyDeferred: PromiseWithResolvers<void> | null = null
@@ -63,7 +63,7 @@ async function onTailwindConfigLoadCallback(
     const babel = getBabel()[0].value!
     const contents = fs.readFileSync(args.path, { encoding: 'utf8' })
 
-    let transformedCode = tailwindConfigCache.get(contents)
+    let transformedCode = tailwindConfigCache.get(contents, args.path)
     if (transformedCode === undefined) {
       const ext = args.path.split('.').pop()
       const result = babel.transform(contents, {
@@ -89,10 +89,7 @@ async function onTailwindConfigLoadCallback(
         throw transformFailure
       }
 
-      tailwindConfigCache.set(contents, transformedCode)
-      while (tailwindConfigCache.size > tailwindConfigCacheMaxSize) {
-        tailwindConfigCache.delete(tailwindConfigCache.keys().next().value as string)
-      }
+      tailwindConfigCache.set(contents, args.path, transformedCode)
     }
 
     if (lastAppliedTailwindConfig !== transformedCode) {

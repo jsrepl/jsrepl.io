@@ -44,6 +44,7 @@ export default function useCodeEditorRepl(
   }, [editorRef, payloadMap])
 
   const doRepl = useCallback(async () => {
+    console.log('doRepl')
     try {
       const replInfo = await sendRepl({
         models,
