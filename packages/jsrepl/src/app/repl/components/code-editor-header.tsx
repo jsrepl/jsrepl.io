@@ -8,6 +8,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
+import { FileIcon } from './file-icon'
 
 export default function CodeEditorHeader({
   editorRef,
@@ -88,12 +89,15 @@ export default function CodeEditorHeader({
               >
                 <span
                   className={cn(
-                    'relative opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80',
+                    'relative flex items-center gap-1.5',
                     modelOption.warningCount > 0 && 'text-yellow-500',
                     modelOption.errorCount > 0 && 'text-red-500'
                   )}
                 >
-                  {modelOption.label}
+                  <FileIcon filename={modelOption.label} />
+                  <span className="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
+                    {modelOption.label}
+                  </span>
                 </span>
               </Button>
 
