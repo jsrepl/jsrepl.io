@@ -30,7 +30,7 @@ export function ErrorsNotification() {
                 {replInfo.errors.map((error) => (
                   <div key={error.text} className="flex gap-3">
                     <LucideCircleAlert size={18} className="translate-y-px text-red-500" />
-                    <span>{error.location?.file}</span>
+                    {error.location?.file && <span>/{error.location.file}</span>}
                     <span className="flex-1">{error.text}</span>
                   </div>
                 ))}
@@ -38,7 +38,7 @@ export function ErrorsNotification() {
                 {replInfo.warnings.map((warning) => (
                   <div key={warning.text} className="flex gap-3">
                     <LucideTriangleAlert size={18} className="translate-y-px text-yellow-500" />
-                    <span>{warning.location?.file}</span>
+                    {warning.location?.file && <span>/{warning.location.file}</span>}
                     <span className="flex-1">{warning.text}</span>
                   </div>
                 ))}

@@ -28,9 +28,12 @@ interface TreeDataItem {
 
 type TreeProps = React.HTMLAttributes<HTMLDivElement> & {
   data: TreeDataItem[] | TreeDataItem
-  selectedItemId?: string
-  onSelectChange?: (item: TreeDataItem | undefined) => void
-  expandAll?: boolean
+  // TODO: allow uncontrolled mode
+  selectedItemId: string | null
+  onSelectChange: (item: TreeDataItem | undefined) => void
+  // TODO: allow uncontrolled mode
+  expandedItemIds: string[]
+  onExpandChange: (item: TreeDataItem, expanded: boolean) => void
   defaultNodeIcon?: React.ElementType
   defaultLeafIcon?: React.ElementType
 }
@@ -40,7 +43,8 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
     data,
     selectedItemId,
     onSelectChange,
-    expandAll,
+    expandedItemIds,
+    onExpandChange,
     defaultLeafIcon,
     defaultNodeIcon,
     className,
@@ -57,32 +61,14 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
     [onSelectChange]
   )
 
-  const expandedItemIds = React.useMemo(() => {
-    if (!selectedItemId && !expandAll) {
-      return [] as string[]
-    }
-
-    const ids: string[] = []
-
-    function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string | undefined) {
-      if (items instanceof Array) {
-        for (let i = 0; i < items.length; i++) {
-          ids.push(items[i]!.id)
-          if (walkTreeItems(items[i]!, targetId) && !expandAll) {
-            return true
-          }
-          if (!expandAll) ids.pop()
-        }
-      } else if (!expandAll && items.id === targetId) {
-        return true
-      } else if (items.children) {
-        return walkTreeItems(items.children, targetId)
+  const handleExpandChange = React.useCallback(
+    (item: TreeDataItem, expanded: boolean) => {
+      if (onExpandChange) {
+        onExpandChange(item, expanded)
       }
-    }
-
-    walkTreeItems(data, selectedItemId)
-    return ids
-  }, [data, expandAll, selectedItemId])
+    },
+    [onExpandChange]
+  )
 
   return (
     <div className={cn('relative overflow-hidden p-2', className)}>
@@ -92,6 +78,7 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
         selectedItemId={selectedItemId}
         handleSelectChange={handleSelectChange}
         expandedItemIds={expandedItemIds}
+        handleExpandChange={handleExpandChange}
         defaultLeafIcon={defaultLeafIcon}
         defaultNodeIcon={defaultNodeIcon}
         {...props}
@@ -100,10 +87,12 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
   )
 })
 
-type TreeItemProps = TreeProps & {
-  selectedItemId?: string
+type TreeItemProps = React.HTMLAttributes<HTMLDivElement> & {
+  data: TreeDataItem[] | TreeDataItem
+  selectedItemId: string | null
   handleSelectChange: (item: TreeDataItem | undefined) => void
   expandedItemIds: string[]
+  handleExpandChange: (item: TreeDataItem, expanded: boolean) => void
   defaultNodeIcon?: React.ElementType
   defaultLeafIcon?: React.ElementType
 }
@@ -115,6 +104,7 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(function TreeIt
     selectedItemId,
     handleSelectChange,
     expandedItemIds,
+    handleExpandChange,
     defaultNodeIcon,
     defaultLeafIcon,
     ...props
@@ -134,6 +124,7 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(function TreeIt
                 item={item}
                 selectedItemId={selectedItemId}
                 expandedItemIds={expandedItemIds}
+                handleExpandChange={handleExpandChange}
                 handleSelectChange={handleSelectChange}
                 defaultNodeIcon={defaultNodeIcon}
                 defaultLeafIcon={defaultLeafIcon}
@@ -157,6 +148,7 @@ const TreeNode = ({
   item,
   handleSelectChange,
   expandedItemIds,
+  handleExpandChange,
   selectedItemId,
   defaultNodeIcon,
   defaultLeafIcon,
@@ -164,13 +156,22 @@ const TreeNode = ({
   item: TreeDataItem
   handleSelectChange: (item: TreeDataItem | undefined) => void
   expandedItemIds: string[]
-  selectedItemId?: string
+  handleExpandChange: (item: TreeDataItem, expanded: boolean) => void
+  selectedItemId: string | null
   defaultNodeIcon?: React.ElementType
   defaultLeafIcon?: React.ElementType
 }) => {
-  const [value, setValue] = React.useState(expandedItemIds.includes(item.id) ? [item.id] : [])
+  const value = React.useMemo(
+    () => (expandedItemIds.includes(item.id) ? [item.id] : []),
+    [expandedItemIds, item.id]
+  )
+
   return (
-    <AccordionPrimitive.Root type="multiple" value={value} onValueChange={(s) => setValue(s)}>
+    <AccordionPrimitive.Root
+      type="multiple"
+      value={value}
+      onValueChange={(s) => handleExpandChange(item, s.includes(item.id))}
+    >
       <AccordionPrimitive.Item value={item.id}>
         <AccordionTrigger
           className={cn(treeVariants(), selectedItemId === item.id && selectedTreeVariants())}
@@ -179,6 +180,7 @@ const TreeNode = ({
             item.onClick?.()
           }}
           title={item.title}
+          data-active={selectedItemId === item.id}
         >
           <TreeIcon
             item={item}
@@ -203,6 +205,7 @@ const TreeNode = ({
             selectedItemId={selectedItemId}
             handleSelectChange={handleSelectChange}
             expandedItemIds={expandedItemIds}
+            handleExpandChange={handleExpandChange}
             defaultLeafIcon={defaultLeafIcon}
             defaultNodeIcon={defaultNodeIcon}
           />
@@ -216,7 +219,7 @@ const TreeLeaf = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     item: TreeDataItem
-    selectedItemId?: string
+    selectedItemId: string | null
     handleSelectChange: (item: TreeDataItem | undefined) => void
     defaultLeafIcon?: React.ElementType
   }
@@ -238,6 +241,7 @@ const TreeLeaf = React.forwardRef<
         item.onClick?.()
       }}
       title={item.title}
+      data-active={selectedItemId === item.id}
       {...props}
     >
       <TreeIcon item={item} isSelected={selectedItemId === item.id} default={defaultLeafIcon} />

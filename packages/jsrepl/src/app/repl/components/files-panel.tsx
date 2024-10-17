@@ -1,5 +1,16 @@
-import { Dispatch, SetStateAction, useCallback, useContext, useMemo, useState } from 'react'
+import {
+  Dispatch,
+  SetStateAction,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { LucideEllipsisVertical, LucideFolder, LucideFolderOpen } from 'lucide-react'
+import * as monaco from 'monaco-editor'
 import IconReadme from '~icons/mdi/book-open-variant-outline.jsx'
 import IconCodeJson from '~icons/mdi/code-json.jsx'
 import IconFile from '~icons/mdi/file-outline.jsx'
@@ -28,60 +39,148 @@ import { ReplInfo } from '@/types/repl.types'
 
 type Renaming = {
   path: string
+  isNew?: boolean
   onComplete?: (path: string) => void
   onCancel?: () => void
 } | null
+
+export const FilesPanelContext = createContext<{
+  setExpandedItemIds: Dispatch<SetStateAction<string[]>>
+} | null>(null)
 
 export default function FilesPanel() {
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { replInfo } = useContext(ReplInfoContext)!
   const [renaming, setRenaming] = useState<Renaming>(null)
+  const [selectedItemId, setSelectedItemId] = useState<string>(replState.activeModel)
+  const treeDataRef = useRef<TreeDataItem[]>([])
+  const treeViewRef = useRef<HTMLDivElement>(null)
 
   const treeData: TreeDataItem[] = useMemo(() => {
-    const root = fsEntryToTreeDataItem('/', replState.fs.root, {
+    const [root] = fsEntryToTreeDataItem('/', replState.fs.root, {
+      // TODO: use ReplInfoContext
       replInfo,
+      // TODO: use FilesPanelContext
       renaming,
+      // TODO: use FilesPanelContext
       setRenaming,
+      // TODO: use FilesPanelContext
       setReplState,
     })
+    treeDataRef.current = root.children!
     return root.children!
   }, [replState.fs, replInfo, renaming, setReplState])
 
+  const [expandedItemIds, setExpandedItemIds] = useState<string[]>(
+    getAutoExpandedItemIds(treeData, selectedItemId, true)
+  )
+
+  const filesPanelContextValue = useMemo(() => ({ setExpandedItemIds }), [])
+
   const onSelectChange = useCallback(
     (item: TreeDataItem | undefined) => {
-      if (item?.children) {
-        return
-      }
+      setSelectedItemId(item?.id ?? '')
 
-      setReplState((state) => {
-        const activeModel = item?.id ?? ''
-        const openedModels =
-          activeModel && !state.openedModels.includes(activeModel)
-            ? [...state.openedModels, activeModel]
-            : state.openedModels
-        return { ...state, activeModel, openedModels }
-      })
+      if (item && !item.children) {
+        setReplState((state) => {
+          const activeModel = item?.id ?? ''
+          const openedModels =
+            activeModel && !state.openedModels.includes(activeModel)
+              ? [...state.openedModels, activeModel]
+              : state.openedModels
+          return { ...state, activeModel, openedModels }
+        })
+
+        requestAnimationFrame(() => {
+          monaco.editor.getEditors()[0]?.focus()
+        })
+      }
     },
     [setReplState]
   )
 
+  const onExpandChange = useCallback((item: TreeDataItem, expanded: boolean) => {
+    setExpandedItemIds((ids) => {
+      if (expanded) {
+        return ids.includes(item.id) ? ids : [...ids, item.id]
+      } else {
+        return ids.filter((id) => id !== item.id)
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    setSelectedItemId(replState.activeModel)
+
+    const autoExpandedIds = getAutoExpandedItemIds(
+      treeDataRef.current,
+      replState.activeModel,
+      false
+    )
+    setExpandedItemIds((ids) => {
+      return [...new Set([...ids, ...autoExpandedIds])]
+    })
+
+    requestAnimationFrame(() => {
+      const activeElement = treeViewRef.current?.querySelector('[data-active="true"]')
+      activeElement?.scrollIntoView({ block: 'nearest' })
+    })
+  }, [replState.activeModel])
+
   return (
     <>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 [&>[data-radix-scroll-area-viewport]]:scroll-pb-4 [&>[data-radix-scroll-area-viewport]]:scroll-pt-10">
         <div className="h-repl-header bg-background sticky top-0 z-[1] flex items-center gap-2 pl-4 text-sm leading-6">
           <span className="text-muted-foreground font-semibold">Files</span>
         </div>
-        <TreeView
-          data={treeData}
-          expandAll
-          selectedItemId={replState.activeModel}
-          onSelectChange={onSelectChange}
-          className="text-muted-foreground z-0 m-2 p-0 pb-6"
-        />
+        <FilesPanelContext.Provider value={filesPanelContextValue}>
+          <TreeView
+            ref={treeViewRef}
+            data={treeData}
+            selectedItemId={selectedItemId}
+            onSelectChange={onSelectChange}
+            expandedItemIds={expandedItemIds}
+            onExpandChange={onExpandChange}
+            className="text-muted-foreground z-0 m-2 p-0 pb-6"
+          />
+        </FilesPanelContext.Provider>
         <ScrollBar orientation="vertical" className="z-[2]" />
       </ScrollArea>
     </>
   )
+}
+
+function getAutoExpandedItemIds(
+  treeData: TreeDataItem[],
+  selectedItemId: string,
+  expandAll: boolean
+) {
+  if (!selectedItemId && !expandAll) {
+    return [] as string[]
+  }
+
+  const ids: string[] = []
+
+  function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string | undefined) {
+    if (items instanceof Array) {
+      for (let i = 0; i < items.length; i++) {
+        ids.push(items[i]!.id)
+        if (walkTreeItems(items[i]!, targetId)) {
+          return true
+        }
+        ids.pop()
+      }
+    } else if (items.id === targetId) {
+      return true
+    } else if (items.children) {
+      return walkTreeItems(items.children, targetId)
+    }
+
+    return expandAll
+  }
+
+  walkTreeItems(treeData, selectedItemId)
+  return ids
 }
 
 function fsEntryToTreeDataItem(
@@ -93,20 +192,43 @@ function fsEntryToTreeDataItem(
     setRenaming: Dispatch<SetStateAction<Renaming>>
     setReplState: SetReplStoredState
   }
-): TreeDataItem {
+): [TreeDataItem, { hasErrors: boolean; hasWarnings: boolean }] {
   const lastSlashIndex = path.lastIndexOf('/')
   const name = path.slice(lastSlashIndex + 1)
 
-  const hasErrors = () =>
-    context.replInfo?.errors.some((e) => e.location?.file && '/' + e.location.file === path)
-  const hasWarnings = () =>
-    context.replInfo?.warnings.some((e) => e.location?.file && '/' + e.location.file === path)
+  const hasErrors =
+    context.replInfo?.errors.some((e) => e.location?.file && '/' + e.location.file === path) ??
+    false
+  const hasWarnings =
+    context.replInfo?.warnings.some((e) => e.location?.file && '/' + e.location.file === path) ??
+    false
+
+  let childrenHaveErrors = false
+  let childrenHaveWarnings = false
+
+  let children: TreeDataItem[] | undefined
+  if (entry.kind === ReplFS.Kind.Directory) {
+    const parentPath = path === '/' ? '' : path
+    children = Object.entries(entry.children)
+      .map(([name, entry]) => {
+        const [child, data] = fsEntryToTreeDataItem(parentPath + '/' + name, entry, context)
+        childrenHaveErrors ||= data.hasErrors
+        childrenHaveWarnings ||= data.hasWarnings
+        return child
+      })
+      .sort(sortTreeDataItem)
+  }
 
   const node: TreeDataItem = {
     id: path,
     name,
     title: path,
-    textClassName: hasErrors() ? 'text-red-500' : hasWarnings() ? 'text-yellow-500' : undefined,
+    textClassName:
+      hasErrors || childrenHaveErrors
+        ? 'text-red-500'
+        : hasWarnings || childrenHaveWarnings
+          ? 'text-yellow-500'
+          : undefined,
     icon:
       entry.kind === ReplFS.Kind.Directory
         ? LucideFolder
@@ -117,16 +239,16 @@ function fsEntryToTreeDataItem(
       context.renaming?.path === path ? (
         <Rename name={name} path={path} context={context} />
       ) : undefined,
+    children,
   }
 
-  if (entry.kind === ReplFS.Kind.Directory) {
-    const parentPath = path === '/' ? '' : path
-    node.children = Object.entries(entry.children)
-      .map(([name, entry]) => fsEntryToTreeDataItem(parentPath + '/' + name, entry, context))
-      .sort(sortTreeDataItem)
-  }
-
-  return node
+  return [
+    node,
+    {
+      hasErrors: hasErrors || childrenHaveErrors,
+      hasWarnings: hasWarnings || childrenHaveWarnings,
+    },
+  ]
 }
 
 // Directories first, then files.
@@ -191,6 +313,7 @@ function Actions({
   }
 }) {
   const { setReplState, setRenaming } = context
+  const { setExpandedItemIds } = useContext(FilesPanelContext)!
 
   const deleteItem = useCallback(
     (path: string) => {
@@ -222,10 +345,10 @@ function Actions({
 
   const createFile = useCallback(() => {
     const dir = entry as ReplFS.Directory
-    let newFileName = 'new-file.ts'
+    let newFileName = '__newfile'
     if (dir.children[newFileName]) {
       for (let i = 1; i < 9999; i++) {
-        newFileName = `new-file-${i}.ts`
+        newFileName = `__newfile(${i})`
         if (!dir.children[newFileName]) {
           break
         }
@@ -241,6 +364,7 @@ function Actions({
 
     setRenaming({
       path: newFilePath,
+      isNew: true,
       onComplete: (path) => {
         setReplState((state) => ({
           ...state,
@@ -254,7 +378,11 @@ function Actions({
         deleteItem(newFilePath)
       },
     })
-  }, [path, setReplState, setRenaming, entry, deleteItem])
+
+    setExpandedItemIds((ids) => {
+      return ids.includes(path) ? ids : [...ids, path]
+    })
+  }, [path, setReplState, setRenaming, entry, deleteItem, setExpandedItemIds])
 
   const createFolder = useCallback(() => {}, [path, setReplState])
 
@@ -312,15 +440,25 @@ function Rename({
   name: string
   path: string
   context: {
+    renaming: Renaming
     setRenaming: Dispatch<SetStateAction<Renaming>>
     setReplState: SetReplStoredState
   }
 }) {
-  const { setRenaming, setReplState } = context
+  const { renaming, setRenaming, setReplState } = context
+  const isNew = renaming?.isNew ?? false
 
   const onConfirm = useCallback(
     (event: React.SyntheticEvent<HTMLInputElement>) => {
       const newName = (event.target as HTMLInputElement).value
+      if (!newName) {
+        setRenaming((renaming) => {
+          renaming?.onCancel?.()
+          return null
+        })
+        return
+      }
+
       const newPath = renameItem(path, newName, name, setReplState)
       setRenaming((renaming) => {
         if (newPath) {
@@ -344,9 +482,10 @@ function Rename({
   return (
     <input
       data-rename={path}
-      defaultValue={name}
-      placeholder={name}
-      className="ring-border outline-primary -ml-1 min-w-0 flex-grow px-1 text-sm ring-1"
+      defaultValue={isNew ? '' : name}
+      placeholder={isNew ? '' : name}
+      pattern="^[\/a-zA-Z0-9_\-.\(\) ]+$"
+      className="ring-border outline-primary invalid:outline-destructive invalid:ring-destructive -ml-1 min-w-0 flex-grow rounded-sm px-1 text-sm outline-offset-2 ring-1 invalid:ring-2"
       onBlur={(event) => {
         onConfirm(event)
       }}
@@ -358,6 +497,7 @@ function Rename({
         }
       }}
       onClick={(event) => event.stopPropagation()}
+      onFocus={isNew ? (event) => event.target.select() : undefined}
       autoFocus
       autoCapitalize="off"
       autoCorrect="off"
@@ -375,8 +515,12 @@ function renameItem(
 ): false | string {
   newName = newName.trim()
 
+  if (!newName) {
+    return false
+  }
+
   // Validate newName for allowed file name characters, plus "/" which is handled below.
-  if (!/^[/a-zA-Z0-9_\-.]+$/.test(newName)) {
+  if (!/^[/a-zA-Z0-9_\-.\(\)\ ]+$/.test(newName)) {
     return false
   }
 

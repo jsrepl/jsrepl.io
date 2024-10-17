@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { TreeDataItem, TreeView } from '@/components/ui/tree-view'
 
 export default {
@@ -6,6 +6,9 @@ export default {
 }
 
 export const Default = () => {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
+  const [expandedItemIds, setExpandedItemIds] = useState<string[]>([])
+
   const data: TreeDataItem[] = [
     {
       id: '1',
@@ -51,5 +54,19 @@ export const Default = () => {
     },
   ]
 
-  return <TreeView data={data} />
+  return (
+    <TreeView
+      data={data}
+      selectedItemId={selectedItemId}
+      onSelectChange={(item) => setSelectedItemId(item?.id ?? null)}
+      expandedItemIds={expandedItemIds}
+      onExpandChange={(item, expanded) => {
+        if (expanded) {
+          setExpandedItemIds((ids) => [...ids, item.id])
+        } else {
+          setExpandedItemIds((ids) => ids.filter((id) => id !== item.id))
+        }
+      }}
+    />
+  )
 }

@@ -159,7 +159,7 @@ export default function CodeEditor({ className }: { className?: string }) {
   return (
     <>
       <div className={cn(className, 'relative flex min-w-24 flex-col [grid-area:editor]')}>
-        <CodeEditorHeader />
+        <CodeEditorHeader editorRef={editorRef} />
         <div
           ref={containerRef}
           className={cn('min-h-0 flex-1', styles.codeEditor, { 'opacity-0': !isThemeLoaded })}

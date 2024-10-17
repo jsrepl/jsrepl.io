@@ -1,24 +1,28 @@
 'use client'
 
-import React, { useCallback, useContext, useEffect, useMemo } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { LucideX } from 'lucide-react'
+import type * as monaco from 'monaco-editor'
 import { Button } from '@/components/ui/button'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
 
-export default function CodeEditorHeader() {
+export default function CodeEditorHeader({
+  editorRef,
+}: {
+  editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>
+}) {
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { replInfo } = useContext(ReplInfoContext)!
+  const headerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const activeModelElement = document.querySelector(`[data-active="true"]`)
-    if (activeModelElement) {
-      activeModelElement.scrollIntoView({
-        inline: 'nearest',
-      })
-    }
+    requestAnimationFrame(() => {
+      const activeModelElement = headerRef.current?.querySelector('[data-active="true"]')
+      activeModelElement?.scrollIntoView({ inline: 'nearest' })
+    })
   }, [replState.activeModel])
 
   const modelSwitcherOptions = useMemo(() => {
@@ -59,9 +63,19 @@ export default function CodeEditorHeader() {
     [setReplState]
   )
 
+  const onTabClick = useCallback(
+    (path: string) => {
+      setReplState((prev) => ({ ...prev, activeModel: path }))
+      requestAnimationFrame(() => {
+        editorRef.current?.focus()
+      })
+    },
+    [setReplState, editorRef]
+  )
+
   return (
-    <header className="h-repl-header flex items-stretch gap-2">
-      <ScrollArea scrollHideDelay={0}>
+    <header ref={headerRef} className="h-repl-header flex items-stretch gap-2">
+      <ScrollArea scrollHideDelay={0} className="flex-1">
         <div className="flex h-full flex-1 border-b">
           {modelSwitcherOptions.map((modelOption) => (
             <span key={modelOption.value} className="group relative inline-flex items-center">
@@ -70,9 +84,7 @@ export default function CodeEditorHeader() {
                 size="none"
                 data-active={replState.activeModel === modelOption.value}
                 className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer py-2 pl-4 pr-8 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner group-first:data-[active=true]:before:border-l-0"
-                onClick={() =>
-                  setReplState((prev) => ({ ...prev, activeModel: modelOption.value }))
-                }
+                onClick={() => onTabClick(modelOption.value)}
               >
                 <span
                   className={cn(
