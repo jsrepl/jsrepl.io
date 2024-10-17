@@ -10,6 +10,14 @@ import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
 import { FileIcon } from './file-icon'
 
+type ModelSwitcherOption = {
+  value: string
+  label: string
+  labelDescription: string
+  errorCount: number
+  warningCount: number
+}
+
 export default function CodeEditorHeader({
   editorRef,
 }: {
@@ -26,13 +34,16 @@ export default function CodeEditorHeader({
     })
   }, [replState.activeModel])
 
-  const modelSwitcherOptions = useMemo(() => {
+  const modelSwitcherOptions: ModelSwitcherOption[] = useMemo(() => {
+    const map: Record<string, ModelSwitcherOption> = {}
+
     return replState.openedModels.map((path) => {
-      // TODO: handle duplicate file names from different directories
       const name = path.slice(path.lastIndexOf('/') + 1)
-      return {
+
+      const option = {
         value: path,
         label: name,
+        labelDescription: '',
         errorCount:
           replInfo?.errors.filter((e) => e.location?.file && '/' + e.location.file === path)
             .length ?? 0,
@@ -40,6 +51,17 @@ export default function CodeEditorHeader({
           replInfo?.warnings.filter((e) => e.location?.file && '/' + e.location.file === path)
             .length ?? 0,
       }
+
+      // Handle duplicate tab titles for files with the same name but in different directories.
+      if (map[name]) {
+        option.labelDescription = option.value.slice(0, option.value.lastIndexOf('/')) || '/'
+        map[name].labelDescription =
+          map[name].value.slice(0, map[name].value.lastIndexOf('/')) || '/'
+      } else {
+        map[name] = option
+      }
+
+      return option
     })
   }, [replState.openedModels, replInfo])
 
@@ -98,6 +120,11 @@ export default function CodeEditorHeader({
                   <span className="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
                     {modelOption.label}
                   </span>
+                  {modelOption.labelDescription && (
+                    <span className="self-end text-xs opacity-40 group-hover:opacity-100 group-data-[active=true]:opacity-80">
+                      {modelOption.labelDescription}
+                    </span>
+                  )}
                 </span>
               </Button>
 
