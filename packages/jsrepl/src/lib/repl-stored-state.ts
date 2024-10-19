@@ -2,6 +2,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import * as ReplFS from '@/lib/repl-fs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
+import { DebugLog, debugLog } from './debug-log'
 import {
   defaultDocsMdFileContent,
   defaultTailwindConfigTs,
@@ -38,6 +39,8 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
       loadSchemaCurrent(searchParams, state)
     }
 
+    debugLog(DebugLog.REPL, 'loaded', state)
+    console.log('loaded', state)
     return state
   } catch (e) {
     console.error('load error', e)

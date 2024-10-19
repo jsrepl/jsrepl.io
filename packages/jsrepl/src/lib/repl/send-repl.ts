@@ -16,6 +16,12 @@ let monacoTailwindcss: MonacoTailwindcss | null = null
 
 let _abortController: AbortController | null = null
 
+export function abortRepl() {
+  if (_abortController && !_abortController.signal.aborted) {
+    _abortController.abort()
+  }
+}
+
 export async function sendRepl({
   models,
   allPayloads,
@@ -31,9 +37,7 @@ export async function sendRepl({
   previewIframe: HTMLIFrameElement
   theme: Theme
 }): Promise<ReplInfo> {
-  if (_abortController && !_abortController.signal.aborted) {
-    _abortController.abort()
-  }
+  abortRepl()
 
   const abortController = (_abortController = new AbortController())
   const checkAborted = () => {
@@ -171,7 +175,11 @@ export async function sendRepl({
 
     const srcdoc = previewDoc.documentElement.outerHTML
 
-    previewIframe.contentWindow!.postMessage(
+    if (!previewIframe.contentWindow) {
+      throw 'aborted'
+    }
+
+    previewIframe.contentWindow.postMessage(
       {
         source: 'jsrepl',
         type: 'repl',

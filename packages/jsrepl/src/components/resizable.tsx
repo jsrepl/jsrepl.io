@@ -61,7 +61,7 @@ export default function Resizable({
     return () => {
       interactable.unset()
     }
-  }, [edges, onSizeUpdate])
+  }, [edges, onSizeUpdate, margin])
 
   return (
     <div

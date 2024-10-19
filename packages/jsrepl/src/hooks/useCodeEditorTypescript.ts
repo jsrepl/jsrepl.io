@@ -154,9 +154,17 @@ export default function useCodeEditorTypescript(
   }, [debouncedUpdateDts])
 
   useEffect(() => {
+    let disposed = false
+
     loadTS().then(() => {
-      updateDts()
+      if (!disposed) {
+        updateDts()
+      }
     })
+
+    return () => {
+      disposed = true
+    }
   }, [loadTS, updateDts])
 
   useEffect(() => {

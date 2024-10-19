@@ -9,11 +9,273 @@ import {
   LucidePackage,
   LucideSquareFunction,
 } from 'lucide-react'
+import dedent from 'string-dedent'
 import IconEmail from '~icons/mdi/email-outline.jsx'
 import IconGithub from '~icons/mdi/github.jsx'
 import { Button } from '@/components/ui/button'
+import { defaultTailwindConfigTs } from '@/lib/repl-files-content'
+import * as ReplFS from '@/lib/repl-fs'
+import { toQueryParams } from '@/lib/repl-stored-state'
+import { ReplStoredState } from '@/types'
 import Demo from './components/demo'
 import FeatureBox from './components/feature-box'
+
+const repls = {
+  liveFeedback: {
+    activeModel: '/index.ts',
+    openedModels: ['/index.ts'],
+    showPreview: false,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.ts': {
+          content: dedent`
+            setInterval(() => {
+              const now = new Date();
+              now.toTimeString();
+            }, 100);
+
+            const p = new Promise((res) => {
+              setTimeout(() => res('JSREPL'), 2000);
+            });
+
+            const site = await p;
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  npmPackages: {
+    activeModel: '/index.ts',
+    openedModels: ['/index.ts'],
+    showPreview: false,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.ts': {
+          content: dedent`
+            import { format } from 'date-fns';
+
+            const now = new Date();
+            format(now, 'dd-MM-yyyy');
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  browserEnv: {
+    activeModel: '/index.ts',
+    openedModels: ['/index.ts', '/index.html', '/index.css'],
+    showPreview: true,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.ts': {
+          content: dedent`
+            import './index.css'
+
+            const el = document.querySelector('select');
+            el.addEventListener('change', () => {
+              document.body.style.backgroundColor = el.value;
+            });
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'index.html': {
+          content: dedent`
+            <select>
+              <option selected disabled>Select color...</option>
+              <option value="red">Red</option>
+              <option value="blue">Blue</option>
+              <option value="green">Green</option>
+              <option value="yellow">Yellow</option>
+            </select>
+
+            <script type="module" src="/index.ts"></script>
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'index.css': {
+          content: dedent`
+            html {
+              zoom: 1.3;
+            }
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  typescript: {
+    activeModel: '/index.ts',
+    openedModels: ['/index.ts'],
+    showPreview: false,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.ts': {
+          content: dedent`
+            let date = new Date();
+            date = 0;
+
+            enum Color {
+              Red = 'red',
+              Yellow = 'yellow',
+              Blue = 'blue',
+              Green = 'green',
+            }
+
+            const color: Color = Color.Green;
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  tailwindcss: {
+    activeModel: '/index.html',
+    openedModels: ['/index.html', '/index.css', '/tailwind.config.ts'],
+    showPreview: true,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.html': {
+          content: dedent`
+            <link rel="stylesheet" href="/index.css"></link>
+            <div class="text-2xl underline underline-offset-4">Hello, world!</div>
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'index.css': {
+          content: dedent`
+            @tailwind base;
+            @tailwind components;
+            @tailwind utilities;
+
+            body {
+              @apply dark:text-lime-500;
+            }
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'tailwind.config.ts': {
+          content: defaultTailwindConfigTs,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  jsx: {
+    activeModel: '/index.tsx',
+    openedModels: ['/index.tsx', '/index.html', '/index.css'],
+    showPreview: true,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.tsx': {
+          content: dedent`
+            import './index.css'
+            import { createRoot } from 'react-dom/client.development';
+
+            const root = createRoot(document.getElementById('root'));
+            root.render(<App />);
+
+            function App() {
+              return <h1 className="italic">Hello, world!</h1>;
+            }
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'index.html': {
+          content: dedent`
+            <div id="root"></div>
+
+            <script type="module" src="/index.tsx"></script>
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'index.css': {
+          content: dedent`
+            @tailwind base;
+            @tailwind components;
+            @tailwind utilities;
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+
+  prettier: {
+    activeModel: '/index.ts',
+    openedModels: ['/index.ts'],
+    showPreview: false,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'index.ts': {
+          content: dedent`
+            const arr = [
+              1, 2, 3, 
+              4, 5]
+
+            function getRandom (arr: number[]){
+            return 4
+            }
+
+            if(getRandom(arr) === 4) {
+                console.log('How lucky!')
+            } 
+
+            // Press ⌘+S to format the code with Prettier.
+          `,
+          kind: ReplFS.Kind.File,
+        },
+        'DOCS.md': {
+          content: 'virtual:///DOCS.md',
+          kind: ReplFS.Kind.File,
+        },
+      },
+    }),
+  },
+}
+
+function getReplLink(state: ReplStoredState) {
+  const query = toQueryParams(state)
+  const searchParams = new URLSearchParams(query)
+  return `/repl?${searchParams.toString()}`
+}
 
 export default function Home() {
   return (
@@ -181,7 +443,7 @@ export default function Home() {
 
       <div id="demos" className="container mt-16 flex flex-col gap-16">
         <Demo
-          replLink="/repl?i=eNpNjzGrwkAQhP%252FKco0XCI%252B8V%252FrQSgvFQtTymhBXXUj25HY1guS%252FuzGKdsMM8w1zd8SH6MbuHhggOCWtMbixyeDywdujVInOSpHfSeDO5U7lZk1BXbBiupa19xlMpvBkVZFFgWMLE2BsYVYq%252Buy%252Fj8z80bijBreaiI9Pu8vhtyh6FXjonl%252FNdYoNCXqfUD58m%252B0J8aKvVUv9aLndzNerUZbDXzHQum%252BkkKJRy7Yk41tgL07a1HbDVCXSi%252B4Bc7hWYg%253D%253D&c=tsx&p=0"
+          replLink={getReplLink(repls.liveFeedback)}
           title="Live feedback"
           text={
             <>
@@ -206,7 +468,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNo1jUEKhDAMRa8SstEBvYDD7GbrDbIR2zIFm0gbcIbSu09EzOqRx%252BNXjBwEJ6zEAIQadfOEkyHhcP2cL2uOu0bh2xA3HFDL18qYdskKFYLktCg0CFkSdG5RPwYu3ZOYeBUuCiwHvID9AW%252Bz%252FcPUVfVmBmvcOM%252Fjz647nW18NG02YrSWckL7A1bQOVw%253D&c=tsx&p=0"
+          replLink={getReplLink(repls.npmPackages)}
           title="NPM packages"
           text={
             <>
@@ -230,7 +492,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNp9kLFOxDAMhl8lytI7qcoJsZW2AwixMMGElKVNTC8ijSFJD8qp747TiBMsnWzZn3%252F%252F9pkb94q84mfpGJM8mmhB8opSyctc0xCUN%252B%252FRoPvtSLfwksfwRZMKXYgMLGuYRjWN4KL4mMDPz2BBRfS7IqxZsb%252BRDqzotL4%252FEfVoQgQH1FfHzg1QlGy3Z03LVi8XrR71LEKcLYi%252BU2%252BDx8npO7ToaSPJnTo7ASkvSZ5cHeNoyVadl7ZJq8bVPcsl0Eyb0PUWdJs9MpXkhBD1IZP%252FptYFjeQetOTtE%252BhNqqdA2C2FTW7wAPTP9iHFTXIGa%252FGT0Jc1%252BcPWh8uRdLgKge5O5%252BcPfiOOFbsS1%252Bk5fPkBlTWokQ%253D%253D&c=tsx&p=1"
+          replLink={getReplLink(repls.browserEnv)}
           title="Browser environment"
           text={
             <>
@@ -251,7 +513,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNo1jsEKwjAMhl8l9DIFEc%252BTXVTw7k3oRduohS6VtmPK2LubtPOUjy8k%252Fz8pR4%252BgWjVpAtAqu%252BxRq5ZRq011FpOJ7p1doP9G06w2KqcPX3rMYG8ZoQPCEU6Mq%252FVe0%252BJ2jJqQhh6OwYcIJemClndNRNuUlCt6H0ZR30LVHvwgL5o7z2rOEZFEPQXEzfLeBEoZjPxvl5iuzm254A7c95V7z4WZTEoC8w%252F9CVAf&c=tsx&p=0"
+          replLink={getReplLink(repls.typescript)}
           title="TypeScript"
           text={
             <>
@@ -267,7 +529,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNpVj80KwkAMhF9lzbmiCF7qD4IX73rcy9qNGEyzpRu1In13o0VEchmGb2bIE0hOCUp4enHOg5IyeihNHgLxnSS67X7vItbJQzFAEXPVUqOUZEDtpIcCNHdWZeKsNZtaRrq5ikPOK6vGTsezjj2sd8icCndPLcfRcmLU2kJVzpbZ6Hf3GDIuvPyMKtVNEhTNf%252FZViUkJ366XY4oP9%252FlmE5qGHy6G9lJ%252BxplqHM%252BnU%252BN66F9%252F9lUJ&c=html&p=1"
+          replLink={getReplLink(repls.tailwindcss)}
           title="Tailwind CSS"
           text={
             <>
@@ -299,7 +561,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNpVkL1OAzEQhF9lcZNECjmlDZdTQCABBUVoKNw49oaz8K1P9l5%252BFN27syYFIDerzzPjHV%252BUp31UK3XRBKAVew6o1UrGLRrL8Pr%252BAY%252FYRa3mV4XDbJPv2Ue66uTQqOaK80lyfNfHxHABm9AwbmNkGGGfYgcTIZZvXewqGzwSLxweMMS%252Bk3lyp0mTjZQZUjGt%252FyRMXbRDUS0%252BkZ8ClvHh%252FOKmkyKdzGZiLtMiITlM0%252Fq%252B76FqCta0H8iWbUHgdAY%252FRRPykAjqdgk2mJzfTIdrrTyb4K1WzTOGEOdwjCm4m7pql41EjZqkZstdkJ618wfwTkzlYbHUlZBGBDZnud%252Bw8eHoycHOZBT3L7BR%252FoikQv6HB%252FbBs8dCNe2iO1933Zi%252BD2dwJn2tGE98e2w9l8RRjd91q5si&c=tsx&p=1"
+          replLink={getReplLink(repls.jsx)}
           title="JSX/TSX"
           text={
             <>
@@ -316,7 +578,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink="/repl?i=eNqVj01OwzAUhK8yeNNEWK2AsImUHUIsESzrLlLHCRbJc%252BUfQVT1BhyA8%252FUkfW6l7rsbWzP63rcXlnonarFXBCgRbRyNEjXHd29itMbjxUxOCXkpdCZob3fROrrUXp2f2ojZJQ%252FtOoMULA24rrczdt6E8%252Bfx7%252F%252F%252BUwlFByFFDL%252FM1Y5CROs9Gqwz4kHiUeJJIj8qieeNIkV9Ip2ZGEz8aKlzEwoe1aA0bY1fb8oswMzkCRUD8sj2xbWe2yWapkFV4iwLPpeCG81ydEOxeHM%252FGJP%252Bnu8WJe8Zr2i1ws16S1b7itPIbpx0CDkcTkdVeL0%253D&c=tsx&p=0"
+          replLink={getReplLink(repls.prettier)}
           title="Prettier"
           text={
             <>
