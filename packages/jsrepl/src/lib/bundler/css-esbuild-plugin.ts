@@ -1,8 +1,10 @@
 import type { PluginObj, types } from '@babel/core'
+import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import type * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { defer } from '../promise-with-resolvers'
+import { defaultTailwindConfigJson } from '../tailwind-configs'
 import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
@@ -10,28 +12,44 @@ import { babelParseErrorToEsbuildError } from './utils'
 const tailwindConfigCache = new Cache()
 
 let tailwindContent: { content: string; extension: string }[] | null = null
-let tailwindConfigReadyDeferred: PromiseWithResolvers<void> | null = null
-let lastAppliedTailwindConfig: string | undefined
+let tailwindConfigLoadDeferred: PromiseWithResolvers<void> | null = null
+let lastAppliedTailwindConfig: string | TailwindConfig | undefined
+let awaitTailwindConfigReady: () => Promise<void>
 
 export function CssEsbuildPlugin({
   setTailwindConfig,
   processCSSWithTailwind,
 }: {
-  setTailwindConfig: ((tailwindConfig: string) => Promise<void>) & Comlink.ProxyMarked
+  setTailwindConfig: ((tailwindConfig: string | TailwindConfig) => Promise<void>) &
+    Comlink.ProxyMarked
   processCSSWithTailwind: ((
     css: string,
     content: { content: string; extension: string }[]
   ) => Promise<string>) &
     Comlink.ProxyMarked
 }): esbuild.Plugin {
+  async function applyTailwindConfig(tailwindConfig: string | TailwindConfig) {
+    if (lastAppliedTailwindConfig !== tailwindConfig) {
+      await setTailwindConfig(tailwindConfig)
+      lastAppliedTailwindConfig = tailwindConfig
+    }
+  }
+
   return {
     name: 'jsrepl-css',
     setup(build) {
       tailwindContent = null
-      tailwindConfigReadyDeferred = null
+      tailwindConfigLoadDeferred = null
+      awaitTailwindConfigReady = async () => {
+        await applyTailwindConfig(defaultTailwindConfigJson)
+      }
 
       build.onResolve({ filter: /tailwind\.config\.(js|ts)$/ }, (args) => {
-        tailwindConfigReadyDeferred = defer()
+        tailwindConfigLoadDeferred = defer()
+        awaitTailwindConfigReady = async () => {
+          await tailwindConfigLoadDeferred?.promise
+        }
+
         return {
           path: args.path,
           namespace: 'tailwind-config',
@@ -39,14 +57,15 @@ export function CssEsbuildPlugin({
       })
 
       build.onLoad({ filter: /.*/, namespace: 'tailwind-config' }, (args) =>
-        onTailwindConfigLoadCallback(args, build, setTailwindConfig)
+        onTailwindConfigLoadCallback(args, build, applyTailwindConfig)
       )
 
       build.onLoad({ filter: /\.css$/ }, (args) => onCssLoadCallback(args, processCSSWithTailwind))
 
       build.onDispose(() => {
         tailwindContent = null
-        tailwindConfigReadyDeferred = null
+        tailwindConfigLoadDeferred = null
+        awaitTailwindConfigReady = async () => {}
       })
     },
   }
@@ -55,7 +74,7 @@ export function CssEsbuildPlugin({
 async function onTailwindConfigLoadCallback(
   args: esbuild.OnLoadArgs,
   build: esbuild.PluginBuild,
-  setTailwindConfig: ((tailwindConfig: string) => Promise<void>) & Comlink.ProxyMarked
+  applyTailwindConfig: (tailwindConfig: string | TailwindConfig) => Promise<void>
 ): Promise<esbuild.OnLoadResult | null | undefined> {
   let transformFailure: esbuild.TransformFailure | undefined
 
@@ -92,19 +111,15 @@ async function onTailwindConfigLoadCallback(
       tailwindConfigCache.set(contents, args.path, transformedCode)
     }
 
-    if (lastAppliedTailwindConfig !== transformedCode) {
-      await setTailwindConfig(transformedCode)
-      lastAppliedTailwindConfig = transformedCode
-    }
-
-    tailwindConfigReadyDeferred?.resolve()
+    await applyTailwindConfig(transformedCode)
+    tailwindConfigLoadDeferred?.resolve()
 
     return {
       contents: transformedCode,
       loader: 'js',
     }
   } catch (error) {
-    tailwindConfigReadyDeferred?.reject('tailwind-config-ready-rejected')
+    tailwindConfigLoadDeferred?.reject('tailwind-config-load-rejected')
 
     if (transformFailure) {
       return {
@@ -158,7 +173,7 @@ async function onCssLoadCallback(
         }))
     }
 
-    await tailwindConfigReadyDeferred?.promise
+    await awaitTailwindConfigReady()
     const css = await processCSSWithTailwind(contents, tailwindContent)
 
     return {
@@ -166,7 +181,7 @@ async function onCssLoadCallback(
       loader: 'css',
     }
   } catch (error) {
-    if (error === 'tailwind-config-ready-rejected') {
+    if (error === 'tailwind-config-load-rejected') {
       return undefined
     }
 

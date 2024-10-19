@@ -1,4 +1,4 @@
-import type { MonacoTailwindcss } from '@nag5000/monaco-tailwindcss'
+import type { MonacoTailwindcss, TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import type * as esbuild from 'esbuild-wasm'
 import * as monaco from 'monaco-editor'
@@ -6,7 +6,6 @@ import { type BuildResult } from '@/lib/bundler/bundler-worker'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
-import { defaultTailwindConfigJson } from '@/lib/tailwind-configs'
 import { type ImportMap, type ReplInfo, type ReplPayload, type Theme } from '@/types'
 import { consoleLogRepl } from '../console-utils'
 import { type ReplData, replDataRef } from './data'
@@ -316,14 +315,12 @@ function processPreviewDoc(
   doc.body.appendChild(afterJsScript)
 }
 
-async function setTailwindConfig(tailwindConfig: string) {
+async function setTailwindConfig(tailwindConfig: string | TailwindConfig) {
   if (monacoTailwindcss) {
-    monacoTailwindcss.setTailwindConfig(tailwindConfig ?? defaultTailwindConfigJson)
+    monacoTailwindcss.setTailwindConfig(tailwindConfig)
   } else {
     const { configureMonacoTailwindcss } = await import('@nag5000/monaco-tailwindcss')
-    monacoTailwindcss = configureMonacoTailwindcss(monaco, {
-      tailwindConfig: tailwindConfig ?? defaultTailwindConfigJson,
-    })
+    monacoTailwindcss = configureMonacoTailwindcss(monaco, { tailwindConfig })
   }
 }
 

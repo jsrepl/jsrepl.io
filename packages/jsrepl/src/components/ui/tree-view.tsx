@@ -16,7 +16,7 @@ interface TreeDataItem {
   id: string
   name: string
   textClassName?: string
-  customText?: React.ReactNode
+  customContent?: React.ReactNode
   title?: string
   icon?: React.ElementType
   selectedIcon?: React.ElementType
@@ -182,16 +182,16 @@ const TreeNode = ({
           title={item.title}
           data-active={selectedItemId === item.id}
         >
-          <TreeIcon
-            item={item}
-            isSelected={selectedItemId === item.id}
-            isOpen={value.includes(item.id)}
-            default={defaultNodeIcon}
-          />
-          {item.customText ? (
-            item.customText
+          {item.customContent ? (
+            item.customContent
           ) : (
             <>
+              <TreeIcon
+                item={item}
+                isSelected={selectedItemId === item.id}
+                isOpen={value.includes(item.id)}
+                default={defaultNodeIcon}
+              />
               <span className={cn('flex-grow truncate text-start text-sm', item.textClassName)}>
                 {item.name}
               </span>
@@ -244,11 +244,11 @@ const TreeLeaf = React.forwardRef<
       data-active={selectedItemId === item.id}
       {...props}
     >
-      <TreeIcon item={item} isSelected={selectedItemId === item.id} default={defaultLeafIcon} />
-      {item.customText ? (
-        item.customText
+      {item.customContent ? (
+        item.customContent
       ) : (
         <>
+          <TreeIcon item={item} isSelected={selectedItemId === item.id} default={defaultLeafIcon} />
           <span className={cn('flex-grow truncate text-sm', item.textClassName)}>{item.name}</span>
           <TreeActions isSelected={selectedItemId === item.id}>{item.actions}</TreeActions>
         </>

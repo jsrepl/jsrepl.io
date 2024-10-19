@@ -1,3 +1,4 @@
+import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel } from '@/lib/get-babel'
@@ -36,7 +37,8 @@ async function build(
     input: Record<string, string>
     options: Omit<esbuild.BuildOptions, 'plugins'>
   },
-  setTailwindConfig: ((tailwindConfig: string) => Promise<void>) & Comlink.ProxyMarked,
+  setTailwindConfig: ((tailwindConfig: string | TailwindConfig) => Promise<void>) &
+    Comlink.ProxyMarked,
   processCSSWithTailwind: ((
     css: string,
     content: { content: string; extension: string }[]

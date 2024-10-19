@@ -1,7 +1,7 @@
 import { useCallback, useContext, useMemo } from 'react'
 import Resizable from '@/components/resizable'
 import { UserStateContext } from '@/context/user-state-context'
-import FilesPanel from './files-panel'
+import FilesPanel from './files-panel/files-panel'
 
 export default function LeftSidebar() {
   const { userState, setUserState } = useContext(UserStateContext)!

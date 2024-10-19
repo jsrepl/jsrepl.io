@@ -28,6 +28,10 @@ export class FS {
     return entry
   }
 
+  exists(path: string): boolean {
+    return this.getEntry(path) !== null
+  }
+
   /**
    * Remove file or directory by path.
    * @param path - Absolute path to the entry.
@@ -67,16 +71,20 @@ export class FS {
     return entry?.kind === Kind.Directory ? entry : null
   }
 
-  mkdirRecursive(path: string): Directory {
+  mkdirRecursive(path: string): { path: string; entry: Directory } {
     path = this.#normalizePath(path)
     const parts = path.slice(1).split('/')
     if (parts.length === 1 && parts[0] === '') {
-      return this.root
+      return { path, entry: this.root }
     }
 
     let dir: Directory = this.root
     while (parts.length > 0) {
       const part = parts.shift()!
+      if (!this.validateName(part)) {
+        throw new Error(`Invalid directory path "${path}".`)
+      }
+
       let child = dir.children[part]
       if (!child) {
         const newDir: Directory = {
@@ -94,7 +102,7 @@ export class FS {
       }
     }
 
-    return dir
+    return { path, entry: dir }
   }
 
   /**
@@ -102,19 +110,19 @@ export class FS {
    * @param path - Absolute path to the file, including the file name.
    * @param content - File content.
    */
-  writeFile(path: string, content: string): File {
+  writeFile(path: string, content: string): { path: string; entry: File } {
     path = this.#normalizePath(path)
 
     const lastSlashIndex = path.lastIndexOf('/')
     const dirPath = lastSlashIndex === -1 ? '' : path.slice(0, lastSlashIndex)
     const fileName = path.slice(lastSlashIndex + 1)
-    if (!fileName.trim()) {
-      throw new Error(`Invalid file name "${fileName}".`)
+    if (!this.validateName(fileName)) {
+      throw new Error(`Invalid file path "${path}".`)
     }
 
-    const dir = this.mkdirRecursive(dirPath)
+    const { entry: parentDir } = this.mkdirRecursive(dirPath)
 
-    const existingEntry = dir.children[fileName]
+    const existingEntry = parentDir.children[fileName]
     if (existingEntry?.kind === Kind.Directory) {
       throw new Error(`Path "${path}" is a directory.`)
     }
@@ -124,29 +132,78 @@ export class FS {
       content,
     }
 
-    dir.children[fileName] = file
+    parentDir.children[fileName] = file
 
-    return file
+    return { path, entry: file }
   }
 
-  renameEntry(path: string, newPath: string): string {
+  writeDirectory(
+    path: string,
+    children: Record<string, Entry>
+  ): { path: string; entry: Directory } {
+    path = this.#normalizePath(path)
+
+    const lastSlashIndex = path.lastIndexOf('/')
+    const dirPath = lastSlashIndex === -1 ? '' : path.slice(0, lastSlashIndex)
+    const dirName = path.slice(lastSlashIndex + 1)
+    if (!this.validateName(dirName)) {
+      throw new Error(`Invalid directory path "${path}".`)
+    }
+
+    const { entry: parentDir } = this.mkdirRecursive(dirPath)
+
+    const existingEntry = parentDir.children[dirName]
+    if (existingEntry?.kind === Kind.File) {
+      throw new Error(`Path "${path}" is a file.`)
+    }
+
+    const dir: Directory = {
+      kind: Kind.Directory,
+      children,
+    }
+
+    parentDir.children[dirName] = dir
+
+    return { path, entry: dir }
+  }
+
+  renameEntry(path: string, newPath: string): { path: string; entry: Entry } {
     const entry = this.getEntry(path)
     if (!entry) {
       throw new Error(`Path "${path}" does not exist.`)
     }
 
+    newPath = this.#normalizePath(newPath)
+    const lastSlashIndex = newPath.lastIndexOf('/')
+    const newName = newPath.slice(lastSlashIndex + 1)
+    if (!this.validateName(newName)) {
+      throw new Error(`Invalid file path "${newPath}".`)
+    }
+
+    const newParentDirPath = newPath.slice(0, lastSlashIndex)
+    const { entry: newParentDir } = this.mkdirRecursive(newParentDirPath)
+
     if (!this.removeEntry(path)) {
       throw new Error(`Failed to remove "${path}".`)
     }
 
-    newPath = this.#normalizePath(newPath)
-    const lastSlashIndex = newPath.lastIndexOf('/')
-    const newName = newPath.slice(lastSlashIndex + 1)
-    const newParentDirPath = newPath.slice(0, lastSlashIndex)
-    const newParentDir = this.mkdirRecursive(newParentDirPath)
     newParentDir.children[newName] = entry
 
-    return newPath
+    return { path: newPath, entry }
+  }
+
+  validateName(name: string): boolean {
+    return !!name.trim() && /^[a-zA-Z0-9_\-.\(\)\ ]+$/.test(name)
+  }
+
+  validatePath(path: string): boolean {
+    return (
+      path.startsWith('/') &&
+      path
+        .split('/')
+        .slice(1)
+        .every((name) => this.validateName(name))
+    )
   }
 
   /**

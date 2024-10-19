@@ -1,3 +1,4 @@
+import { LucideFolder } from 'lucide-react'
 import IconReadme from '~icons/mdi/book-open-variant-outline.jsx'
 import IconCodeJson from '~icons/mdi/code-json.jsx'
 import IconFile from '~icons/mdi/file-outline.jsx'
@@ -9,14 +10,26 @@ import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
 import IconReact from '~icons/mdi/react.jsx'
 import IconTailwind from '~icons/mdi/tailwind.jsx'
 
-export function FileIcon({ filename, className }: { filename: string; className?: string }) {
-  const ext = filename.split('.').pop()?.toLowerCase()
+export function FileIcon({
+  name,
+  isFolder,
+  className,
+}: {
+  name: string
+  isFolder?: boolean
+  className?: string
+}) {
+  if (isFolder) {
+    return <LucideFolder className={`${className}`} />
+  }
+
+  const ext = name.split('.').pop()?.toLowerCase()
 
   switch (true) {
-    case /tailwind\.config\.(ts|js)?$/i.test(filename):
+    case /tailwind\.config\.(ts|js)?$/i.test(name):
       return <IconTailwind className={`${className} text-[#38BDF9]`} />
 
-    case /readme\.md$/i.test(filename):
+    case /readme\.md$/i.test(name):
       return <IconReadme className={`${className} text-[#38BDF9]`} />
   }
 

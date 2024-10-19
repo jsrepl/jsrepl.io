@@ -111,12 +111,12 @@ export default function CodeEditorHeader({
               >
                 <span
                   className={cn(
-                    'relative flex items-center gap-1.5',
+                    'relative flex items-center gap-1.5 font-normal',
                     modelOption.warningCount > 0 && 'text-yellow-500',
                     modelOption.errorCount > 0 && 'text-red-500'
                   )}
                 >
-                  <FileIcon filename={modelOption.label} />
+                  <FileIcon name={modelOption.label} />
                   <span className="opacity-60 group-hover:opacity-100 group-data-[active=true]:opacity-80">
                     {modelOption.label}
                   </span>

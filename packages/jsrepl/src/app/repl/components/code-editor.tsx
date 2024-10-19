@@ -44,6 +44,8 @@ export default function CodeEditor({ className }: { className?: string }) {
           const uri = monaco.Uri.parse('file://' + path)
           monacoModel = monaco.editor.createModel(entry.content, getMonacoLanguage(path), uri)
           monacoModelMap.current.set(path, monacoModel)
+        } else if (entry.content !== monacoModel.getValue()) {
+          monacoModel.setValue(entry.content)
         }
 
         const model = new CodeEditorModel(entry, monacoModel)
