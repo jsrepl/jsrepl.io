@@ -1,6 +1,11 @@
 import { useContext } from 'react'
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { defaultTailwindConfigTs } from '@/lib/tailwind-configs'
+import {
+  defaultDocsMdFileContent,
+  defaultHtmlFileContent,
+  defaultReadmeMdFileContent,
+  defaultTailwindConfigTs,
+} from '@/lib/repl-files-content'
 import { FileIcon } from '../file-icon'
 import { FilesPanelContext } from './files-panel-context'
 
@@ -33,12 +38,16 @@ export function NewFileMenuItems({ dirPath }: { dirPath: string }) {
         <FileIcon name=".json" />
         JSON
       </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => createFile(dirPath, '.md')}>
+        <FileIcon name=".md" />
+        Markdown
+      </DropdownMenuItem>
 
       {dirPath === '' && (
         <>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => createFile(dirPath, 'index.html', getDefaultHtmlFileContent(), true)}
+            onClick={() => createFile(dirPath, 'index.html', defaultHtmlFileContent, true)}
           >
             <FileIcon name="index.html" />
             index.html
@@ -49,9 +58,17 @@ export function NewFileMenuItems({ dirPath }: { dirPath: string }) {
             <FileIcon name="tailwind.config.ts" />
             tailwind.config.ts
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => createFile(dirPath, 'README.md', '# New REPL\n', true)}>
+          <DropdownMenuItem
+            onClick={() => createFile(dirPath, 'README.md', defaultReadmeMdFileContent, true)}
+          >
             <FileIcon name="README.md" />
             README.md
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => createFile(dirPath, 'DOCS.md', defaultDocsMdFileContent, true)}
+          >
+            <FileIcon name="DOCS.md" />
+            DOCS.md
           </DropdownMenuItem>
         </>
       )}
@@ -63,15 +80,4 @@ export function NewFileMenuItems({ dirPath }: { dirPath: string }) {
       </DropdownMenuItem>
     </>
   )
-}
-
-function getDefaultHtmlFileContent() {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-  </head>
-  <body></body>
-</html>
-`
 }

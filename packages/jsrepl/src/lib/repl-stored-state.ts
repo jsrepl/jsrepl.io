@@ -1,8 +1,14 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import * as ReplFS from '@/lib/repl-fs'
-import { defaultTailwindConfigTs } from '@/lib/tailwind-configs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
+import {
+  defaultDocsMdFileContent,
+  defaultTailwindConfigTs,
+  starterCss,
+  starterHtml,
+  starterTs,
+} from './repl-files-content'
 
 export type OldModelDefV0 = {
   /**
@@ -141,6 +147,10 @@ function loadSchemaV0(searchParams: ReturnType<typeof useSearchParams>, state: R
           content: indexcss.content,
           kind: ReplFS.Kind.File,
         },
+        'DOCS.md': {
+          content: defaultDocsMdFileContent,
+          kind: ReplFS.Kind.File,
+        },
       },
     })
 
@@ -209,75 +219,25 @@ function getDefaultFs(): ReplStoredState['fs'] {
     kind: ReplFS.Kind.Directory,
     children: {
       'index.ts': {
-        content: getDefaultTs(),
+        content: starterTs,
         kind: ReplFS.Kind.File,
       },
       'index.html': {
-        content: getDefaultHtml(),
+        content: starterHtml,
         kind: ReplFS.Kind.File,
       },
       'index.css': {
-        content: getDefaultCss(),
+        content: starterCss,
         kind: ReplFS.Kind.File,
       },
       'tailwind.config.ts': {
         content: defaultTailwindConfigTs,
         kind: ReplFS.Kind.File,
       },
+      'DOCS.md': {
+        content: defaultDocsMdFileContent,
+        kind: ReplFS.Kind.File,
+      },
     },
   })
-}
-
-function getDefaultHtml(): string {
-  return `<div class="flex items-center justify-center h-full dark:text-stone-100">
-  <time id="clock" class="text-5xl font-bold"></time>
-</div>
-
-<script type="module" src="/index.ts"></script>
-`
-}
-
-function getDefaultCss(): string {
-  return `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  padding: 1rem;
-}
-
-*,
-::before,
-::after {
-  box-sizing: border-box;
-}
-`
-}
-
-function getDefaultTs(): string {
-  return `import { format } from 'date-fns';
-import './index.css';
-
-let now = new Date();
-
-const clock = document.getElementById('clock') as HTMLTimeElement;
-clock.dateTime = now.toISOString();
-clock.textContent = formatTime(now);
-
-setInterval(() => {
-  now = new Date();
-  clock.dateTime = now.toISOString();
-  clock.textContent = formatTime(now);
-}, 1000);
-
-function formatTime(date: Date) {
-  return format(date, 'HH:mm:ss');
-}
-`
 }

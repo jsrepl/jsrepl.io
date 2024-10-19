@@ -7,6 +7,7 @@ import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
+import { readOnlyFiles, virtualFilesStorage } from '@/lib/repl-files-content'
 import * as ReplFS from '@/lib/repl-fs'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
@@ -39,13 +40,17 @@ export default function CodeEditor({ className }: { className?: string }) {
 
     replState.fs.walk('/', (path, entry) => {
       if (entry.kind === ReplFS.Kind.File) {
+        const content = entry.content.startsWith('virtual://')
+          ? virtualFilesStorage.get(entry.content) ?? entry.content
+          : entry.content
+
         let monacoModel = monacoModelMap.current.get(path)
         if (!monacoModel) {
           const uri = monaco.Uri.parse('file://' + path)
-          monacoModel = monaco.editor.createModel(entry.content, getMonacoLanguage(path), uri)
+          monacoModel = monaco.editor.createModel(content, getMonacoLanguage(path), uri)
           monacoModelMap.current.set(path, monacoModel)
-        } else if (entry.content !== monacoModel.getValue()) {
-          monacoModel.setValue(entry.content)
+        } else if (content !== monacoModel.getValue()) {
+          monacoModel.setValue(content)
         }
 
         const model = new CodeEditorModel(entry, monacoModel)
@@ -83,6 +88,11 @@ export default function CodeEditor({ className }: { className?: string }) {
   const onModelChange = useCallback(
     (editorModel: InstanceType<typeof CodeEditorModel>) => {
       console.log('onModelChange', editorModel)
+
+      if (readOnlyFiles.has(editorModel.filePath)) {
+        return
+      }
+
       editorModel.file.content = editorModel.getValue()
       saveReplState()
     },
@@ -115,6 +125,21 @@ export default function CodeEditor({ className }: { className?: string }) {
     }
   }, [currentTextModel])
 
+  const isReadOnly = useMemo(() => {
+    const path = currentTextModel?.uri.path
+    if (path && readOnlyFiles.has(path)) {
+      return true
+    }
+
+    return false
+  }, [currentTextModel])
+
+  useEffect(() => {
+    if (isReadOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id)) {
+      editorRef.current?.updateOptions({ readOnly: isReadOnly })
+    }
+  }, [isReadOnly])
+
   const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
     model: currentTextModel,
     automaticLayout: true,
@@ -122,6 +147,7 @@ export default function CodeEditor({ className }: { className?: string }) {
     // TODO: make it configurable
     fontSize: 16,
     minimap: { enabled: false },
+    readOnly: isReadOnly,
     theme: theme.id,
     quickSuggestions: {
       other: true,
