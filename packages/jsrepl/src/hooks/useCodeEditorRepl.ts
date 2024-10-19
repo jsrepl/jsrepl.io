@@ -6,6 +6,7 @@ import { ReplInfoContext } from '@/context/repl-info-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
+import { getBabel } from '@/lib/get-babel'
 import { createDecorations } from '@/lib/repl-decorations'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
@@ -114,7 +115,8 @@ export default function useCodeEditorRepl(
   }, [debouncedUpdateDecorations])
 
   useEffect(() => {
-    bundler.setup().then((bundlerSetupResult) => {
+    const [, loadBabel] = getBabel()
+    Promise.all([bundler.setup(), loadBabel()]).then(([bundlerSetupResult]) => {
       if (!bundlerSetupResult.ok) {
         toast.error('Failed to setup bundler', {
           duration: Infinity,
