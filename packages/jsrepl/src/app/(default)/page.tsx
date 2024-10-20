@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -9,267 +10,15 @@ import {
   LucidePackage,
   LucideSquareFunction,
 } from 'lucide-react'
-import dedent from 'string-dedent'
 import IconEmail from '~icons/mdi/email-outline.jsx'
 import IconGithub from '~icons/mdi/github.jsx'
+import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
-import { defaultTailwindConfigTs } from '@/lib/repl-files-content'
-import * as ReplFS from '@/lib/repl-fs'
 import { toQueryParams } from '@/lib/repl-stored-state'
+import { demoRepls } from '@/lib/repl-stored-state-library'
 import { ReplStoredState } from '@/types'
 import Demo from './components/demo'
 import FeatureBox from './components/feature-box'
-
-const repls = {
-  liveFeedback: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts'],
-    showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            setInterval(() => {
-              const now = new Date();
-              now.toTimeString();
-            }, 100);
-
-            const p = new Promise((res) => {
-              setTimeout(() => res('JSREPL'), 2000);
-            });
-
-            const site = await p;
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  npmPackages: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts'],
-    showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            import { format } from 'date-fns';
-
-            const now = new Date();
-            format(now, 'dd-MM-yyyy');
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  browserEnv: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts', '/index.html', '/index.css'],
-    showPreview: true,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            import './index.css'
-
-            const el = document.querySelector('select');
-            el.addEventListener('change', () => {
-              document.body.style.backgroundColor = el.value;
-            });
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'index.html': {
-          content: dedent`
-            <select>
-              <option selected disabled>Select color...</option>
-              <option value="red">Red</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="yellow">Yellow</option>
-            </select>
-
-            <script type="module" src="/index.ts"></script>
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'index.css': {
-          content: dedent`
-            html {
-              zoom: 1.3;
-            }
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  typescript: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts'],
-    showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            let date = new Date();
-            date = 0;
-
-            enum Color {
-              Red = 'red',
-              Yellow = 'yellow',
-              Blue = 'blue',
-              Green = 'green',
-            }
-
-            const color: Color = Color.Green;
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  tailwindcss: {
-    activeModel: '/index.html',
-    openedModels: ['/index.html', '/index.css', '/tailwind.config.ts'],
-    showPreview: true,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.html': {
-          content: dedent`
-            <link rel="stylesheet" href="/index.css"></link>
-            <div class="text-2xl underline underline-offset-4">Hello, world!</div>
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'index.css': {
-          content: dedent`
-            @tailwind base;
-            @tailwind components;
-            @tailwind utilities;
-
-            body {
-              @apply dark:text-lime-500;
-            }
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'tailwind.config.ts': {
-          content: defaultTailwindConfigTs,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  jsx: {
-    activeModel: '/index.tsx',
-    openedModels: ['/index.tsx', '/index.html', '/index.css'],
-    showPreview: true,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.tsx': {
-          content: dedent`
-            import './index.css'
-            import { createRoot } from 'react-dom/client.development';
-
-            const root = createRoot(document.getElementById('root'));
-            root.render(<App />);
-
-            function App() {
-              return <h1 className="italic">Hello, world!</h1>;
-            }
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'index.html': {
-          content: dedent`
-            <div id="root"></div>
-
-            <script type="module" src="/index.tsx"></script>
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'index.css': {
-          content: dedent`
-            @tailwind base;
-            @tailwind components;
-            @tailwind utilities;
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  prettier: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts'],
-    showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            const arr = [
-              1, 2, 3, 
-              4, 5]
-
-            function getRandom (arr: number[]){
-            return 4
-            }
-
-            if(getRandom(arr) === 4) {
-                console.log('How lucky!')
-            } 
-
-            // Press ⌘+S to format the code with Prettier.
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: 'virtual:///DOCS.md',
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-}
 
 function getReplLink(state: ReplStoredState) {
   const query = toQueryParams(state)
@@ -278,6 +27,8 @@ function getReplLink(state: ReplStoredState) {
 }
 
 export default function Home() {
+  const [starterDialogOpen, setStarterDialogOpen] = useState(false)
+
   return (
     <>
       <div className="container flex items-center gap-x-6 gap-y-12 pt-8 max-lg:flex-col-reverse">
@@ -306,11 +57,9 @@ export default function Home() {
               <LucideArrowDown size={18} className="ml-2" />
             </Button>
 
-            <Button asChild size="lg" variant="ghost-primary">
-              <Link href="/repl">
-                Go to the Playground
-                <LucideArrowRight size={18} className="ml-2" />
-              </Link>
+            <Button size="lg" variant="ghost-primary" onClick={() => setStarterDialogOpen(true)}>
+              Go to the Playground
+              <LucideArrowRight size={18} className="ml-2" />
             </Button>
           </div>
         </div>
@@ -443,7 +192,7 @@ export default function Home() {
 
       <div id="demos" className="container mt-16 flex flex-col gap-16">
         <Demo
-          replLink={getReplLink(repls.liveFeedback)}
+          replLink={getReplLink(demoRepls.liveFeedback)}
           title="Live feedback"
           text={
             <>
@@ -468,7 +217,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.npmPackages)}
+          replLink={getReplLink(demoRepls.npmPackages)}
           title="NPM packages"
           text={
             <>
@@ -492,7 +241,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.browserEnv)}
+          replLink={getReplLink(demoRepls.browserEnv)}
           title="Browser environment"
           text={
             <>
@@ -513,7 +262,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.typescript)}
+          replLink={getReplLink(demoRepls.typescript)}
           title="TypeScript"
           text={
             <>
@@ -529,7 +278,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.tailwindcss)}
+          replLink={getReplLink(demoRepls.tailwindcss)}
           title="Tailwind CSS"
           text={
             <>
@@ -561,7 +310,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.jsx)}
+          replLink={getReplLink(demoRepls.jsx)}
           title="JSX/TSX"
           text={
             <>
@@ -578,7 +327,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(repls.prettier)}
+          replLink={getReplLink(demoRepls.prettier)}
           title="Prettier"
           text={
             <>
@@ -682,14 +431,16 @@ export default function Home() {
         That&apos;s it! Looks interesting? Give it a try! For prototyping, for learning, or just for
         fun.
         <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <Button asChild size="lg">
-            <Link href="/repl">Go to the Playground</Link>
+          <Button size="lg" onClick={() => setStarterDialogOpen(true)}>
+            Go to the Playground
           </Button>
           <Button size="lg" variant="ghost-primary" onClick={scrollToTop}>
             Back to Top ↑
           </Button>
         </div>
       </div>
+
+      <ReplStarterDialog open={starterDialogOpen} onOpenChange={setStarterDialogOpen} />
     </>
   )
 }

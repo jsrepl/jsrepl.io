@@ -7,10 +7,11 @@ import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
-import { readOnlyFiles, virtualFilesStorage } from '@/lib/repl-files-content'
 import * as ReplFS from '@/lib/repl-fs'
+import { readOnlyFiles } from '@/lib/repl-fs-meta'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
+import { virtualFilesStorage } from '@/lib/virtual-files-storage'
 import CodeEditorHeader from './code-editor-header'
 import styles from './code-editor.module.css'
 import { ErrorsNotification } from './errors-notification'
@@ -93,7 +94,11 @@ export default function CodeEditor({ className }: { className?: string }) {
         return
       }
 
-      editorModel.file.content = editorModel.getValue()
+      if (editorModel.filePath.startsWith('virtual://')) {
+        virtualFilesStorage.set(editorModel.filePath, editorModel.getValue())
+      } else {
+        editorModel.file.content = editorModel.getValue()
+      }
       saveReplState()
     },
     [saveReplState]

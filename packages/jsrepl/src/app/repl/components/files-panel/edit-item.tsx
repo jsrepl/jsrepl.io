@@ -67,7 +67,7 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
 
       if (editingItem.isNew) {
         setReplState((state) => {
-          const fs = new ReplFS.FS(state.fs.root)
+          const fs = state.fs.clone()
           let newItem: { path: string; entry: ReplFS.Entry }
           const isDir = editingItem.kind === ReplFS.Kind.Directory
 
@@ -98,7 +98,7 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
         })
       } else {
         setReplState((state) => {
-          const fs = new ReplFS.FS(state.fs.root)
+          const fs = state.fs.clone()
 
           let newItem: { path: string; entry: ReplFS.Entry }
           try {

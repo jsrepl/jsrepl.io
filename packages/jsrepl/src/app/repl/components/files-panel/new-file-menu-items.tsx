@@ -5,7 +5,7 @@ import {
   defaultHtmlFileContent,
   defaultReadmeMdFileContent,
   defaultTailwindConfigTs,
-} from '@/lib/repl-files-content'
+} from '@/lib/repl-stored-state-library'
 import { FileIcon } from '../file-icon'
 import { FilesPanelContext } from './files-panel-context'
 

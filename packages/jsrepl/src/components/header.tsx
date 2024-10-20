@@ -1,11 +1,17 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { LucidePlus } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import { cn } from '@/lib/utils'
+import ReplStarterDialog from './repl-starter-dialog'
+import { Button } from './ui/button'
 
 export default function Header({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const [starterDialogOpen, setStarterDialogOpen] = useState(false)
+
   return (
     <header
       className={cn(
@@ -30,10 +36,14 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
 
           <div className="border-border mx-2 h-5 border-l" />
 
-          <Link href="/repl" className="text-primary inline-flex items-center text-nowrap">
+          <Button
+            className="inline-flex items-center text-nowrap"
+            variant="link"
+            onClick={() => setStarterDialogOpen(true)}
+          >
             <LucidePlus size={18} className="mr-1" />
             New REPL
-          </Link>
+          </Button>
 
           <div className="border-border mx-2 h-5 border-l" />
 
@@ -47,6 +57,8 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
           </Link>
         </div>
       </div>
+
+      <ReplStarterDialog open={starterDialogOpen} onOpenChange={setStarterDialogOpen} />
     </header>
   )
 }

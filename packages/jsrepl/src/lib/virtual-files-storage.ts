@@ -1,81 +1,4 @@
-export const starterHtml = `<div class="flex items-center justify-center h-full dark:text-stone-100">
-  <time id="clock" class="text-5xl font-bold"></time>
-</div>
-
-<script type="module" src="/index.ts"></script>
-`
-
-export const starterCss = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  padding: 1rem;
-}
-
-*,
-::before,
-::after {
-  box-sizing: border-box;
-}
-`
-
-export const starterTs = `import { format } from 'date-fns';
-import './index.css';
-
-let now = new Date();
-
-const clock = document.getElementById('clock') as HTMLTimeElement;
-clock.dateTime = now.toISOString();
-clock.textContent = formatTime(now);
-
-setInterval(() => {
-  now = new Date();
-  clock.dateTime = now.toISOString();
-  clock.textContent = formatTime(now);
-}, 1000);
-
-function formatTime(date: Date) {
-  return format(date, 'HH:mm:ss');
-}
-`
-
-export const defaultTailwindConfigTs = `import type { Config } from 'tailwindcss';
-
-export default {
-  content: ['**/*'],
-  corePlugins: {
-    preflight: false,
-  },
-  darkMode: 'class',
-} satisfies Config;
-`
-
-export const defaultTailwindConfigJson = {
-  corePlugins: {
-    preflight: false,
-  },
-  darkMode: 'class',
-}
-
-export const defaultHtmlFileContent = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-  </head>
-  <body></body>
-</html>
-`
-
-export const defaultReadmeMdFileContent = '# New REPL\n'
-
-export const defaultDocsMdFileContent = 'virtual:///DOCS.md'
+import { defaultTailwindConfigJson } from './repl-stored-state-library'
 
 const virtualDocsMdFileContent = `# Welcome to https://jsrepl.io
 
@@ -184,11 +107,6 @@ https://github.com/sponsors/nag5000 or https://buymeacoffee.com/nag5000.
 
 With 🧡, Alexey.
 `
-
-/**
- * Array of file paths relative to the root of the REPL, starting with `/`.
- */
-export const readOnlyFiles = new Set(['/DOCS.md'])
 
 export const virtualFilesStorage = new Map<string, string>([
   ['virtual:///DOCS.md', virtualDocsMdFileContent],

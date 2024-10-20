@@ -5,6 +5,10 @@ export class FS {
     this.root = root
   }
 
+  clone() {
+    return structuredClone(this)
+  }
+
   /**
    * Get entry by path.
    * @param path - Absolute path to the entry.

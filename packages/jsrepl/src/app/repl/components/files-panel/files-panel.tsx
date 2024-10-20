@@ -104,7 +104,7 @@ export default function FilesPanel() {
       }
 
       setReplState((state) => {
-        const fs = new ReplFS.FS(state.fs.root)
+        const fs = state.fs.clone()
         const ok = fs.removeEntry(path)
         if (!ok) {
           return state
@@ -130,14 +130,14 @@ export default function FilesPanel() {
         entry.kind === ReplFS.Kind.Directory
           ? () => {
               setReplState((state) => {
-                const fs = new ReplFS.FS(state.fs.root)
+                const fs = state.fs.clone()
                 fs.mkdirRecursive(path)
                 return { ...state, fs }
               })
             }
           : () => {
               setReplState((state) => {
-                const fs = new ReplFS.FS(state.fs.root)
+                const fs = state.fs.clone()
                 const { path: savedPath } = fs.writeFile(path, entry.content)
                 return {
                   ...state,
@@ -170,7 +170,7 @@ export default function FilesPanel() {
     ) => {
       if (noEdit) {
         setReplState((state) => {
-          const fs = new ReplFS.FS(state.fs.root)
+          const fs = state.fs.clone()
           const path = parentDirPath + '/' + name
 
           if (fs.exists(path)) {

@@ -3,13 +3,7 @@ import * as ReplFS from '@/lib/repl-fs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
 import { DebugLog, debugLog } from './debug-log'
-import {
-  defaultDocsMdFileContent,
-  defaultTailwindConfigTs,
-  starterCss,
-  starterHtml,
-  starterTs,
-} from './repl-files-content'
+import { defaultDocsMdFileContent, demoStarter } from './repl-stored-state-library'
 
 export type OldModelDefV0 = {
   /**
@@ -31,7 +25,7 @@ const SCHEMA_VERSION = '1'
 export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStoredState {
   try {
     const versionQP = searchParams.get('v')
-    const state = getDefaultState()
+    const state = { ...demoStarter }
 
     if (!versionQP) {
       loadSchemaV0(searchParams, state)
@@ -40,11 +34,10 @@ export function load(searchParams: ReturnType<typeof useSearchParams>): ReplStor
     }
 
     debugLog(DebugLog.REPL, 'loaded', state)
-    console.log('loaded', state)
     return state
   } catch (e) {
     console.error('load error', e)
-    return getDefaultState()
+    return { ...demoStarter }
   }
 }
 
@@ -206,41 +199,4 @@ function deserialize(serialized: string): unknown {
 
 function serialize(storedState: unknown): string {
   return encodeURIComponent(utoa(JSON.stringify(storedState)))
-}
-
-function getDefaultState(): ReplStoredState {
-  return {
-    fs: getDefaultFs(),
-    openedModels: ['/index.ts', '/index.html', '/index.css'],
-    activeModel: '/index.ts',
-    showPreview: true,
-  }
-}
-
-function getDefaultFs(): ReplStoredState['fs'] {
-  return new ReplFS.FS({
-    kind: ReplFS.Kind.Directory,
-    children: {
-      'index.ts': {
-        content: starterTs,
-        kind: ReplFS.Kind.File,
-      },
-      'index.html': {
-        content: starterHtml,
-        kind: ReplFS.Kind.File,
-      },
-      'index.css': {
-        content: starterCss,
-        kind: ReplFS.Kind.File,
-      },
-      'tailwind.config.ts': {
-        content: defaultTailwindConfigTs,
-        kind: ReplFS.Kind.File,
-      },
-      'DOCS.md': {
-        content: defaultDocsMdFileContent,
-        kind: ReplFS.Kind.File,
-      },
-    },
-  })
 }
