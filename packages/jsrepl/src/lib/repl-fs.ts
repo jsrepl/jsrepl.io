@@ -27,7 +27,7 @@ export class FS {
   }
 
   clone() {
-    return structuredClone(this)
+    return new FS(structuredClone(this.root))
   }
 
   /**
