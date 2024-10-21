@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { TreeDataItem, TreeView } from '@/components/ui/tree-view'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
@@ -261,16 +262,23 @@ export default function FilesPanel() {
             <span className="text-muted-foreground flex-1 font-semibold">Files</span>
             <div className="invisible flex group-focus-within/files-panel:visible group-hover/files-panel:visible has-[[aria-expanded=true]]/files-panel:visible">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    className="text-secondary-foreground/50"
-                    title="New File…"
-                  >
-                    <LucideFilePlus size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-secondary-foreground/50"
+                      >
+                        <LucideFilePlus size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={4}>
+                    New File…
+                  </TooltipContent>
+                </Tooltip>
+
                 <DropdownMenuContent
                   onCloseAutoFocus={(e) => {
                     const input = treeViewRef.current?.querySelector(
@@ -286,27 +294,39 @@ export default function FilesPanel() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="text-secondary-foreground/50"
-                onClick={() => createFolder('')}
-                title="New Folder…"
-              >
-                <LucideFolderPlus size={16} />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="text-secondary-foreground/50"
+                    onClick={() => createFolder('')}
+                  >
+                    <LucideFolderPlus size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={4}>
+                  New Folder…
+                </TooltipContent>
+              </Tooltip>
 
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="text-secondary-foreground/50"
-                onClick={() => {
-                  setExpandedItemIds([])
-                }}
-                title="Collapse Folders"
-              >
-                <LucideCopyMinus size={16} />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="text-secondary-foreground/50"
+                    onClick={() => {
+                      setExpandedItemIds([])
+                    }}
+                  >
+                    <LucideCopyMinus size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={4}>
+                  Collapse Folders
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
 

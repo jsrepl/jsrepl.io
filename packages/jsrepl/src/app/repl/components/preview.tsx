@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
@@ -69,15 +70,19 @@ export default function ReplPreview({ className }: { className?: string }) {
               Preview
             </span>
             <div className="ml-auto flex items-center">
-              <Button
-                variant="ghost"
-                size="none"
-                className="text-secondary-foreground/60 h-6 w-6 p-0.5 ring-inset"
-                title="Reload preview and restart REPL"
-                onClick={() => restartRepl()}
-              >
-                <LucideRotateCw size={14} />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="none"
+                    className="text-secondary-foreground/60 h-6 w-6 p-0.5 ring-inset"
+                    onClick={() => restartRepl()}
+                  >
+                    <LucideRotateCw size={14} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reload preview and restart REPL</TooltipContent>
+              </Tooltip>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -79,6 +79,7 @@ export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) 
           >
             Move…
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => deleteItem(path)}>Delete</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

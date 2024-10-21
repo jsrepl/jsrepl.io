@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
@@ -161,24 +162,38 @@ export default function CodeEditorHeader({
       </ScrollArea>
 
       <div className="flex items-center border-b px-2">
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="text-muted-foreground"
-          title="Format code with Prettier (⌘+S)"
-          onClick={() => {
-            editorRef.current?.getAction('editor.action.formatDocument')?.run()
-          }}
-        >
-          <IconPrettier width={15} height={15} />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground"
+              onClick={() => {
+                editorRef.current?.getAction('editor.action.formatDocument')?.run()
+              }}
+            >
+              <IconPrettier width={15} height={15} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" sideOffset={8} align="end">
+            Format code with Prettier (⌘+S)
+          </TooltipContent>
+        </Tooltip>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
-              <LucideEllipsisVertical size={18} />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+                  <LucideEllipsisVertical size={18} />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={8} align="end">
+              More Actions...
+            </TooltipContent>
+          </Tooltip>
+
           <DropdownMenuContent>
             <DropdownMenuItem onClick={closeAllModels}>Close All</DropdownMenuItem>
             <DropdownMenuItem onClick={closeOtherModels}>Close Others</DropdownMenuItem>
