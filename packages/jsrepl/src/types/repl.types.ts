@@ -129,6 +129,7 @@ export type UserStoredState = {
   showLeftSidebar: boolean
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
+  editorFontSize: number
 }
 
 export type Theme = {

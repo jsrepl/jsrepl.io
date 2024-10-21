@@ -42,5 +42,6 @@ function getDefaultState(): UserStoredState {
     version: undefined,
     leftSidebarWidth: 200,
     autostartOnCodeChange: true,
+    editorFontSize: 14,
   }
 }

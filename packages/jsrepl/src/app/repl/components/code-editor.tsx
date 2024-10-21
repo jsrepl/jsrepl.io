@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
 import { ReplStateContext } from '@/context/repl-state-context'
+import { UserStateContext } from '@/context/user-state-context'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
@@ -18,6 +19,7 @@ import { ErrorsNotification } from './errors-notification'
 
 export default function CodeEditor({ className }: { className?: string }) {
   const { replState, saveReplState } = useContext(ReplStateContext)!
+  const { userState } = useContext(UserStateContext)!
 
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
@@ -142,9 +144,9 @@ export default function CodeEditor({ className }: { className?: string }) {
   const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
     model: currentTextModel,
     automaticLayout: true,
-    padding: { top: 20, bottom: 20 },
+    padding: { top: 16, bottom: 16 },
     // TODO: make it configurable
-    fontSize: 16,
+    fontSize: userState.editorFontSize,
     minimap: { enabled: false },
     readOnly: isReadOnly,
     theme: theme.id,
@@ -156,10 +158,13 @@ export default function CodeEditor({ className }: { className?: string }) {
       strings: true,
     },
     tabSize: 2,
-    // TODO: make it configurable
     renderLineHighlight: 'none',
     scrollBeyondLastLine: false,
   })
+
+  useEffect(() => {
+    editorRef.current?.updateOptions({ fontSize: userState.editorFontSize })
+  }, [userState.editorFontSize])
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {
