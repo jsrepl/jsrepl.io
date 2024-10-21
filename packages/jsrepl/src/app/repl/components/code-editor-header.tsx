@@ -1,9 +1,16 @@
 'use client'
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { LucideX } from 'lucide-react'
+import { LucideEllipsisVertical, LucideX } from 'lucide-react'
 import type * as monaco from 'monaco-editor'
+import IconPrettier from '~icons/simple-icons/prettier'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
@@ -86,6 +93,17 @@ export default function CodeEditorHeader({
     [setReplState]
   )
 
+  const closeAllModels = useCallback(() => {
+    setReplState((prev) => ({ ...prev, openedModels: [], activeModel: '' }))
+  }, [setReplState])
+
+  const closeOtherModels = useCallback(() => {
+    setReplState((prev) => ({
+      ...prev,
+      openedModels: [prev.activeModel],
+    }))
+  }, [setReplState])
+
   const onTabClick = useCallback(
     (path: string) => {
       setReplState((prev) => ({ ...prev, activeModel: path }))
@@ -97,7 +115,7 @@ export default function CodeEditorHeader({
   )
 
   return (
-    <header ref={headerRef} className="h-repl-header flex items-stretch gap-2">
+    <header ref={headerRef} className="h-repl-header flex items-stretch">
       <ScrollArea scrollHideDelay={0} className="flex-1">
         <div className="flex h-full flex-1 border-b">
           {modelSwitcherOptions.map((modelOption) => (
@@ -141,6 +159,32 @@ export default function CodeEditorHeader({
         </div>
         <ScrollBar orientation="horizontal" className="h-1 p-0 [&>:first-child]:rounded-none" />
       </ScrollArea>
+
+      <div className="flex items-center border-b px-2">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="text-muted-foreground"
+          title="Format code with Prettier (⌘+S)"
+          onClick={() => {
+            editorRef.current?.getAction('editor.action.formatDocument')?.run()
+          }}
+        >
+          <IconPrettier width={15} height={15} />
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+              <LucideEllipsisVertical size={18} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={closeAllModels}>Close All</DropdownMenuItem>
+            <DropdownMenuItem onClick={closeOtherModels}>Close Others</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   )
 }
