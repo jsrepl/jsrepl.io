@@ -128,6 +128,7 @@ export type UserStoredState = {
   previewPos: PreviewPosition
   showLeftSidebar: boolean
   leftSidebarWidth: number
+  autostartOnCodeChange: boolean
 }
 
 export type Theme = {

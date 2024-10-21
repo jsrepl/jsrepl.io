@@ -1,8 +1,9 @@
-import { useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
-import { LucideFiles } from 'lucide-react'
+import { LucideFiles, LucidePlay } from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
+import IconPause from '~icons/mdi/pause.jsx'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import ShareRepl from '@/components/share-repl'
@@ -25,6 +26,10 @@ export default function ActivityBar() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { userState, setUserState } = useContext(UserStateContext)!
+
+  const startRepl = useCallback(() => {
+    window.dispatchEvent(new Event('jsrepl-start-repl'))
+  }, [])
 
   return (
     <div className="bg-secondary flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
@@ -72,6 +77,41 @@ export default function ActivityBar() {
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={8}>
           Toggle preview window
+        </TooltipContent>
+      </Tooltip>
+
+      <div className="mx-2 my-2 border-b" />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-secondary-foreground/60"
+            onClick={startRepl}
+          >
+            <div className="relative">
+              <LucidePlay size={20} />
+              {!userState.autostartOnCodeChange && (
+                <IconPause width={10} height={10} className="absolute -bottom-1 -right-0.5" />
+              )}
+            </div>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8} align="start">
+          Start / Restart REPL
+          <div className="bg-secondary text-secondary-foreground border-primary -mx-2 -mb-1 mt-1 rounded-b border px-2 py-2">
+            <label className="flex items-center gap-1">
+              <span>Autostart on code change</span>
+              <input
+                type="checkbox"
+                defaultChecked={userState.autostartOnCodeChange}
+                onChange={(e) =>
+                  setUserState((prev) => ({ ...prev, autostartOnCodeChange: e.target.checked }))
+                }
+              />
+            </label>
+          </div>
         </TooltipContent>
       </Tooltip>
 

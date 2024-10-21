@@ -3,6 +3,7 @@ import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import { ReplInfoContext } from '@/context/repl-info-context'
+import { UserStateContext } from '@/context/user-state-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
@@ -19,6 +20,7 @@ export default function useCodeEditorRepl(
   { theme }: { theme: Theme }
 ) {
   const { setReplInfo } = useContext(ReplInfoContext)!
+  const { userState } = useContext(UserStateContext)!
 
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
@@ -46,6 +48,10 @@ export default function useCodeEditorRepl(
 
   const doRepl = useCallback(async () => {
     try {
+      if (!depsReady || !previewIframeReadyId) {
+        return
+      }
+
       const replInfo = await sendRepl({
         models,
         allPayloads,
@@ -68,7 +74,15 @@ export default function useCodeEditorRepl(
         duration: Infinity,
       })
     }
-  }, [payloadMap, allPayloads, models, setReplInfo, updateDecorations])
+  }, [
+    payloadMap,
+    allPayloads,
+    models,
+    setReplInfo,
+    updateDecorations,
+    depsReady,
+    previewIframeReadyId,
+  ])
 
   const debouncedDoRepl = useMemo(() => debounce(doRepl, 300), [doRepl])
 
@@ -128,6 +142,10 @@ export default function useCodeEditorRepl(
   }, [models, bundler])
 
   useEffect(() => {
+    if (!userState.autostartOnCodeChange) {
+      return
+    }
+
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
         debouncedDoRepl()
@@ -137,7 +155,7 @@ export default function useCodeEditorRepl(
     return () => {
       disposables.forEach((disposable) => disposable.dispose())
     }
-  }, [models, debouncedDoRepl])
+  }, [models, debouncedDoRepl, userState.autostartOnCodeChange])
 
   useEffect(() => {
     themeRef.current = theme
@@ -159,6 +177,18 @@ export default function useCodeEditorRepl(
       doRepl()
     }
   }, [depsReady, previewIframeReadyId, doRepl])
+
+  useEffect(() => {
+    const onStartReplEvent = () => {
+      doRepl()
+    }
+
+    window.addEventListener('jsrepl-start-repl', onStartReplEvent)
+
+    return () => {
+      window.removeEventListener('jsrepl-start-repl', onStartReplEvent)
+    }
+  }, [userState.autostartOnCodeChange, doRepl])
 
   return { updateDecorations }
 }

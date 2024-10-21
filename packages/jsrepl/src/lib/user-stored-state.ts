@@ -41,5 +41,6 @@ function getDefaultState(): UserStoredState {
     showLeftSidebar: true,
     version: undefined,
     leftSidebarWidth: 200,
+    autostartOnCodeChange: true,
   }
 }

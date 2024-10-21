@@ -130,6 +130,8 @@ export default function ReplPreview({ className }: { className?: string }) {
 }
 
 function restartRepl() {
-  const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement
-  previewIframe.src += ''
+  const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement | null
+  if (previewIframe) {
+    previewIframe.src += ''
+  }
 }
