@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -10,8 +10,10 @@ import {
   LucidePackage,
   LucideSquareFunction,
 } from 'lucide-react'
+import Typed from 'typed.js'
 import IconEmail from '~icons/mdi/email-outline.jsx'
 import IconGithub from '~icons/mdi/github.jsx'
+import IconEsbuild from '~icons/simple-icons/esbuild.jsx'
 import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
 import { toQueryParams } from '@/lib/repl-stored-state'
@@ -28,6 +30,29 @@ function getReplLink(state: ReplStoredState) {
 
 export default function Home() {
   const [starterDialogOpen, setStarterDialogOpen] = useState(false)
+  const typedRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    let loopIndex = 0
+
+    const typed = new Typed(typedRef.current, {
+      strings: ['TypeScript, HTML, CSS', 'React JSX / TSX', 'Tailwind CSS'],
+      typeSpeed: 10,
+      backDelay: 2000,
+      smartBackspace: false,
+      loop: true,
+      // HACK: fix initial text flickering when loop is restarted
+      onBegin: (self) => {
+        if (loopIndex++ > 0) {
+          self.strPos = 0
+        }
+      },
+    })
+
+    return () => {
+      typed.destroy()
+    }
+  }, [])
 
   return (
     <>
@@ -37,10 +62,10 @@ export default function Home() {
             alpha version
           </span>
 
-          <h1 className="text-5xl font-bold leading-snug max-md:text-4xl">
-            <span className="text-primary whitespace-nowrap">JavaScript, HTML, CSS</span>
+          <h1 className="text-primary whitespace-nowrap text-5xl font-bold leading-snug max-md:text-4xl [&>.typed-cursor]:inline-block [&>.typed-cursor]:-translate-y-0.5 [&>.typed-cursor]:font-normal">
+            <span ref={typedRef}>JavaScript, HTML, CSS</span>
             <br />
-            <span className="whitespace-nowrap text-stone-200">REPL & Playground</span>
+            <span className="text-stone-200">REPL & Playground</span>
           </h1>
 
           <div>
@@ -82,31 +107,13 @@ export default function Home() {
         <FeatureBox
           icon={<LucideSquareFunction size={24} className="text-primary" />}
           title="Get instant feedback as you type"
-          description="The results of JavaScript expressions are displayed in real time."
+          description="The results of JavaScript and TypeScript expressions are displayed in real time."
         />
 
         <FeatureBox
-          icon={
-            <svg
-              role="img"
-              viewBox="0 0 24 24"
-              height="20"
-              width="20"
-              className="fill-primary"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title>TypeScript</title>
-              <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z" />
-            </svg>
-          }
-          title="TypeScript by default"
-          description={
-            <>
-              Because we love TypeScript.
-              <br />
-              Of course, you can write in plain JavaScript as well.
-            </>
-          }
+          icon={<IconEsbuild width={24} height={24} className="text-primary" />}
+          title="Powered by esbuild"
+          description={<>Enjoy TypeScript and ECMAScript modules out of the box.</>}
         />
 
         <FeatureBox
@@ -114,7 +121,14 @@ export default function Home() {
           title="Import NPM packages with ease"
           description={
             <>
-              Just type <code>`import smth from &apos;npm-package&apos;`</code>.<br />
+              Just type{' '}
+              <code>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>smth</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;npm-package&apos;</span>
+              </code>
+              .<br />
               There is no step 2. Types are included.
             </>
           }
@@ -246,8 +260,8 @@ export default function Home() {
           text={
             <>
               <p>
-                No emulation, no limitations. The code is executed in the browser environment, so
-                you have full DOM access, and all the browser APIs available.
+                The code is executed in the browser environment, so you have full DOM access, and
+                all the browser APIs available.
               </p>
               <p>Enjoy tinkering with HTML and see the result in the Preview window.</p>
             </>
@@ -364,13 +378,9 @@ export default function Home() {
           text={
             <>
               <p>
-                You can share Repl with anyone. Anyone can share Repl with you. Security is
-                important when you run untrusted code. The code evaluates in a cross-domain iframe,
+                You can share your Repl with anyone, and others can share theirs with you. Security
+                is crucial when executing untrusted code. The code runs in a cross-domain iframe,
                 which do not have access to anything sensitive outside the untrusted domain.
-              </p>
-              <p>
-                For example, if you used your GitHub account to sign in, the code will not have
-                access to it and its session cookies.
               </p>
             </>
           }

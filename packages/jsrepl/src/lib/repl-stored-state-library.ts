@@ -166,7 +166,7 @@ export const tailwindcssStarter: ReplStoredState = {
           <html lang="en">
             <head>
               <meta charset="utf-8" />
-              <link rel="stylesheet" href="/index.css"></link>
+              <link rel="stylesheet" href="/index.css" />
             </head>
             <body>
               <span class="text-4xl font-bold dark:text-stone-100">Hello, world!</span>
@@ -489,7 +489,7 @@ export const demoRepls = {
       children: {
         'index.html': {
           content: dedent`
-            <link rel="stylesheet" href="/index.css"></link>
+            <link rel="stylesheet" href="/index.css" />
             <div class="text-2xl underline underline-offset-4">Hello, world!</div>
           `,
           kind: ReplFS.Kind.File,
