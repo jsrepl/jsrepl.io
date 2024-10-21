@@ -3,6 +3,7 @@ import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { LucideFiles } from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
+import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import ShareRepl from '@/components/share-repl'
 import { Button } from '@/components/ui/button'
@@ -103,6 +104,12 @@ export default function ActivityBar() {
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button size="icon" variant="ghost" className="text-secondary-foreground/60" asChild>
+        <Link href="https://github.com/jsrepl/jsrepl.io" target="_blank">
+          <IconGithub width={17} height={17} />
+        </Link>
+      </Button>
     </div>
   )
 }
