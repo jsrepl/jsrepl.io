@@ -17,8 +17,6 @@ import styles from './code-editor.module.css'
 import { ErrorsNotification } from './errors-notification'
 
 export default function CodeEditor({ className }: { className?: string }) {
-  console.log('CodeEditor render')
-
   const { replState, saveReplState } = useContext(ReplStateContext)!
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -32,8 +30,6 @@ export default function CodeEditor({ className }: { className?: string }) {
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
 
   const models = useMemo(() => {
-    console.log('models useMemo')
-
     modelsDisposables.current.forEach((disposable) => disposable())
     modelsDisposables.current = []
 
@@ -88,8 +84,6 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   const onModelChange = useCallback(
     (editorModel: InstanceType<typeof CodeEditorModel>) => {
-      console.log('onModelChange', editorModel)
-
       if (readOnlyFiles.has(editorModel.filePath)) {
         return
       }
@@ -169,7 +163,6 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {
-      console.log('set theme is loaded')
       monaco.editor.setTheme(theme.id)
       setIsThemeLoaded(true)
     })

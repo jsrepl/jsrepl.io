@@ -10,8 +10,6 @@ import LeftSidebar from './left-sidebar'
 import Preview from './preview'
 
 export default function ReplPlaygroundMain() {
-  console.log('ReplPlaygroundMain render')
-
   useEarlyAccessToast()
   useNewVersionToast()
 
