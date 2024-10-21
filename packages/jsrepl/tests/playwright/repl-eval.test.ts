@@ -8,10 +8,12 @@ test('simple expressions', async ({ page }) => {
     openedModels: ['/test.ts'],
     activeModel: '/test.ts',
     showPreview: false,
-    fs: ReplFS.FS.fromJSON({
-      'test.ts': {
-        kind: ReplFS.Kind.File,
-        content: dedent`
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'test.ts': {
+          kind: ReplFS.Kind.File,
+          content: dedent`
           const n = 1;
           const m = n + 2;
 
@@ -21,6 +23,7 @@ test('simple expressions', async ({ page }) => {
           let now = new Date('2024');
           now.toISOString();
         `,
+        },
       },
     }),
   })

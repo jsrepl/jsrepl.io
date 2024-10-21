@@ -44,13 +44,16 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
         return
       }
 
+      const fs = replState.fs
+
       const oldPath = editingItem.path
-      const newPath =
+      const newPath = fs.normalizePath(
         editingItem.editingType === 'name'
           ? oldPath.slice(0, oldPath.lastIndexOf('/') + 1) + value
           : value
+      )
 
-      if (!replState.fs.validatePath(newPath)) {
+      if (!fs.validatePath(newPath)) {
         toast.warning(`Invalid path "${newPath}".`)
         return
       }
@@ -60,7 +63,7 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
         return
       }
 
-      if (replState.fs.exists(newPath)) {
+      if (fs.exists(newPath)) {
         toast.warning(`Path "${newPath}" already exists. Choose another name.`)
         return
       }
@@ -68,13 +71,14 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
       if (editingItem.isNew) {
         setReplState((state) => {
           const fs = state.fs.clone()
-          let newItem: { path: string; entry: ReplFS.Entry }
           const isDir = editingItem.kind === ReplFS.Kind.Directory
 
           try {
-            newItem = isDir
-              ? fs.mkdirRecursive(newPath)
-              : fs.writeFile(newPath, editingItem.newFileContent ?? '')
+            if (isDir) {
+              fs.mkdir(newPath)
+            } else {
+              fs.writeFile(newPath, editingItem.newFileContent ?? '')
+            }
           } catch (error) {
             toast.error(
               error instanceof Error ? error.message : `Failed to create path "${newPath}".`
@@ -83,26 +87,25 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
           }
 
           if (isDir) {
-            setSelectedItemId(newItem.path)
+            setSelectedItemId(newPath)
           }
 
           return {
             ...state,
             fs,
-            activeModel: isDir ? state.activeModel : newItem.path,
+            activeModel: isDir ? state.activeModel : newPath,
             openedModels:
-              isDir || state.openedModels.includes(newItem.path)
+              isDir || state.openedModels.includes(newPath)
                 ? state.openedModels
-                : [...state.openedModels, newItem.path],
+                : [...state.openedModels, newPath],
           }
         })
       } else {
         setReplState((state) => {
           const fs = state.fs.clone()
 
-          let newItem: { path: string; entry: ReplFS.Entry }
           try {
-            newItem = fs.renameEntry(oldPath, newPath)
+            fs.rename(oldPath, newPath)
           } catch (error) {
             toast.error(
               error instanceof Error ? error.message : `Failed to rename path "${oldPath}".`
@@ -112,14 +115,14 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
 
           // Handling renaming of activeModel itself or any of its parent directories.
           const activeModel = state.activeModel.startsWith(oldPath)
-            ? newItem.path + state.activeModel.slice(oldPath.length)
+            ? newPath + state.activeModel.slice(oldPath.length)
             : state.activeModel
 
           // Handling renaming of some openedModels themselves or any of their parent directories.
           let openedModels = state.openedModels
           if (openedModels.some((m) => m.startsWith(oldPath))) {
             openedModels = openedModels.map((x) =>
-              x.startsWith(oldPath) ? newItem.path + x.slice(oldPath.length) : x
+              x.startsWith(oldPath) ? newPath + x.slice(oldPath.length) : x
             )
           }
 

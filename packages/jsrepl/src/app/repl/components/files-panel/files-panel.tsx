@@ -98,14 +98,15 @@ export default function FilesPanel() {
 
   const deleteItem = useCallback(
     (path: string) => {
-      const entry = replState.fs.getEntry(path)
+      path = replState.fs.normalizePath(path)
+      const entry = replState.fs.get(path)
       if (!entry) {
         return
       }
 
       setReplState((state) => {
         const fs = state.fs.clone()
-        const ok = fs.removeEntry(path)
+        const ok = fs.remove(path)
         if (!ok) {
           return state
         }
@@ -131,21 +132,21 @@ export default function FilesPanel() {
           ? () => {
               setReplState((state) => {
                 const fs = state.fs.clone()
-                fs.mkdirRecursive(path)
+                fs.mkdir(path)
                 return { ...state, fs }
               })
             }
           : () => {
               setReplState((state) => {
                 const fs = state.fs.clone()
-                const { path: savedPath } = fs.writeFile(path, entry.content)
+                fs.writeFile(path, entry.content)
                 return {
                   ...state,
                   fs,
-                  activeModel: savedPath,
-                  openedModels: state.openedModels.includes(savedPath)
+                  activeModel: path,
+                  openedModels: state.openedModels.includes(path)
                     ? state.openedModels
-                    : [...state.openedModels, savedPath],
+                    : [...state.openedModels, path],
                 }
               })
             }

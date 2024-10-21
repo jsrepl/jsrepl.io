@@ -5,7 +5,7 @@ describe('FS', () => {
   it('should create a new file system', () => {
     const fs = new FS()
     expect(fs.root.kind).toBe(Kind.Directory)
-    expect(fs.root.children.size).toBe(0)
+    expect(Object.keys(fs.root.children).length).toBe(0)
   })
 
   it('should add and retrieve a file', () => {
@@ -23,7 +23,7 @@ describe('FS', () => {
   it('should add and retrieve a directory', () => {
     const fs = new FS()
     const dirPath = '/testDir'
-    fs.mkdirRecursive(dirPath)
+    fs.mkdir(dirPath)
 
     const dir = fs.getDirectory(dirPath)
     expect(dir).not.toBeNull()
@@ -34,7 +34,7 @@ describe('FS', () => {
     const fs = new FS()
     const filePath = '/test.txt'
     fs.writeFile(filePath, 'Hello, world!')
-    const removed = fs.removeEntry(filePath)
+    const removed = fs.remove(filePath)
 
     expect(removed).toBe(true)
     expect(fs.getFile(filePath)).toBeNull()
@@ -43,7 +43,7 @@ describe('FS', () => {
   it('should not remove a non-existent file', () => {
     const fs = new FS()
     const filePath = '/nonexistent.txt'
-    const removed = fs.removeEntry(filePath)
+    const removed = fs.remove(filePath)
 
     expect(removed).toBe(false)
   })
@@ -51,7 +51,7 @@ describe('FS', () => {
   it('should handle nested directories', () => {
     const fs = new FS()
     const nestedDirPath = '/a/b/c'
-    fs.mkdirRecursive(nestedDirPath)
+    fs.mkdir(nestedDirPath)
 
     const dir = fs.getDirectory(nestedDirPath)
     expect(dir).not.toBeNull()
@@ -60,20 +60,20 @@ describe('FS', () => {
 
   it('mkdirRecursive "" should return root directory', () => {
     const fs = new FS()
-    const dir = fs.mkdirRecursive('')
+    const dir = fs.mkdir('')
     expect(dir).toBe(fs.root)
   })
 
   it('mkdirRecursive "/" should return root directory', () => {
     const fs = new FS()
-    const dir = fs.mkdirRecursive('/')
+    const dir = fs.mkdir('/')
     expect(dir).toBe(fs.root)
   })
 
   it('should throw error when writing a file to a directory path', () => {
     const fs = new FS()
     const dirPath = '/testDir'
-    fs.mkdirRecursive(dirPath)
+    fs.mkdir(dirPath)
 
     expect(() => fs.writeFile(dirPath, 'content')).toThrowError(`Path "${dirPath}" is a directory.`)
   })
