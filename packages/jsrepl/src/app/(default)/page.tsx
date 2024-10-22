@@ -8,12 +8,14 @@ import {
   LucideArrowRight,
   LucideHeart,
   LucidePackage,
+  LucidePiggyBank,
   LucideSquareFunction,
 } from 'lucide-react'
 import Typed from 'typed.js'
 import IconEmail from '~icons/mdi/email-outline.jsx'
 import IconGithub from '~icons/mdi/github.jsx'
 import IconEsbuild from '~icons/simple-icons/esbuild.jsx'
+import IconGithubSponsors from '~icons/simple-icons/githubsponsors.jsx'
 import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
 import { toQueryParams } from '@/lib/repl-stored-state'
@@ -108,28 +110,123 @@ export default function Home() {
           icon={<LucideSquareFunction size={24} className="text-primary" />}
           title="Get instant feedback as you type"
           description="The results of JavaScript and TypeScript expressions are displayed in real time."
+          code={
+            <>
+              <span style={{ color: '#ffd700' }}>&#123;&#125;</span> +{' '}
+              <span style={{ color: '#ffd700' }}>&#91;&#93;</span>{' '}
+              <span style={{ color: '#666' }}>{'// → 0'}</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
+                <span style={{ color: '#ffd700' }}>&#123;&#125;</span> +{' '}
+                <span style={{ color: '#ffd700' }}>&#123;&#125;</span>{' '}
+                <span style={{ color: '#666' }}>{'// → NaN'}</span>
+              </p>
+              <p>
+                <span style={{ color: '#ffd700' }}>&#91;&#93;</span> +{' '}
+                <span style={{ color: '#ffd700' }}>&#91;&#93;</span>{' '}
+                <span style={{ color: '#666' }}>{"// → ''"}</span>
+              </p>
+              <p>
+                <span style={{ color: '#ffd700' }}>&#91;&#93;</span> +{' '}
+                <span style={{ color: '#ffd700' }}>&#123;&#125;</span>{' '}
+                <span style={{ color: '#666' }}>{"// → '[object Object]'"}</span>
+              </p>
+              <p>
+                <span style={{ color: '#9cdcfe' }}>Math</span>
+                <span style={{ color: '#d4d4d4' }}>.</span>
+                <span style={{ color: '#dcdcaa' }}>max()</span>{' '}
+                <span style={{ color: '#666' }}>{'// → -Infinity'}</span>
+              </p>
+              <p>
+                <span style={{ color: '#569cd6' }}>typeof</span>{' '}
+                <span style={{ color: '#569cd6' }}>NaN</span>{' '}
+                <span style={{ color: '#666' }}>{"// → 'number'"}</span>
+              </p>
+            </>
+          }
         />
 
         <FeatureBox
           icon={<IconEsbuild width={24} height={24} className="text-primary" />}
           title="Powered by esbuild"
-          description={<>Enjoy TypeScript and ECMAScript modules out of the box.</>}
+          description={
+            <>Experience ECMAScript modules and TypeScript in a multi-file editing environment.</>
+          }
+          code={
+            <>
+              <span style={{ color: '#c586c0' }}>import</span>{' '}
+              <span style={{ color: '#ce9178' }}>&apos;./index.css&apos;</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#ffd700' }}>&#123;</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>deepClone</span>{' '}
+                <span style={{ color: '#ffd700' }}>&#125;</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;./src/utils&apos;</span>
+              </p>
+              <p>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>Button</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;./button.tsx&apos;</span>
+              </p>
+            </>
+          }
         />
 
         <FeatureBox
           icon={<LucidePackage size={24} className="text-primary" />}
-          title="Import NPM packages with ease"
+          title="Use NPM packages with ease"
           description={
             <>
-              Just type{' '}
-              <code>
+              Just import them in the code.
+              <br />
+              There is no step 2. Types included.
+            </>
+          }
+          code={
+            <>
+              <span style={{ color: '#c586c0' }}>import</span>{' '}
+              <span style={{ color: '#9cdcfe' }}>smth</span>{' '}
+              <span style={{ color: '#c586c0' }}>from</span>{' '}
+              <span style={{ color: '#ce9178' }}>&apos;npm-package&apos;</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
                 <span style={{ color: '#c586c0' }}>import</span>{' '}
-                <span style={{ color: '#9cdcfe' }}>smth</span>{' '}
+                <span style={{ color: '#ffd700' }}>&#123;</span>
+                <span style={{ color: '#9cdcfe' }}> format </span>
+                <span style={{ color: '#ffd700' }}>&#125;</span>{' '}
                 <span style={{ color: '#c586c0' }}>from</span>{' '}
-                <span style={{ color: '#ce9178' }}>&apos;npm-package&apos;</span>
-              </code>
-              .<br />
-              There is no step 2. Types are included.
+                <span style={{ color: '#ce9178' }}>&apos;date-fns&apos;</span>
+              </p>
+              <p>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>React</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;react&apos;</span>
+              </p>
+              <p>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>axios</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;axios&apos;</span>
+              </p>
+              <p>
+                <span style={{ color: '#c586c0' }}>import</span>{' '}
+                <span style={{ color: '#9cdcfe' }}>confetti</span>{' '}
+                <span style={{ color: '#c586c0' }}>from</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;canvas-confetti&apos;</span>
+              </p>
             </>
           }
         />
@@ -161,6 +258,42 @@ export default function Home() {
               Tailwind CSS is enabled by default. IntelliSense included.
             </>
           }
+          code={
+            <>
+              <span style={{ color: '#808080' }}>&lt;</span>
+              <span style={{ color: '#569cd6' }}>div</span>
+              <span style={{ color: '#9cdcfe' }}> class</span>
+              <span style={{ color: '#d4d4d4' }}>=</span>
+              <span style={{ color: '#ce9178' }}>&quot;text-xl&quot;</span>
+              <span style={{ color: '#808080' }}>&gt;</span>
+              jsrepl.io
+              <span style={{ color: '#808080' }}>&lt;/</span>
+              <span style={{ color: '#569cd6' }}>div</span>
+              <span style={{ color: '#808080' }}>&gt;</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
+                <span style={{ color: '#c586c0' }}>@apply</span>{' '}
+                <span
+                  style={{
+                    backgroundColor: '#a8a29e',
+                    width: '10px',
+                    height: '10px',
+                    display: 'inline-block',
+                    margin: '0 3px',
+                    border: '1px solid #eee',
+                  }}
+                />
+                <span style={{ color: '#ce9178' }}>dark:text-stone-400</span>;
+              </p>
+              <p>
+                <span style={{ color: '#c586c0' }}>@tailwind</span>{' '}
+                <span style={{ color: '#ce9178' }}>base</span>;
+              </p>
+            </>
+          }
         />
 
         <FeatureBox
@@ -179,6 +312,41 @@ export default function Home() {
           }
           title="Prettier for code formatting"
           description="Because you shouldn't waste time on formatting while prototyping."
+          code={
+            <>
+              <span style={{ color: '#569cd6' }}>const</span>{' '}
+              <span style={{ color: '#4fc1ff' }}>a</span>
+              <span style={{ color: '#d4d4d4' }}>=</span>
+              <span style={{ color: '#ffd700' }}>[</span>
+              <span style={{ color: '#b5cea8' }}>1</span>
+              <span style={{ color: '#d4d4d4' }}>,</span>
+              <span style={{ color: '#b5cea8' }}>2</span>
+              <span style={{ color: '#d4d4d4' }}>,</span>
+              <span style={{ color: '#ce9178' }}>&quot;a&quot;</span>
+              <span style={{ color: '#d4d4d4' }}>,</span>
+              <span style={{ color: '#da70d6' }}>&#123; &#125;</span>
+              <span style={{ color: '#ffd700' }}>]</span>
+              <span style={{ color: '#666' }}>{'·······'}</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
+                <span style={{ color: '#569cd6' }}>const</span>{' '}
+                <span style={{ color: '#4fc1ff' }}>a</span>{' '}
+                <span style={{ color: '#d4d4d4' }}>=</span>{' '}
+                <span style={{ color: '#ffd700' }}>[</span>
+                <span style={{ color: '#b5cea8' }}>1</span>
+                <span style={{ color: '#d4d4d4' }}>,</span>{' '}
+                <span style={{ color: '#b5cea8' }}>2</span>
+                <span style={{ color: '#d4d4d4' }}>,</span>{' '}
+                <span style={{ color: '#ce9178' }}>&apos;a&apos;</span>
+                <span style={{ color: '#d4d4d4' }}>,</span>{' '}
+                <span style={{ color: '#da70d6' }}>&#123;&#125;</span>
+                <span style={{ color: '#ffd700' }}>]</span>;
+              </p>
+            </>
+          }
         />
 
         <FeatureBox
@@ -196,12 +364,68 @@ export default function Home() {
             </svg>
           }
           title="JSX/TSX is ready to go"
-          description="Use React JSX for prototyping dynamic UIs."
+          description="Prototype dynamic UIs with React and JSX, experiment with reactivity."
+          code={
+            <>
+              <span style={{ color: '#808080' }}>&lt;</span>
+              <span style={{ color: '#569cd6' }}>h1</span>
+              <span style={{ color: '#808080' }}>&gt;</span>Hello,{' '}
+              <span style={{ color: '#da70d6' }}>{'{'}</span>
+              <span style={{ color: '#9cdcfe' }}>name</span>
+              <span style={{ color: '#da70d6' }}>{'}'}</span>
+              <span style={{ color: '#808080' }}>&lt;/</span>
+              <span style={{ color: '#569cd6' }}>h1</span>
+              <span style={{ color: '#808080' }}>&gt;</span>
+            </>
+          }
+          codeVariants={
+            <>
+              <p>
+                <span style={{ color: '#808080' }}>&lt;</span>
+                <span style={{ color: '#569cd6' }}>img</span>
+                <span style={{ color: '#9cdcfe' }}> src</span>
+                <span style={{ color: '#d4d4d4' }}>=</span>
+                <span style={{ color: '#da70d6' }}>&#123;</span>
+                <span style={{ color: '#9cdcfe' }}>user.avatarUrl</span>
+                <span style={{ color: '#da70d6' }}>&#125;</span>
+                <span style={{ color: '#808080' }}> /&gt;</span>
+              </p>
+              <p>
+                <span style={{ color: '#808080' }}>&lt;</span>
+                <span style={{ color: '#569cd6' }}>li</span>
+                <span style={{ color: '#9cdcfe' }}> className</span>
+                <span style={{ color: '#d4d4d4' }}>=</span>
+                <span style={{ color: '#ce9178' }}>&quot;item&quot;</span>
+                <span style={{ color: '#808080' }}>&gt;</span>
+                <span style={{ color: '#da70d6' }}>&#123;</span>
+                <span style={{ color: '#9cdcfe' }}>name</span>
+                <span style={{ color: '#da70d6' }}>&#125;</span>
+                <span style={{ color: '#808080' }}>&lt;/</span>
+                <span style={{ color: '#569cd6' }}>li</span>
+                <span style={{ color: '#808080' }}>&gt;</span>
+              </p>
+            </>
+          }
         />
       </div>
 
+      <div className="container my-20 space-y-16 text-center font-medium text-gray-300">
+        <div>
+          <h2 className="text-primary text-2xl font-semibold">It is all free and open source</h2>
+          <p>No login / registration required.</p>
+        </div>
+        <div>
+          <h2 className="text-primary text-2xl font-semibold">It works right in your browser</h2>
+          <p>
+            I mean it works <i>right in your browser</i>.
+          </p>
+          <p>The playground powered by client-side JavaScript and WebAssembly.</p>
+        </div>
+        <p></p>
+      </div>
+
       <div className="container mt-16 text-center font-medium text-gray-300">
-        See these and even more features in action:
+        See the features in action:
       </div>
 
       <div id="demos" className="container mt-16 flex flex-col gap-16">
@@ -216,8 +440,8 @@ export default function Home() {
               </p>
               <p>
                 You still have the power to debug your code using <span>d</span>ebugger statements,
-                thanks to the source maps, and, of course, you can use your favorite console.log
-                just as you like :).
+                thanks to the source maps, and, of course, you can use your favorite{' '}
+                <code>console.log</code> just as you like :).
               </p>
             </>
           }
@@ -325,10 +549,13 @@ export default function Home() {
 
         <Demo
           replLink={getReplLink(demoRepls.jsx)}
-          title="JSX/TSX"
+          title="React & JSX/TSX"
           text={
             <>
-              <p>You can use React JSX in the code to tinker with dynamic UIs & reactive state.</p>
+              <p>
+                You can use React & React JSX in the code to tinker with dynamic UIs & reactive
+                state.
+              </p>
             </>
           }
           media={({ videoProps }) => (
@@ -346,7 +573,7 @@ export default function Home() {
           text={
             <>
               <p>
-                Format your code using Prettier by pressing <kbd>⌘+S</kbd>.<br />
+                Format your code with Prettier by pressing <kbd>⌘+S</kbd>.<br />
                 There&apos;s nothing more to say.
               </p>
             </>
@@ -419,6 +646,16 @@ export default function Home() {
             </Button>
 
             <Button asChild size="icon" variant="ghost">
+              <Link href="https://github.com/sponsors/nag5000" target="_blank">
+                <IconGithubSponsors
+                  width={22}
+                  height={22}
+                  className="opacity-80 hover:text-[#bf3989]"
+                />
+              </Link>
+            </Button>
+
+            <Button asChild size="icon" variant="ghost">
               <Link href="mailto:contact@jsrepl.io" target="_blank">
                 <IconEmail width={24} height={24} className="opacity-80" />
               </Link>
@@ -434,6 +671,55 @@ export default function Home() {
               className="max-w-40"
             />
           </Link>
+        </div>
+      </div>
+
+      <div className="container mt-32 text-gray-300 max-md:mt-20">
+        <h2 className="mb-8 text-center text-2xl font-semibold text-white/85">
+          Donate{' '}
+          <LucidePiggyBank
+            className="mx-1 inline-block -translate-y-0.5 text-green-400"
+            size={32}
+          />
+        </h2>
+        <div className="mx-auto w-full max-w-prose rounded-xl bg-zinc-800 p-6 text-center text-white/85 underline-offset-4">
+          If you like the project, consider giving it a ⭐️ on{' '}
+          <Link
+            href="https://github.com/jsrepl/jsrepl.io"
+            target="_blank"
+            className="text-primary hover:underline"
+          >
+            GitHub
+          </Link>{' '}
+          <div className="border-border mx-auto mb-px mt-3 w-8 border-t" />
+          or
+          <div className="border-border mx-auto mb-3 mt-0.5 w-8 border-t" />
+          make a small donation 💖
+          <br />
+          <Link
+            href="https://github.com/sponsors/nag5000"
+            target="_blank"
+            className="text-primary hover:underline"
+          >
+            https://github.com/sponsors/nag5000
+          </Link>{' '}
+          /{' '}
+          <Link
+            href="https://buymeacoffee.com/nag5000"
+            target="_blank"
+            className="text-primary hover:underline"
+          >
+            https://buymeacoffee.com/nag5000
+          </Link>
+          <br />
+          to support the development and cover some of the costs of the domain.
+          <br />
+          <br />
+          JSREPL is a side project, and I do it in my free time.
+          <br />
+          It is free for everyone, and will remain free.
+          <br />
+          Your support means a lot to me. Thank you!
         </div>
       </div>
 
