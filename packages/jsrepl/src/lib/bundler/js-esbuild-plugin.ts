@@ -2,6 +2,7 @@ import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
 import * as esbuild from 'esbuild-wasm'
 import { assert } from '@/lib/assert'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
+import { getFileExtension } from '../fs-utils'
 import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
@@ -32,11 +33,11 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
   try {
     const contents = fs.readFileSync(args.path, { encoding: 'utf8' })
     const transformed = replTransform(contents, args.path)
-    const ext = args.path.split('.').pop()
+    const loader = getFileExtension(args.path).slice(1) as esbuild.Loader
 
     return {
       contents: transformed,
-      loader: ext as esbuild.Loader,
+      loader,
     }
   } catch (error) {
     return {
@@ -61,6 +62,8 @@ function replTransform(code: string, filePath: string): string {
     plugins: [replPlugin],
   }
 
+  const ext = getFileExtension(filePath)
+
   const babel = getBabel()[0].value!
   const output = babel.transform(code, {
     parserOpts: {
@@ -70,9 +73,8 @@ function replTransform(code: string, filePath: string): string {
     presets: [[jsReplPreset, {}]],
     plugins: [
       // Allow Babel to parse TypeScript without transforming it
-      filePath.endsWith('.ts') || filePath.endsWith('.tsx')
-        ? ['syntax-typescript', { isTSX: filePath.endsWith('.tsx') }]
-        : null,
+      ext === '.ts' || ext === '.tsx' ? ['syntax-typescript', { isTSX: ext === '.tsx' }] : null,
+      ext === '.jsx' ? ['syntax-jsx'] : null,
     ].filter((x) => x !== null),
     sourceMaps: 'inline',
   })

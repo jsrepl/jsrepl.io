@@ -3,9 +3,10 @@ import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
+import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
-import useCodeEditorTypescript from '@/hooks/useCodeEditorTypescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
+import { getFileExtension } from '@/lib/fs-utils'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
 import * as ReplFS from '@/lib/repl-fs'
@@ -182,7 +183,7 @@ export default function CodeEditor({ className }: { className?: string }) {
     }
   }, [])
 
-  useCodeEditorTypescript(editorRef, models)
+  useCodeEditorDTS(editorRef, models)
 
   const { updateDecorations } = useCodeEditorRepl(editorRef, models, { theme })
   updateDecorationsRef.current = updateDecorations
@@ -274,20 +275,20 @@ async function setupTailwindCSS() {
 }
 
 function getMonacoLanguage(path: string): string {
-  const ext = path.split('.').pop()?.toLowerCase()
+  const ext = getFileExtension(path)
   if (!ext) {
     return 'plaintext'
   }
 
   const language = {
-    tsx: 'typescript',
-    ts: 'typescript',
-    js: 'javascript',
-    jsx: 'javascript',
-    json: 'json',
-    html: 'html',
-    css: 'css',
-    md: 'markdown',
+    '.tsx': 'typescript',
+    '.ts': 'typescript',
+    '.js': 'javascript',
+    '.jsx': 'javascript',
+    '.json': 'json',
+    '.html': 'html',
+    '.css': 'css',
+    '.md': 'markdown',
   }[ext]
 
   return language ?? 'plaintext'

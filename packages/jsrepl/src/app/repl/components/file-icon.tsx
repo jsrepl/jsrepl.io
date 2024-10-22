@@ -9,6 +9,7 @@ import IconLanguageMarkdown from '~icons/mdi/language-markdown.jsx'
 import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
 import IconReact from '~icons/mdi/react.jsx'
 import IconTailwind from '~icons/mdi/tailwind.jsx'
+import { getFileExtension } from '@/lib/fs-utils'
 
 export function FileIcon({
   name,
@@ -23,8 +24,6 @@ export function FileIcon({
     return <LucideFolder className={`${className}`} />
   }
 
-  const ext = name.split('.').pop()?.toLowerCase()
-
   switch (true) {
     case /tailwind\.config\.(ts|js)?$/i.test(name):
       return <IconTailwind className={`${className} text-[#38BDF9]`} />
@@ -33,21 +32,22 @@ export function FileIcon({
       return <IconReadme className={`${className} text-[#38BDF9]`} />
   }
 
+  const ext = getFileExtension(name)
   switch (ext) {
-    case 'tsx':
-    case 'jsx':
+    case '.tsx':
+    case '.jsx':
       return <IconReact className={`${className} text-[#0A7EA4]`} />
-    case 'ts':
+    case '.ts':
       return <IconLanguageTypescript className={`${className} text-[#3078C6]`} />
-    case 'js':
+    case '.js':
       return <IconLanguageJavascript className={`${className} text-[#E8D44E]`} />
-    case 'html':
+    case '.html':
       return <IconLanguageHtml className={`${className} text-[#DC4A25]`} />
-    case 'css':
+    case '.css':
       return <IconLanguageCss className={`${className} text-[#3078C6]`} />
-    case 'json':
+    case '.json':
       return <IconCodeJson className={`${className} text-[#CC8000]`} />
-    case 'md':
+    case '.md':
       return <IconLanguageMarkdown className={`${className} text-[#3078C6]`} />
     default:
       return <IconFile className={`${className} text-muted-foreground`} />

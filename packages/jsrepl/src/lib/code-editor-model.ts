@@ -1,5 +1,6 @@
 import type * as Monaco from 'monaco-editor'
 import * as ReplFS from '@/lib/repl-fs'
+import { getFileExtension } from './fs-utils'
 
 export class CodeEditorModel {
   file: ReplFS.File
@@ -41,8 +42,7 @@ export class CodeEditorModel {
    * If there is no extension, returns an empty string.
    */
   get fileExtension(): string {
-    const ext = this.filePath.split('.').pop()
-    return ext ? '.' + ext : ''
+    return getFileExtension(this.filePath)
   }
 
   get kind() {

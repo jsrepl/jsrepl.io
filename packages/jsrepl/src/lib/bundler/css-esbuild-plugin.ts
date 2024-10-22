@@ -3,6 +3,7 @@ import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import type * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
+import { getFileExtension } from '../fs-utils'
 import { defer } from '../promise-with-resolvers'
 import { defaultTailwindConfigJson } from '../repl-stored-state-library'
 import { Cache } from './cache'
@@ -84,14 +85,15 @@ async function onTailwindConfigLoadCallback(
 
     let transformedCode = tailwindConfigCache.get(contents, args.path)
     if (transformedCode === undefined) {
-      const ext = args.path.split('.').pop()
+      const ext = getFileExtension(args.path)
+
       const result = babel.transform(contents, {
         parserOpts: {
           sourceType: 'module',
         },
         filename: args.path,
         plugins: [
-          args.path.endsWith('.ts') ? ['syntax-typescript', { isTSX: false }] : null,
+          ext === '.ts' ? ['syntax-typescript', { isTSX: false }] : null,
           updateImports,
         ].filter((x) => x !== null),
         sourceMaps: 'inline',
@@ -99,7 +101,7 @@ async function onTailwindConfigLoadCallback(
 
       try {
         const transformed = await build.esbuild.transform(result.code ?? '', {
-          loader: ext as esbuild.Loader,
+          loader: ext.slice(1) as esbuild.Loader,
         })
 
         transformedCode = transformed.code
@@ -169,7 +171,7 @@ async function onCssLoadCallback(
         )
         .map((dirent) => ({
           content: fs.readFileSync(dirent.parentPath + '/' + dirent.name, { encoding: 'utf8' }),
-          extension: dirent.name.split('.').pop()!,
+          extension: getFileExtension(dirent.name).slice(1),
         }))
     }
 
