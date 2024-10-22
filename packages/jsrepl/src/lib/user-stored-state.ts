@@ -40,7 +40,7 @@ function getDefaultState(): UserStoredState {
     previewPos: PreviewPosition.FloatBottomRight,
     showLeftSidebar: true,
     version: undefined,
-    leftSidebarWidth: 200,
+    leftSidebarWidth: 240,
     autostartOnCodeChange: true,
     editorFontSize: 14,
   }
