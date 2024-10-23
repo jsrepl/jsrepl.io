@@ -17,7 +17,8 @@ import { FilesPanelContext } from './files-panel-context'
 import { NewFileMenuItems } from './new-file-menu-items'
 
 export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) {
-  const { treeViewRef, createFolder, deleteItem, setEditingItem } = useContext(FilesPanelContext)!
+  const { treeViewRef, createFolder, deleteItem, setEditingItem, duplicateItem } =
+    useContext(FilesPanelContext)!
 
   return (
     <div className="flex" onClick={(event) => event.stopPropagation()}>
@@ -79,6 +80,7 @@ export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) 
           >
             Move…
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => duplicateItem(path)}>Duplicate</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => deleteItem(path)}>Delete</DropdownMenuItem>
         </DropdownMenuContent>

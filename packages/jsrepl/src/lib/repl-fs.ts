@@ -186,7 +186,7 @@ export class FS {
 
     const dir: Directory = {
       kind: Kind.Directory,
-      children,
+      children: structuredClone(children),
     }
 
     parentDir.children[dirName] = dir
@@ -217,6 +217,21 @@ export class FS {
     newParentDir.children[newName] = entry
 
     return entry
+  }
+
+  copy(path: string, newPath: string): Entry {
+    const entry = this.get(path)
+    if (!entry) {
+      throw new Error(`Path "${path}" does not exist.`)
+    }
+
+    if (entry.kind === Kind.File) {
+      return this.writeFile(newPath, entry.content)
+    } else if (entry.kind === Kind.Directory) {
+      return this.writeDirectory(newPath, entry.children)
+    }
+
+    throw new Error(`Path "${path}" is not a file or directory.`)
   }
 
   validateName(name: string): boolean {

@@ -9,6 +9,7 @@ export type FilesPanelContextType = {
   setSelectedItemId: Dispatch<SetStateAction<string>>
   createFile: (parentDirPath: string, name?: string, fileContent?: string, noEdit?: boolean) => void
   createFolder: (parentDirPath: string, name?: string) => void
+  duplicateItem: (path: string) => void
   deleteItem: (path: string) => void
 }
 

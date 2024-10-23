@@ -149,7 +149,7 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
         pattern={
           editingType === 'name' ? '^[a-zA-Z0-9_\\-.\\(\\) ]+$' : '^\\/[\\/a-zA-Z0-9_\\-.\\(\\) ]+$'
         }
-        className="ring-border outline-primary invalid:outline-destructive invalid:ring-destructive -ml-1 min-w-0 flex-grow rounded-sm px-1 text-sm outline-offset-2 ring-1 invalid:ring-2"
+        className="ring-border outline-primary invalid:outline-destructive invalid:ring-destructive -ml-1 mr-1 min-w-0 flex-grow rounded-sm px-1 text-sm outline-offset-2 ring-1 invalid:ring-2"
         onBlur={(event) => {
           const value = (event.target as HTMLInputElement).value
           onConfirm(value)
@@ -176,7 +176,6 @@ export function EditItem({ editingItem }: { editingItem: EditingItem }) {
             }
           }
         }}
-        autoFocus
         autoCapitalize="off"
         autoCorrect="off"
         autoComplete="off"

@@ -97,6 +97,33 @@ export default function FilesPanel() {
     })
   }, [])
 
+  const duplicateItem = useCallback(
+    (path: string) => {
+      path = replState.fs.normalizePath(path)
+
+      const slashLastIndex = path.lastIndexOf('/')
+      const dirPath = path.slice(0, slashLastIndex)
+      const fileName = path.slice(slashLastIndex + 1)
+      const dotLastIndex = fileName.lastIndexOf('.')
+      const fileNameWithoutExt = dotLastIndex === -1 ? fileName : fileName.slice(0, dotLastIndex)
+      const extWithDot = dotLastIndex === -1 ? '' : fileName.slice(dotLastIndex)
+
+      let suffix = ''
+      let newPath = ''
+      do {
+        suffix += ' (copy)'
+        newPath = dirPath + '/' + fileNameWithoutExt + suffix + extWithDot
+      } while (replState.fs.exists(newPath))
+
+      setReplState((state) => {
+        const fs = state.fs.clone()
+        fs.copy(path, newPath)
+        return { ...state, fs }
+      })
+    },
+    [replState.fs, setReplState]
+  )
+
   const deleteItem = useCallback(
     (path: string) => {
       path = replState.fs.normalizePath(path)
@@ -231,9 +258,10 @@ export default function FilesPanel() {
       setSelectedItemId,
       createFile,
       createFolder,
+      duplicateItem,
       deleteItem,
     }),
-    [createFile, createFolder, deleteItem]
+    [createFile, createFolder, deleteItem, duplicateItem]
   )
 
   useEffect(() => {
