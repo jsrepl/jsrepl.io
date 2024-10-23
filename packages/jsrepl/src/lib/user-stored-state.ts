@@ -38,6 +38,7 @@ function serialize(storedState: UserStoredState): string {
 function getDefaultState(): UserStoredState {
   return {
     previewPos: PreviewPosition.FloatBottomRight,
+    previewSize: [350, 180],
     showLeftSidebar: true,
     version: undefined,
     leftSidebarWidth: 240,

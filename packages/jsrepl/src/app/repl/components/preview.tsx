@@ -29,7 +29,7 @@ export default function ReplPreview({ className }: { className?: string }) {
 
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { userState, setUserState } = useContext(UserStateContext)!
-  const [size, setSize] = useReplPreviewSize({ userState })
+  const [size, setSize] = useReplPreviewSize()
   const pos = userState.previewPos
 
   return (

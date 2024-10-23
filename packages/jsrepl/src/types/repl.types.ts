@@ -126,6 +126,10 @@ export type UserStoredState = {
    */
   version: string | undefined
   previewPos: PreviewPosition
+  /**
+   * [width, height]
+   */
+  previewSize: [number, number]
   showLeftSidebar: boolean
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
