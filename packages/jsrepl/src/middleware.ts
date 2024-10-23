@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     form-action 'self';
     frame-ancestors 'none';
     frame-src ${process.env.NEXT_PUBLIC_PREVIEW_URL};
-    connect-src 'self' https://esm.sh;
+    connect-src 'self' https://esm.sh https://api-gateway.umami.dev/api/send;
     ${process.env.NEXT_PUBLIC_NODE_ENV === 'production' /* https://stackoverflow.com/a/71109928 */ ? 'upgrade-insecure-requests;' : ''}
   `
 
