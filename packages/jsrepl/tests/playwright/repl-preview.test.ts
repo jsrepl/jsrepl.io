@@ -1,40 +1,33 @@
 import { expect, test } from '@playwright/test'
 import dedent from 'string-dedent'
+import * as ReplFS from '@/lib/repl-fs'
 import { visitPlayground } from './utils'
 
 test('preview', async ({ page }) => {
   await visitPlayground(page, {
-    activeModel: 'file:///index.tsx',
+    openedModels: ['/test.ts'],
+    activeModel: '/test.ts',
     showPreview: true,
-    models: new Map([
-      [
-        'file:///index.tsx',
-        {
-          uri: 'file:///index.tsx',
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'test.ts': {
+          kind: ReplFS.Kind.File,
           content: dedent`
-            const now = new Date('2024');
-            const foo = document.querySelector('.foo');
-            foo.innerHTML = now.toISOString();
-          `,
+          const now = new Date('2024');
+          const foo = document.querySelector('.foo');
+          foo.innerHTML = now.toISOString();
+        `,
         },
-      ],
-      [
-        'file:///index.html',
-        {
-          uri: 'file:///index.html',
+        'index.html': {
+          kind: ReplFS.Kind.File,
           content: dedent`
-            <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
-          `,
+          <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
+          <script type="module" src="/test.ts"></script>
+        `,
         },
-      ],
-      [
-        'file:///index.css',
-        {
-          uri: 'file:///index.css',
-          content: ``,
-        },
-      ],
-    ]),
+      },
+    }),
   })
 
   const frame = page.frameLocator('iframe').frameLocator('.preview.active')

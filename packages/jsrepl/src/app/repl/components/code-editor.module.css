@@ -24,12 +24,13 @@
   }
 }
 
+.jsreplDecor-warning,
 .jsreplDecor-console-warn {
   --color: rgb(177, 105, 35);
 }
 
 .jsreplDecor-error,
-.jsreplDecor-babel-parse-error,
+.jsreplDecor-window-error,
 .jsreplDecor-console-error {
   --color: rgb(177, 35, 35);
 }

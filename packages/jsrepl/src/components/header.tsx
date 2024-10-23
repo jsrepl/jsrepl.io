@@ -1,11 +1,17 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { LucidePlus } from 'lucide-react'
+import { LucideArrowUpRight, LucidePlus } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import { cn } from '@/lib/utils'
+import ReplStarterDialog from './repl-starter-dialog'
+import { Button } from './ui/button'
 
 export default function Header({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const [starterDialogOpen, setStarterDialogOpen] = useState(false)
+
   return (
     <header
       className={cn(
@@ -23,17 +29,28 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
           <span className="tracking-wide text-stone-200">JSREPL</span>
         </Link>
 
-        <div className="text-secondary-foreground/80 ml-auto flex items-center text-sm font-medium leading-10 [&_a]:px-3 [&_a]:underline-offset-4 hover:[&_a]:underline">
+        <div className="text-secondary-foreground/80 ml-auto flex items-center text-sm font-medium leading-10 [&_a]:px-3 [&_a]:underline-offset-4 hover:[&_a]:underline [&_button]:px-3">
+          <Link href="https://github.com/sponsors/nag5000" target="_blank">
+            Donate
+            <LucideArrowUpRight size={16} className="ml-1 inline-block align-middle opacity-30" />
+          </Link>
+
           <Link href="https://github.com/jsrepl/jsrepl.io/releases" target="_blank">
             Changelog
+            <LucideArrowUpRight size={16} className="ml-1 inline-block align-middle opacity-30" />
           </Link>
 
           <div className="border-border mx-2 h-5 border-l" />
 
-          <Link href="/repl" className="text-primary inline-flex items-center text-nowrap">
+          <Button
+            className="inline-flex items-center text-nowrap"
+            variant="link"
+            size="lg"
+            onClick={() => setStarterDialogOpen(true)}
+          >
             <LucidePlus size={18} className="mr-1" />
             New REPL
-          </Link>
+          </Button>
 
           <div className="border-border mx-2 h-5 border-l" />
 
@@ -47,6 +64,8 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
           </Link>
         </div>
       </div>
+
+      <ReplStarterDialog open={starterDialogOpen} onOpenChange={setStarterDialogOpen} />
     </header>
   )
 }

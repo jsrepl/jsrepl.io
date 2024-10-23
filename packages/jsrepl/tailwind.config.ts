@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import type { Config } from 'tailwindcss'
 import { Themes } from './src/lib/themes'
 
@@ -15,7 +16,6 @@ const config: Config = {
     isDev && './.storybook/**/*.{js,ts,jsx,tsx,mdx}',
   ].filter((x) => x !== false),
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require('@tailwindcss/typography'), require('tailwindcss-animate')],
 
   theme: {
@@ -77,7 +77,29 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       height: {
-        'repl-header': '2.6875rem',
+        'repl-header': '2.25rem',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+        },
+        'accordion-up': {
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
   },

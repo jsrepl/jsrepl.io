@@ -29,9 +29,7 @@ export default function ShareRepl({ setReplState }: { setReplState: SetReplStore
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="my-2 self-center font-medium">
-        To share, simply copy the current URL from the address bar:
-      </span>
+      <span className="mb-2 font-medium">To share, copy the current URL from the address bar:</span>
 
       <input
         ref={inputRef}

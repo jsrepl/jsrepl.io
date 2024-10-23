@@ -1,10 +1,9 @@
-import type { Theme } from '../../jsrepl/src/types'
+import { consoleLogRepl } from '../../jsrepl/src/lib/console-utils'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
 import { setupRepl } from './repl'
 import type {
-  ImportMap,
   PreviewEntryWindow,
   PreviewWindow,
   ReplMessageData,
@@ -63,7 +62,7 @@ function onMessage(event: MessageEvent) {
 }
 
 async function onReplMessage(data: ReplMessageData) {
-  const { token, jsCode, htmlCode, cssCode, importmap, theme } = data
+  const { token, srcdoc } = data
   currentToken = token
 
   const iframeToEnter = activeIframe === iframe1 ? iframe2 : iframe1
@@ -72,7 +71,7 @@ async function onReplMessage(data: ReplMessageData) {
 
   iframeToEnter.style.opacity = '0'
   iframeToEnter.style.pointerEvents = 'none'
-  iframeToEnter.srcdoc = getIframeTemplate(importmap, jsCode, htmlCode, cssCode, theme, token)
+  iframeToEnter.srcdoc = srcdoc
 
   iframeToEnter.classList.add('active')
   iframeToLeave.classList.remove('active')
@@ -92,93 +91,19 @@ async function onReplMessage(data: ReplMessageData) {
 }
 
 function onUpdateThemeMessage(data: UpdateThemeMessageData) {
-  const { theme } = data
   const html = activeIframe?.contentWindow?.document.documentElement
   if (html) {
-    setTheme(html, theme)
+    html.classList.toggle('dark', data.theme.isDark)
   }
-}
-
-function setTheme(html: HTMLElement, theme: Pick<Theme, 'id' | 'isDark'>) {
-  html.classList.toggle('dark', theme.isDark)
-}
-
-function getIframeTemplate(
-  importmap: ImportMap,
-  jsCode: string,
-  htmlCode: string,
-  cssCode: string,
-  theme: Pick<Theme, 'id' | 'isDark'>,
-  token: number
-) {
-  const newDoc = document.implementation.createHTMLDocument('JSRepl Preview')
-
-  newDoc.documentElement.dataset.token = token.toString()
-  setTheme(newDoc.documentElement, theme)
-
-  const metaColorScheme = newDoc.createElement('meta')
-  metaColorScheme.name = 'color-scheme'
-  metaColorScheme.content = theme.isDark ? 'dark light' : 'light dark'
-  newDoc.head.appendChild(metaColorScheme)
-
-  const importmapScript = newDoc.createElement('script')
-  importmapScript.type = 'importmap'
-  importmapScript.textContent = JSON.stringify(importmap)
-  newDoc.head.appendChild(importmapScript)
-
-  const setupScript = newDoc.createElement('script')
-  setupScript.type = 'module'
-  setupScript.textContent = `window.parent.hooks.setup(window, ${token})`
-  newDoc.head.appendChild(setupScript)
-
-  const cssStyle = newDoc.createElement('style')
-  cssStyle.textContent = cssCode
-  newDoc.head.appendChild(cssStyle)
-
-  const jsScript = document.createElement('script')
-  jsScript.id = 'repl-script'
-  jsScript.type = 'module'
-  // `${jsCode}` must be at col 0 to compute correct colno in error stack, see window.onerror handler.
-  jsScript.textContent = `\n${jsCode}\n`
-  newDoc.head.appendChild(jsScript)
-
-  const afterJsScript = newDoc.createElement('script')
-  afterJsScript.type = 'module'
-  afterJsScript.textContent = `window.parent.hooks.afterJsScript(window, ${token})`
-  newDoc.head.appendChild(afterJsScript)
-
-  newDoc.body.innerHTML = htmlCode
-
-  return newDoc.documentElement.outerHTML
 }
 
 function setup(previewWindow: PreviewWindow, token: number) {
   setupRepl(previewWindow, token)
   setupConsole(previewWindow)
-
-  if (previewWindow.document.body.hasChildNodes()) {
-    bodyMutation(token)
-  } else {
-    const observer = new previewWindow.MutationObserver(() => {
-      observer.disconnect()
-      bodyMutation(token)
-    })
-
-    observer.observe(previewWindow.document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-    })
-  }
-
-  previewWindow.console.debug('%cREPL begin (%s)', 'font-weight: bold;', token)
+  consoleLogRepl('debug', `%c REPL begin (${token})`, 'font-weight: bold;')
 }
 
 function afterJsScript(_window: PreviewWindow, token: number) {
   postMessage(token, { type: 'script-complete' })
   afterJsScriptDeferred?.resolve()
-}
-
-function bodyMutation(token: number) {
-  postMessage(token, { type: 'body-mutation' })
 }

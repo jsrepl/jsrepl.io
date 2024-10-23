@@ -1,6 +1,6 @@
 import { type Locator, type Page, expect } from '@playwright/test'
 import regexpEscape from 'regexp.escape'
-import { toQueryParams } from '@/lib/repl-stored-state'
+import { OldReplStoredStateV0, toQueryParams, toQueryParamsV0 } from '@/lib/repl-stored-state'
 import type { ReplStoredState } from '@/types'
 
 type MonacoLocator = Locator
@@ -70,13 +70,12 @@ export async function assertReplLines(
   await Promise.all(promises)
 }
 
-export async function visitPlayground(page: Page, state: Partial<ReplStoredState>) {
-  const defaultState: ReplStoredState = {
-    models: new Map(),
-    activeModel: '',
-    showPreview: false,
-  }
+export async function visitPlayground(page: Page, state: ReplStoredState) {
+  const qp = toQueryParams(state)
+  await page.goto('/repl?' + new URLSearchParams(qp))
+}
 
-  const qp = toQueryParams({ ...defaultState, ...state })
+export async function visitPlaygroundV0(page: Page, state: OldReplStoredStateV0) {
+  const qp = toQueryParamsV0(state)
   await page.goto('/repl?' + new URLSearchParams(qp))
 }

@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
+import { type Dispatch, type SetStateAction, useCallback } from 'react'
 import { type ReplStoredState } from '@/types'
 
 export function useReplPreviewShown({
@@ -7,14 +7,7 @@ export function useReplPreviewShown({
 }: {
   replState: ReplStoredState
   setReplState: Dispatch<SetStateAction<ReplStoredState>>
-}): [
-  boolean,
-  (force?: boolean) => void,
-  { mightBeHidden: boolean; onRepl: () => void; onReplBodyMutation: () => void },
-] {
-  const [mightBeHidden, setMightBeHidden] = useState(false)
-  const hideTimeoutId = useRef<NodeJS.Timeout>()
-
+}): [boolean, (force?: boolean) => void] {
   const shown = replState.showPreview
 
   const toggle = useCallback(
@@ -31,23 +24,5 @@ export function useReplPreviewShown({
     [shown, setReplState]
   )
 
-  const onRepl = useCallback(() => {
-    clearTimeout(hideTimeoutId.current)
-    hideTimeoutId.current = setTimeout(() => {
-      setMightBeHidden(true)
-    }, 1000)
-  }, [])
-
-  const onReplBodyMutation = useCallback(() => {
-    clearTimeout(hideTimeoutId.current)
-    setMightBeHidden(false)
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(hideTimeoutId.current)
-    }
-  }, [])
-
-  return [shown, toggle, { mightBeHidden, onRepl, onReplBodyMutation }]
+  return [shown, toggle]
 }

@@ -10,12 +10,14 @@ export default function Resizable({
   size,
   onSizeUpdate,
   edges,
+  margin,
   children,
   className,
 }: {
   size: { width: number; height: number }
   onSizeUpdate: (size: { width: number; height: number }) => void
   edges: OrBoolean<ResizableOptions['edges']>
+  margin?: number | boolean
   children: React.ReactNode
   className?: string
 }) {
@@ -25,6 +27,7 @@ export default function Resizable({
     const interactable = interact(elRef.current!)
       .resizable({
         edges,
+        margin,
         listeners: {
           move(event) {
             Object.assign(event.target.style, {
@@ -58,7 +61,7 @@ export default function Resizable({
     return () => {
       interactable.unset()
     }
-  }, [edges, onSizeUpdate])
+  }, [edges, onSizeUpdate, margin])
 
   return (
     <div

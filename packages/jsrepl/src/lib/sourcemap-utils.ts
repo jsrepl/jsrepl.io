@@ -1,23 +1,20 @@
-import type { BabelFileResult } from '@babel/core'
 import { type SourceMapInput, TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 
-// line starts with 1, column starts with 0
-export function getOriginalPosition(
-  sourcemap: BabelFileResult['map'],
-  line: number,
-  column: number
-): { line: number | null; column: number | null } {
-  if (line < 1 || column < 0) {
-    console.error(`getOriginalPosition: invalid position ${line}:${column}`)
-    return { line: null, column: null }
+/**
+ * @param line - starts with 1
+ * @param column - starts with 1
+ * @returns line and column starting with 1
+ */
+export function getOriginalPosition(sourcemap: SourceMapInput, line: number, column: number) {
+  if (line < 1 || column < 1) {
+    throw new Error(`getOriginalPosition: invalid position ${line}:${column}`)
   }
 
-  try {
-    const tracer = new TraceMap(sourcemap as SourceMapInput)
-    const originalPosition = originalPositionFor(tracer, { line, column })
-    return originalPosition
-  } catch (e) {
-    console.error('getOriginalPosition error', e)
-    return { line: null, column: null }
+  const tracer = new TraceMap(sourcemap as SourceMapInput)
+  const originalPosition = originalPositionFor(tracer, { line, column: column - 1 })
+  if (originalPosition.column !== null) {
+    originalPosition.column += 1
   }
+
+  return originalPosition
 }

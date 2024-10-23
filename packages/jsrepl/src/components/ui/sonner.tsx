@@ -15,7 +15,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="bottom-left"
       richColors
       closeButton
-      className="toaster group"
+      className="toaster group ml-10"
       toastOptions={{
         classNames: {
           toast:

@@ -1,4 +1,6 @@
+import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
+import * as ReplFS from '@/lib/repl-fs'
 
 export enum ReplPayloadCustomKind {
   DomNode = 'dom-node', // non-cloneable
@@ -57,17 +59,35 @@ export type ReplPayload = {
   isError: boolean
   result: unknown
   ctx: {
-    id: number
+    id: number | string
+    /**
+     * Starts with 1.
+     */
     lineStart: number
+    /**
+     * Starts with 1.
+     */
     lineEnd: number
+    /**
+     * Starts with 1.
+     */
     colStart: number
+    /**
+     * Starts with 1.
+     */
     colEnd: number
     source: string
+    /**
+     * Path relative to the root of the project, starting with '/'.
+     * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
+     */
+    filePath: string
     kind:
       | 'expression'
       | 'variable'
+      | 'window-error'
       | 'error'
-      | 'babel-parse-error'
+      | 'warning'
       | 'console-log'
       | 'console-debug'
       | 'console-info'
@@ -87,19 +107,33 @@ type ReplNonPromiseFields = {
 }
 
 export type ReplStoredState = {
-  models: Map<string, ModelDef>
+  fs: ReplFS.FS
+  /**
+   * Array of absolute paths to the opened models. Paths start with '/'.
+   */
+  openedModels: string[]
+  /**
+   * Absolute path to the active model, starting with '/'.
+   * In case of no active model use '' (empty string).
+   */
   activeModel: string
   showPreview: boolean
 }
 
-export type ModelDef = {
-  uri: string
-  content: string
-}
-
 export type UserStoredState = {
+  /**
+   * Last used App version. It is used to show New Version toast.
+   */
   version: string | undefined
   previewPos: PreviewPosition
+  /**
+   * [width, height]
+   */
+  previewSize: [number, number]
+  showLeftSidebar: boolean
+  leftSidebarWidth: number
+  autostartOnCodeChange: boolean
+  editorFontSize: number
 }
 
 export type Theme = {
@@ -112,4 +146,14 @@ export enum PreviewPosition {
   FloatBottomRight = 'float-bottom-right',
   FloatTopRight = 'float-top-right',
   AsideRight = 'aside-right',
+}
+
+export type ImportMap = {
+  imports: Record<string, string>
+}
+
+export type ReplInfo = {
+  ok: boolean
+  errors: esbuild.Message[]
+  warnings: esbuild.Message[]
 }

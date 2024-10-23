@@ -1,14 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
-import { type UserStoredState } from '@/types'
+import { useCallback, useContext, useMemo, useState } from 'react'
+import { UserStateContext } from '@/context/user-state-context'
 
-export function useReplPreviewSize({
-  userState,
-}: {
-  userState: UserStoredState
-}): [{ width: number; height: number }, (value: { width: number; height: number }) => void] {
-  const [floatSize, setFloatSize] = useState({ width: 350, height: 180 })
-  const [asideSize, setAsideSize] = useState({ width: 350, height: 0 })
+export function useReplPreviewSize(): [
+  { width: number; height: number },
+  (value: { width: number; height: number }) => void,
+] {
+  const { userState, setUserState } = useContext(UserStateContext)!
   const position = userState.previewPos
+  const [previewWidth, previewHeight] = userState.previewSize
+
+  const [floatSize, setFloatSize] = useState({ width: previewWidth, height: previewHeight })
+  const [asideSize, setAsideSize] = useState({ width: previewWidth, height: 0 })
 
   const size = useMemo(() => {
     switch (position) {
@@ -29,14 +31,16 @@ export function useReplPreviewSize({
         case 'float-top-right':
           setFloatSize(value)
           setAsideSize((prev) => ({ ...prev, width: value.width }))
+          setUserState((prev) => ({ ...prev, previewSize: [value.width, value.height] }))
           break
         case 'aside-right':
           setAsideSize(value)
           setFloatSize((prev) => ({ ...prev, width: value.width }))
+          setUserState((prev) => ({ ...prev, previewSize: [value.width, prev.previewSize[1]] }))
           break
       }
     },
-    [position]
+    [position, setUserState]
   )
 
   return [size, setSize]

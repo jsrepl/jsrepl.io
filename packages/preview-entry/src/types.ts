@@ -4,10 +4,6 @@ declare global {
   const __JSREPL_ORIGIN__: string
 }
 
-export type ImportMap = {
-  imports: Record<string, string>
-}
-
 export type ReplRawPayload = Omit<ReplPayload, 'result'> & { rawResult: unknown }
 
 export type PreviewEntryWindow = Window &
@@ -19,13 +15,9 @@ export type PreviewEntryWindow = Window &
 export type PreviewWindow = Window & typeof globalThis & { __r: Function }
 
 export type ReplMessageData = {
-  token: number
   type: 'repl'
-  jsCode: string
-  htmlCode: string
-  cssCode: string
-  importmap: ImportMap
-  theme: Pick<Theme, 'id' | 'isDark'>
+  token: number
+  srcdoc: string
 }
 
 export type UpdateThemeMessageData = {

@@ -1,53 +1,59 @@
-import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
-import { CodeEditorModel } from '@/lib/code-editor-model'
+import { toast } from 'sonner'
+import { ReplInfoContext } from '@/context/repl-info-context'
+import { UserStateContext } from '@/context/user-state-context'
+import { getBundler } from '@/lib/bundler/get-bundler'
+import type { CodeEditorModel } from '@/lib/code-editor-model'
+import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
-import { onPreviewMessage, sendRepl, updatePreviewTheme } from '@/lib/repl'
 import { createDecorations } from '@/lib/repl-decorations'
-import { TsxCodeEditorModel } from '@/lib/tsx-code-editor-model'
+import { onPreviewMessage } from '@/lib/repl/on-preview-message'
+import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
+import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
 import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>,
-  {
-    theme,
-    onRepl,
-    onReplBodyMutation,
-  }: { theme: Theme; onRepl: () => void; onReplBodyMutation: () => void }
+  { theme }: { theme: Theme }
 ) {
+  const { setReplInfo } = useContext(ReplInfoContext)!
+  const { userState } = useContext(UserStateContext)!
+
   const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
   const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
-  const changedModels = useMemo(() => new Set<InstanceType<typeof CodeEditorModel>>(), [])
   const decorationsDisposable = useRef<() => void>()
-  const replDisposable = useRef<() => void>()
   const previewIframe = useRef<HTMLIFrameElement>()
   const themeRef = useRef(theme)
   const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
   const [depsReady, setDepsReady] = useState(false)
-  const configureMonacoTailwindcss =
-    useRef<typeof import('@nag5000/monaco-tailwindcss').configureMonacoTailwindcss>()
-  const [, loadBabel] = useMemo(() => getBabel(), [])
+  const bundler = useMemo(() => getBundler(), [])
 
   const updateDecorations = useCallback(() => {
     const editor = editorRef.current!
-    const tsxModel = models.get('file:///index.tsx') as TsxCodeEditorModel
-    if (!editor || !tsxModel || editor.getModel() !== tsxModel.monacoModel) {
+    const activeModel = editorRef.current?.getModel()
+    if (!editor || !activeModel) {
       return
     }
 
     decorationsDisposable.current?.()
-    const payloads = Array.from(payloadMap.values())
-    decorationsDisposable.current = createDecorations(editor, payloads)
-  }, [editorRef, models, payloadMap])
+    const payloads = Array.from(payloadMap.values()).filter(
+      (payload) => payload.ctx.filePath === activeModel.uri.path
+    )
+    decorationsDisposable.current =
+      payloads.length > 0 ? createDecorations(editor, payloads) : undefined
+  }, [editorRef, payloadMap])
 
   const doRepl = useCallback(async () => {
     try {
-      replDisposable.current = await sendRepl({
+      if (!depsReady || !previewIframeReadyId) {
+        return
+      }
+
+      const replInfo = await sendRepl({
         models,
-        configureMonacoTailwindcss: configureMonacoTailwindcss.current!,
-        changedModels,
         allPayloads,
         payloadMap,
         updateDecorations,
@@ -55,14 +61,28 @@ export default function useCodeEditorRepl(
         theme: themeRef.current,
       })
 
-      changedModels.clear()
-      onRepl()
+      setReplInfo(replInfo)
     } catch (e) {
-      if (e !== 'cancelled') {
-        throw e
+      if (e === 'aborted') {
+        return
       }
+
+      const msg = `Unexpected error bundling repl: ${e instanceof Error ? e.message : 'Something went wrong'}`
+      consoleLogRepl('error', msg)
+      console.error(e)
+      toast.error(msg, {
+        duration: Infinity,
+      })
     }
-  }, [payloadMap, allPayloads, changedModels, models, onRepl, updateDecorations])
+  }, [
+    payloadMap,
+    allPayloads,
+    models,
+    setReplInfo,
+    updateDecorations,
+    depsReady,
+    previewIframeReadyId,
+  ])
 
   const debouncedDoRepl = useMemo(() => debounce(doRepl, 300), [doRepl])
 
@@ -77,15 +97,11 @@ export default function useCodeEditorRepl(
         setPreviewIframeReadyId,
         allPayloads,
         payloadMap,
-        models,
+        //models,
         debouncedUpdateDecorations,
       })
-
-      if (event.data.type === 'body-mutation') {
-        onReplBodyMutation()
-      }
     },
-    [payloadMap, allPayloads, debouncedUpdateDecorations, models, onReplBodyMutation]
+    [payloadMap, allPayloads, debouncedUpdateDecorations]
   )
 
   useEffect(() => {
@@ -95,7 +111,7 @@ export default function useCodeEditorRepl(
   useEffect(() => {
     return () => {
       decorationsDisposable.current?.()
-      replDisposable.current?.()
+      abortRepl()
     }
   }, [])
 
@@ -112,22 +128,26 @@ export default function useCodeEditorRepl(
   }, [debouncedUpdateDecorations])
 
   useEffect(() => {
-    models.forEach((model) => {
-      changedModels.add(model)
-    })
-
-    Promise.all([loadBabel(), import('@nag5000/monaco-tailwindcss')]).then(
-      ([, { configureMonacoTailwindcss: _configureMonacoTailwindcss }]) => {
-        configureMonacoTailwindcss.current = _configureMonacoTailwindcss
-        setDepsReady(true)
+    const [, loadBabel] = getBabel()
+    Promise.all([bundler.setup(), loadBabel()]).then(([bundlerSetupResult]) => {
+      if (!bundlerSetupResult.ok) {
+        toast.error('Failed to setup bundler', {
+          duration: Infinity,
+        })
+        return
       }
-    )
-  }, [loadBabel, models, changedModels])
+
+      setDepsReady(true)
+    })
+  }, [models, bundler])
 
   useEffect(() => {
+    if (!userState.autostartOnCodeChange) {
+      return
+    }
+
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
-        changedModels.add(model)
         debouncedDoRepl()
       })
     })
@@ -135,7 +155,7 @@ export default function useCodeEditorRepl(
     return () => {
       disposables.forEach((disposable) => disposable.dispose())
     }
-  }, [models, debouncedDoRepl, changedModels])
+  }, [models, debouncedDoRepl, userState.autostartOnCodeChange])
 
   useEffect(() => {
     themeRef.current = theme
@@ -157,6 +177,18 @@ export default function useCodeEditorRepl(
       doRepl()
     }
   }, [depsReady, previewIframeReadyId, doRepl])
+
+  useEffect(() => {
+    const onStartReplEvent = () => {
+      doRepl()
+    }
+
+    window.addEventListener('jsrepl-start-repl', onStartReplEvent)
+
+    return () => {
+      window.removeEventListener('jsrepl-start-repl', onStartReplEvent)
+    }
+  }, [userState.autostartOnCodeChange, doRepl])
 
   return { updateDecorations }
 }

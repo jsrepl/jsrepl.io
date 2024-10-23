@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
       <body>
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
       </body>
     </html>

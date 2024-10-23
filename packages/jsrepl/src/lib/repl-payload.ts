@@ -137,7 +137,8 @@ function stringifyResult(result: ReplPayload['result']): string | null {
   }
 
   if (isFunction(result)) {
-    const parsed = parseFunction(result.str)
+    const str = result.str.replace('[native code]', '')
+    const parsed = parseFunction(str)
     const fnArgs = parsed?.args
     const isAsync = parsed?.isAsync
 
@@ -202,8 +203,14 @@ function parseFunction(
   // @ts-expect-error Babel standalone: https://babeljs.io/docs/babel-standalone#internal-packages
   const { parser } = babel.packages as { parser: typeof import('@babel/parser') }
 
-  // ArrowFunctionExpression | FunctionExpression
-  const ast = parser.parseExpression(str)
+  let ast: ReturnType<typeof parser.parseExpression>
+
+  try {
+    // ArrowFunctionExpression | FunctionExpression
+    ast = parser.parseExpression(str)
+  } catch {
+    return null
+  }
 
   if (ast.type === 'ArrowFunctionExpression') {
     return {

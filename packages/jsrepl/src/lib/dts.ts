@@ -3,7 +3,7 @@ import type * as TS from 'typescript'
 const indexDtsUrlCache = new Map<string, string | null>()
 const dtsSourceCache = new Map<string, string>()
 
-// TODO: extract into webworker?
+// TODO: place it in webworker?
 export async function getDtsMap(
   packageName: string,
   ts: typeof import('typescript'),
