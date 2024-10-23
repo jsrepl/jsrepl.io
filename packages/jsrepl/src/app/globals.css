@@ -148,4 +148,8 @@
     animation: header-sticky-stuck auto steps(1);
     animation-timeline: scroll(root);
   }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-400 via-[#c586c0] to-yellow-400 bg-clip-text text-transparent;
+  }
 }
