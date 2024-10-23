@@ -117,7 +117,7 @@ export const reactStarter: ReplStoredState = {
     children: {
       'index.tsx': {
         content: dedent`
-          import './index.css'
+          import './index.css';
           import { createRoot } from 'react-dom/client.development';
 
           const root = createRoot(document.getElementById('root'));
