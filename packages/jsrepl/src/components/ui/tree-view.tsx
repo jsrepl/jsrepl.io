@@ -7,10 +7,10 @@ import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const treeVariants = cva(
-  'group hover:before:opacity-100 before:absolute before:rounded-lg before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-[2rem] before:-z-10'
+  'group hover:text-accent-foreground hover:before:opacity-100 before:absolute before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-[2rem] before:-z-10'
 )
 
-const selectedTreeVariants = cva('before:opacity-100 before:bg-accent/70 text-accent-foreground')
+const selectedTreeVariants = cva('before:opacity-100 before:bg-accent/90 text-accent-foreground/90')
 
 interface TreeDataItem {
   id: string

@@ -337,7 +337,7 @@ export default function FilesPanel() {
             onSelectChange={onSelectChange}
             expandedItemIds={expandedItemIds}
             onExpandChange={onExpandChange}
-            className="text-muted-foreground z-0 m-2 p-0 pb-6"
+            className="text-muted-foreground z-0 pb-6 pl-2 pr-0 pt-2"
           />
           <ScrollBar orientation="vertical" className="z-[2]" />
         </ScrollArea>
