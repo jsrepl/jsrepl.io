@@ -118,13 +118,25 @@ export const reactStarter: ReplStoredState = {
       'index.tsx': {
         content: dedent`
           import './index.css';
-          import { createRoot } from 'react-dom/client.development';
+          import { createRoot } from 'react-dom/client?dev';
+          import { useState } from 'react?dev';
 
           const root = createRoot(document.getElementById('root'));
           root.render(<App />);
 
           function App() {
-            return <h1 className="italic">Hello, world!</h1>;
+            const [counter, setCounter] = useState(0);
+
+            return (
+              <>
+                <h1 className="italic">Hello, world!</h1>
+                <p className="space-x-1">
+                  <button onClick={() => setCounter((x) => x - 1)}>-</button>
+                  <span>Counter: {counter}</span>
+                  <button onClick={() => setCounter((x) => x + 1)}>+</button>
+                </p>
+              </>
+            );
           }
         `,
         kind: ReplFS.Kind.File,
@@ -528,7 +540,7 @@ export const demoRepls = {
         'index.tsx': {
           content: dedent`
             import './index.css'
-            import { createRoot } from 'react-dom/client.development';
+            import { createRoot } from 'react-dom/client?dev';
 
             const root = createRoot(document.getElementById('root'));
             root.render(<App />);

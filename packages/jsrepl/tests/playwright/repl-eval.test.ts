@@ -1,6 +1,7 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
+import { reactStarter } from '@/lib/repl-stored-state-library'
 import { assertReplLines, monacoLocator, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
@@ -128,6 +129,29 @@ test('simple expressions', async ({ page }) => {
       line: 22,
       content: 'h',
       decors: ['9'],
+    },
+  ])
+})
+
+test('react starter', async ({ page }) => {
+  await visitPlayground(page, reactStarter)
+
+  const monaco = monacoLocator(page)
+  await assertReplLines(monaco, [
+    {
+      line: 5,
+      content: "const root = createRoot(document.getElementById('root'));",
+      decors: ['root = ReactDOMRoot {}'],
+    },
+    {
+      line: 6,
+      content: 'root.render(<App />);',
+      decors: ['undefined'],
+    },
+    {
+      line: 9,
+      content: 'const [counter, setCounter] = useState(0);',
+      decors: ['counter = 0, setCounter = ƒ dispatchSetState'],
     },
   ])
 })

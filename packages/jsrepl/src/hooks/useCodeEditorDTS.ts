@@ -91,11 +91,10 @@ export default function useCodeEditorDTS(
         .filter((moduleName) => moduleName !== null)
     )
 
-    // TODO: support packages with version specifier: `react@18.2.0`
     if (
-      packages.has('react') ||
-      packages.has('react-dom/client') ||
-      packages.has('react-dom/client.development')
+      Array.from(models.values()).some(
+        (model) => model.fileExtension === '.jsx' || model.fileExtension === '.tsx'
+      )
     ) {
       packages.add('react/jsx-runtime')
     }
