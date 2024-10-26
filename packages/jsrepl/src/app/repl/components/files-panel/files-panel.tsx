@@ -246,6 +246,15 @@ export default function FilesPanel() {
       setExpandedItemIds((ids) => {
         return ids.includes(parentDirPath) ? ids : [...ids, parentDirPath]
       })
+
+      requestAnimationFrame(() => {
+        const input = treeViewRef.current?.querySelector(
+          'input[data-editing]'
+        ) as HTMLInputElement | null
+        if (input) {
+          input.focus()
+        }
+      })
     },
     [setEditingItem, setExpandedItemIds]
   )
