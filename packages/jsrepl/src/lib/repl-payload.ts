@@ -170,10 +170,11 @@ function stringifyResult(result: ReplPayload['result']): string | null {
     const { constructorName, props } = result
 
     const propsStr = Object.entries(props)
+      .filter(([key]) => !key.startsWith('_'))
       .map(([key, value]) => `${key}: ${stringifyResult(value)}`)
       .join(', ')
 
-    const propsPart = propsStr.length > 0 ? ` {${propsStr}}` : '{}'
+    const propsPart = propsStr.length > 0 ? `{${propsStr}}` : '{}'
 
     return constructorName !== 'Object' ? `${constructorName} ${propsPart}` : `${propsPart}`
   }
