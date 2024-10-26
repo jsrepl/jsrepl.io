@@ -134,6 +134,9 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         }
       },
 
+      // const z = foo()
+      // const [ccc, a = '', { x: cc }, [xbx = 'a'], ...b] = await foo()
+      // const x1 = 1, x2 = 2
       VariableDeclaration(path) {
         if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
           return
@@ -142,30 +145,55 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         processedNodes.add(path.node)
 
         const declarations = path.get('declarations')
+        const identifiers: types.Identifier[] = []
+
         declarations.forEach((declaration) => {
-          const node = declaration.node
-          if (node.init && t.isIdentifier(node.id) && node.id.name) {
-            const varName = node.id.name
-            const initValue = node.init
-
-            const callExpression = t.callExpression(t.identifier('__r'), [
-              t.objectExpression([
-                ...getCommonWrapperFields.call(this, {
-                  t,
-                  path,
-                  id: ++exprKey,
-                  kind: 'variable',
-                }),
-                t.objectProperty(t.identifier('varName'), t.stringLiteral(varName)),
-              ]),
-              initValue,
-            ])
-
-            node.init = callExpression
+          const declarationId = declaration.get('id')
+          if (t.isIdentifier(declarationId.node)) {
+            identifiers.push(declarationId.node)
+          } else {
+            declarationId.traverse({
+              AssignmentPattern(path) {
+                path.skipKey('right')
+              },
+              ObjectProperty(path) {
+                path.skipKey('key')
+              },
+              Identifier(path) {
+                identifiers.push(path.node)
+              },
+            })
           }
         })
+
+        if (identifiers.length === 0) {
+          return
+        }
+
+        const callExpression = t.callExpression(t.identifier('__r'), [
+          t.objectExpression([
+            ...getCommonWrapperFields.call(this, {
+              t,
+              path,
+              id: ++exprKey,
+              kind: 'variable',
+            }),
+          ]),
+          t.arrayExpression(
+            identifiers.map((id) =>
+              t.objectExpression([
+                t.objectProperty(t.identifier('name'), t.stringLiteral(id.name)),
+                t.objectProperty(t.identifier('value'), id),
+              ])
+            )
+          ),
+        ])
+
+        path.insertAfter(t.expressionStatement(callExpression))
       },
 
+      // foo()
+      // await foo()
       ExpressionStatement(path) {
         if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
           return

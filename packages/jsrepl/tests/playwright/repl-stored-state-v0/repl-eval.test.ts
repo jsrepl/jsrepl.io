@@ -36,27 +36,27 @@ test('simple expressions', async ({ page }) => {
     {
       line: 3,
       content: 'const n = 1;',
-      decors: ['1'],
+      decors: ['n = 1'],
     },
     {
       line: 4,
       content: 'const m = n + 2;',
-      decors: ['3'],
+      decors: ['m = 3'],
     },
     {
       line: 6,
       content: "const a = 'foo';",
-      decors: ['"foo"'],
+      decors: ['a = "foo"'],
     },
     {
       line: 7,
       content: "const b = a + 'bar';",
-      decors: ['"foobar"'],
+      decors: ['b = "foobar"'],
     },
     {
       line: 9,
       content: "let now = new Date('2024');",
-      decors: ['Date(2024-01-01T00:00:00.000Z)'],
+      decors: ['now = Date(2024-01-01T00:00:00.000Z)'],
     },
     {
       line: 10,

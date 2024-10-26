@@ -14,17 +14,17 @@ test('preview', async ({ page }) => {
         'test.ts': {
           kind: ReplFS.Kind.File,
           content: dedent`
-          const now = new Date('2024');
-          const foo = document.querySelector('.foo');
-          foo.innerHTML = now.toISOString();
-        `,
+            const now = new Date('2024');
+            const foo = document.querySelector('.foo');
+            foo.innerHTML = now.toISOString();
+          `,
         },
         'index.html': {
           kind: ReplFS.Kind.File,
           content: dedent`
-          <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
-          <script type="module" src="/test.ts"></script>
-        `,
+            <div class="foo">lorem ipsum <span>dolor sit amet</span></div>
+            <script type="module" src="/test.ts"></script>
+          `,
         },
       },
     }),

@@ -42,6 +42,11 @@ function _stringifyPayload(payload: ReplPayload): string | null {
     return args.map((arg) => stringifyResult(arg)).join(' ')
   }
 
+  if (payload.ctx.kind === 'variable') {
+    const vars = payload.result as Array<{ props: { name: string; value: unknown } }>
+    return vars.map(({ props }) => `${props.name} = ${stringifyResult(props.value)}`).join(', ')
+  }
+
   return stringifyResult(payload.result)
 }
 
