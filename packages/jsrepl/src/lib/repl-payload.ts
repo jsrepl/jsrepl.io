@@ -137,13 +137,16 @@ function stringifyResult(result: ReplPayload['result']): string | null {
   }
 
   if (isFunction(result)) {
-    const str = result.str.replace('[native code]', '')
+    const isNative = result.str.includes('[native code]')
+    const str = isNative ? result.str.replace('[native code]', '') : result.str
     const parsed = parseFunction(str)
-    const fnArgs = parsed?.args
+    const fnArgs = isNative ? undefined : parsed?.args
     const isAsync = parsed?.isAsync
 
     // TODO: support class definitions
-    return `${isAsync ? 'async ' : ''}ƒ ${result.name || ''}(${fnArgs || ''})`
+    return `${isAsync ? 'async ' : ''}ƒ ${result.name.replace(/^bound /u, '') || ''}${
+      fnArgs ? `(${fnArgs})` : ''
+    }`
   }
 
   if (isSymbol(result)) {
