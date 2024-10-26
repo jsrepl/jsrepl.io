@@ -26,8 +26,19 @@ test('simple expressions', async ({ page }) => {
             const f2Val = 2;
             const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();
 
-            function foo() {
-              return [1,, {x: 3}, [4], 5, 6];
+            foo()
+            ;[window.hhh] = foo();
+            window.hadds = foo();
+            ({ x: hhh } = foo({x: 1}));
+            let h;
+            ;[h] = foo()
+            // TODO: Handle SequenceExpressions better
+            ;[h] = foo(), [h] = foo([9])
+            let hhhVar = window.hhh;
+            h
+
+            function foo(x) {
+              return x ?? [1,, {x: 3}, [4], 5, 6];
             }
           `,
         },
@@ -71,6 +82,52 @@ test('simple expressions', async ({ page }) => {
       line: 11,
       content: 'const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();',
       decors: ['f1 = 1, f2 = 2, f3 = 3, f4 = 4, f5 = [5, 6]'],
+    },
+    {
+      line: 13,
+      content: 'foo()',
+      decors: ['[1, , {x: 3}, [4], 5, 6]'],
+    },
+    {
+      line: 14,
+      content: ';[window.hhh] = foo();',
+      decors: ['window.hhh = 1'],
+    },
+    {
+      line: 15,
+      content: 'window.hadds = foo();',
+      decors: ['window.hadds = [1, , {x: 3}, [4], 5, 6]'],
+    },
+    {
+      line: 16,
+      content: '({ x: hhh } = foo({x: 1}));',
+      decors: ['hhh = 1'],
+    },
+    {
+      line: 17,
+      content: 'let h;',
+      decors: ['h = undefined'],
+    },
+    {
+      line: 18,
+      content: ';[h] = foo()',
+      decors: ['h = 1'],
+    },
+    {
+      line: 20,
+      content: ';[h] = foo(), [h] = foo([9])',
+      // TODO: Handle SequenceExpressions better
+      decors: ['[9]'],
+    },
+    {
+      line: 21,
+      content: 'let hhhVar = window.hhh;',
+      decors: ['hhhVar = 1'],
+    },
+    {
+      line: 22,
+      content: 'h',
+      decors: ['9'],
     },
   ])
 })

@@ -213,6 +213,66 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           }
         }
 
+        // ;[window.hhh] = foo();
+        // ({ x: hhh } = foo({x: 1}));
+        // window.hhh = foo();
+        // let h; [h] = foo()
+        if (t.isAssignmentExpression(path.node.expression)) {
+          const vars: { name: string; node: types.Identifier | types.MemberExpression }[] = []
+          const left = path.get('expression.left') as NodePath<types.Node>
+          if (t.isIdentifier(left.node)) {
+            // asd = bar()
+            vars.push({ name: left.node.name, node: left.node })
+          } else if (t.isMemberExpression(left.node)) {
+            // window.hhh = foo();
+            vars.push({ name: left.toString(), node: left.node })
+          } else {
+            // ;[window.hhh] = foo();
+            // ({ x: hhh } = foo({x: 1}));
+            left.traverse({
+              AssignmentPattern(path) {
+                path.skipKey('right')
+              },
+              ObjectProperty(path) {
+                path.skipKey('key')
+              },
+              MemberExpression(path) {
+                vars.push({ name: path.toString(), node: path.node })
+                path.skip()
+              },
+              Identifier(path) {
+                vars.push({ name: path.node.name, node: path.node })
+              },
+            })
+          }
+
+          if (vars.length === 0) {
+            return
+          }
+
+          const callExpression = t.callExpression(t.identifier('__r'), [
+            t.objectExpression([
+              ...getCommonWrapperFields.call(this, {
+                t,
+                path,
+                id: ++exprKey,
+                kind: 'variable',
+              }),
+            ]),
+            t.arrayExpression(
+              vars.map((_var) => {
+                return t.objectExpression([
+                  t.objectProperty(t.identifier('name'), t.stringLiteral(_var.name)),
+                  t.objectProperty(t.identifier('value'), _var.node),
+                ])
+              })
+            ),
+          ])
+
+          path.insertAfter(t.expressionStatement(callExpression))
+          return
+        }
+
         const callExpression = t.callExpression(t.identifier('__r'), [
           t.objectExpression([
             ...getCommonWrapperFields.call(this, {
