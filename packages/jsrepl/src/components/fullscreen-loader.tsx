@@ -2,7 +2,6 @@ import React from 'react'
 import Logo from '@/components/logo'
 
 export default function FullscreenLoader() {
-  console.log('FullscreenLoader')
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center">
       <Logo width={150} height={150} className="opacity-50" />
