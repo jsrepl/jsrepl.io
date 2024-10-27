@@ -21,13 +21,13 @@ export default function LeftSidebar() {
   return (
     <>
       {userState.showLeftSidebar && (
-        <div className="min-w-0 [grid-area:left-sidebar]">
+        <div className="bg-secondary text-secondary-foreground min-w-0 [grid-area:left-sidebar]">
           <Resizable
             size={size}
             onSizeUpdate={setSize}
             edges={{ right: true }}
             margin={3}
-            className="flex !h-full max-w-full flex-col border-r pr-px"
+            className="flex !h-full max-w-full flex-col border-r"
           >
             <FilesPanel />
           </Resizable>

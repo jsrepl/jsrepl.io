@@ -10,6 +10,8 @@
     --foreground: 20 14.3% 4.1%;
 
     --editor-background: 0 0% 100%;
+    --activity-bar: 0 0% 92%;
+    --activity-bar-foreground: 25 5.3% 44.7%;
 
     --card: 0 0% 100%;
     --card-foreground: 20 14.3% 4.1%;
@@ -23,10 +25,10 @@
     --secondary: 60 4.8% 95.9%;
     --secondary-foreground: 24 9.8% 10%;
 
-    --muted: 60 4.8% 95.9%;
+    --muted: 0 0% 92%;
     --muted-foreground: 25 5.3% 44.7%;
 
-    --accent: 60 4.8% 95.9%;
+    --accent: 0 0% 90%;
     --accent-foreground: 24 9.8% 10%;
 
     --destructive: 0 84.2% 60.2%;
@@ -44,21 +46,10 @@
 
     --radius: 0.5rem;
 
-    /* --select-icon: url('@/components/ui/select/icon.svg');
-    --checkbox-icon: url('@/components/ui/checkbox/icon.svg'); */
-
     --logo-a: #af9750;
-    --logo-b: white;
+    --logo-b: #f1f1f1;
   }
 
-  /* [data-theme="light-plus"] {} */
-
-  [data-theme='one-light'] {
-    --editor-background: 0 0% 98%;
-  }
-
-  [data-theme='vs-dark'],
-  [data-theme='hc-black'],
   [data-theme='dark-plus'],
   [data-theme='github-dark'],
   [data-theme='monokai'],
@@ -69,6 +60,8 @@
     --foreground: 210 40% 98%;
 
     --editor-background: 0 0% 11.76%;
+    --activity-bar: 12 6.5% 18.1%;
+    --activity-bar-foreground: 24 5.4% 63.9%;
 
     --card: 20 14.3% 4.1%;
     --card-foreground: 60 9.1% 97.8%;
@@ -79,11 +72,11 @@
     --secondary: 12 6.5% 15.1%;
     --secondary-foreground: 60 9.1% 97.8%;
 
-    --muted: 12 6.5% 15.1%;
+    --muted: 12 6.5% 18.1%;
     --muted-foreground: 24 5.4% 63.9%;
 
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --accent: 12 6.5% 19.1%;
+    --accent-foreground: 60 9.1% 90.8%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 60 9.1% 97.8%;
@@ -97,28 +90,48 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    /* --select-icon: url('@/components/ui/select/icon-dark-plus.svg'); */
-
     --logo-a: #af9750;
-    --logo-b: black;
+    --logo-b: #121212;
   }
 
+  /* [data-theme="light-plus"] {} */
   /* [data-theme='dark-plus'] {} */
 
-  [data-theme='hc-black'] {
-    --editor-background: 0 0% 0%;
+  [data-theme='one-light'] {
+    --editor-background: 0 0% 98%;
+    --background: 0 0% 98%;
+    --secondary: 60 4.8% 93.9%;
+    --activity-bar: 0 0% 88%;
+    --muted: 0 0% 88%;
+    --accent: 0 0% 86%;
+    --logo-b: #eee;
   }
 
   [data-theme='github-dark'] {
     --editor-background: 213 13% 16%;
+    --background: 213 13% 16%;
+    --secondary: 213 13% 13%;
+    --activity-bar: 213 13% 19.1%;
+    --muted: 213 13% 19.1%;
+    --accent: 213 13% 20.1%;
   }
 
   [data-theme='monokai'] {
     --editor-background: 70 8% 15%;
+    --background: 70 8% 15%;
+    --secondary: 70 8% 12%;
+    --activity-bar: 70 8% 18.1%;
+    --muted: 70 8% 18.1%;
+    --accent: 70 8% 19.1%;
   }
 
   [data-theme='dracula'] {
     --editor-background: 231 15% 18%;
+    --background: 231 15% 18%;
+    --secondary: 231 15% 15%;
+    --activity-bar: 231 15% 21.1%;
+    --muted: 231 15% 21.1%;
+    --accent: 231 15% 22.1%;
   }
 }
 

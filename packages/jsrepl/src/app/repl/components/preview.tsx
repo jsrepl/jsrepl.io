@@ -57,7 +57,7 @@ export default function ReplPreview({ className }: { className?: string }) {
           className={cn(
             'flex h-full w-full flex-col overflow-hidden',
             (pos === 'float-bottom-right' || pos === 'float-top-right') &&
-              'border-border bg-secondary rounded border opacity-90 shadow-lg'
+              'border-border bg-secondary rounded border opacity-90 shadow-md'
           )}
         >
           <div

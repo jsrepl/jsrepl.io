@@ -10,7 +10,7 @@ const treeVariants = cva(
   'group hover:text-accent-foreground hover:before:opacity-100 before:absolute before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-[2rem] before:-z-10'
 )
 
-const selectedTreeVariants = cva('before:opacity-100 before:bg-accent/90 text-accent-foreground/90')
+const selectedTreeVariants = cva('before:opacity-100 before:bg-accent text-accent-foreground')
 
 interface TreeDataItem {
   id: string

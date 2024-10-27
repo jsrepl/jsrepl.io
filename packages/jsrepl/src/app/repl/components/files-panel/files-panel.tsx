@@ -295,18 +295,14 @@ export default function FilesPanel() {
     <>
       <FilesPanelContext.Provider value={filesPanelContextValue}>
         <ScrollArea className="group/files-panel flex-1 [&>[data-radix-scroll-area-viewport]]:scroll-pb-4 [&>[data-radix-scroll-area-viewport]]:scroll-pt-10">
-          <div className="h-repl-header bg-background sticky top-0 z-[1] flex items-center gap-2 pl-4 pr-1 text-sm leading-6">
+          <div className="h-repl-header sticky top-0 z-[1] flex items-center gap-2 pl-4 pr-1 text-sm leading-6">
             <span className="text-muted-foreground flex-1 font-semibold">Files</span>
             <div className="invisible flex group-focus-within/files-panel:visible group-hover/files-panel:visible has-[[aria-expanded=true]]/files-panel:visible">
               <DropdownMenu>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-secondary-foreground/50"
-                      >
+                      <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
                         <LucideFilePlus size={16} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -336,7 +332,7 @@ export default function FilesPanel() {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    className="text-secondary-foreground/50"
+                    className="text-muted-foreground"
                     onClick={() => createFolder('')}
                   >
                     <LucideFolderPlus size={16} />
@@ -352,7 +348,7 @@ export default function FilesPanel() {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    className="text-secondary-foreground/50"
+                    className="text-muted-foreground"
                     onClick={() => {
                       setExpandedItemIds([])
                     }}

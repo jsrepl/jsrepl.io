@@ -116,7 +116,7 @@ export default function CodeEditorHeader({
   )
 
   return (
-    <header ref={headerRef} className="h-repl-header flex items-stretch">
+    <header ref={headerRef} className="h-repl-header bg-secondary flex items-stretch">
       <ScrollArea scrollHideDelay={0} className="flex-1">
         <div className="flex h-full flex-1 border-b">
           {modelSwitcherOptions.map((modelOption) => (
@@ -125,7 +125,7 @@ export default function CodeEditorHeader({
                 variant="none"
                 size="none"
                 data-active={replState.activeModel === modelOption.value}
-                className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer py-2 pl-4 pr-8 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 data-[active=true]:before:shadow-inner group-first:data-[active=true]:before:border-l-0"
+                className="before:border-border data-[active=true]:before:border-b-editor-background data-[active=true]:before:bg-editor-background group peer py-2 pl-4 pr-8 before:absolute before:inset-0 before:-bottom-px data-[active=true]:cursor-default data-[active=true]:before:border data-[active=true]:before:border-t-0 group-first:data-[active=true]:before:border-l-0"
                 onClick={() => onTabClick(modelOption.value)}
               >
                 <span
@@ -150,7 +150,7 @@ export default function CodeEditorHeader({
               <Button
                 variant="ghost"
                 size="none"
-                className="text-muted-foreground hover:text-accent-foreground invisible absolute right-2 mt-px self-center p-0.5 group-hover:visible aria-expanded:visible peer-data-[active=true]:visible"
+                className="text-muted-foreground hover:text-accent-foreground hover:bg-accent invisible absolute right-2 mt-px self-center p-0.5 group-hover:visible aria-expanded:visible peer-data-[active=true]:visible"
                 onClick={() => closeModelTab(modelOption.value)}
               >
                 <LucideX size={16} />

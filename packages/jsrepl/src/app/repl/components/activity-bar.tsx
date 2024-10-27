@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { Themes } from '@/lib/themes'
+import { cn } from '@/lib/utils'
 
 export default function ActivityBar() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
@@ -32,7 +33,7 @@ export default function ActivityBar() {
   }, [])
 
   return (
-    <div className="bg-secondary flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
+    <div className="bg-activityBar flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon">
@@ -50,8 +51,11 @@ export default function ActivityBar() {
         <TooltipTrigger asChild>
           <Button
             size="icon"
-            variant={userState.showLeftSidebar ? 'secondary' : 'ghost'}
-            className="text-secondary-foreground/60"
+            variant="ghost"
+            className={cn(
+              'text-activityBar-foreground',
+              userState.showLeftSidebar && 'bg-accent border-activityBar-foreground/30 border'
+            )}
             onClick={() =>
               setUserState((prev) => ({ ...prev, showLeftSidebar: !prev.showLeftSidebar }))
             }
@@ -68,8 +72,11 @@ export default function ActivityBar() {
         <TooltipTrigger asChild>
           <Button
             size="icon"
-            variant={replState.showPreview ? 'secondary' : 'ghost'}
-            className="text-secondary-foreground/60"
+            variant="ghost"
+            className={cn(
+              'text-activityBar-foreground',
+              replState.showPreview && 'bg-accent border-activityBar-foreground/30 border'
+            )}
             onClick={() => setReplState((prev) => ({ ...prev, showPreview: !prev.showPreview }))}
           >
             <LucideEye size={20} />
@@ -80,14 +87,14 @@ export default function ActivityBar() {
         </TooltipContent>
       </Tooltip>
 
-      <div className="mx-2 my-2 border-b" />
+      <div className="border-activityBar-foreground/30 mx-2 my-2 border-b" />
 
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
-            className="text-secondary-foreground/60"
+            className="text-activityBar-foreground"
             onClick={startRepl}
           >
             <div className="relative">
@@ -121,7 +128,7 @@ export default function ActivityBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="text-secondary-foreground/60">
+              <Button size="icon" variant="ghost" className="text-activityBar-foreground">
                 <LucidePalette size={18} />
               </Button>
             </DropdownMenuTrigger>
@@ -153,7 +160,7 @@ export default function ActivityBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="text-secondary-foreground/60">
+              <Button size="icon" variant="ghost" className="text-activityBar-foreground">
                 <LucideShare2 size={18} />
               </Button>
             </DropdownMenuTrigger>
@@ -170,7 +177,7 @@ export default function ActivityBar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button size="icon" variant="ghost" className="text-secondary-foreground/60" asChild>
+      <Button size="icon" variant="ghost" className="text-activityBar-foreground" asChild>
         <Link href="https://github.com/jsrepl/jsrepl.io" target="_blank">
           <IconGithub width={17} height={17} />
         </Link>

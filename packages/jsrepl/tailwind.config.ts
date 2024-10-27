@@ -32,6 +32,10 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         'editor-background': 'hsl(var(--editor-background))',
+        activityBar: {
+          DEFAULT: 'hsl(var(--activity-bar))',
+          foreground: 'hsl(var(--activity-bar-foreground))',
+        },
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',

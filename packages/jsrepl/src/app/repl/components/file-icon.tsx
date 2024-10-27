@@ -40,7 +40,9 @@ export function FileIcon({
     case '.ts':
       return <IconLanguageTypescript className={`${className} text-[#3078C6]`} />
     case '.js':
-      return <IconLanguageJavascript className={`${className} text-[#E8D44E]`} />
+      return (
+        <IconLanguageJavascript className={`${className} text-[#c8a421] dark:text-[#E8D44E]`} />
+      )
     case '.html':
       return <IconLanguageHtml className={`${className} text-[#DC4A25]`} />
     case '.css':
