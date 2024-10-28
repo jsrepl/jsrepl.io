@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
+import Analytics from '@/components/analytics'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
@@ -20,13 +20,7 @@ export default function RootLayout({
       <body>
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
-        {process.env.NEXT_PUBLIC_NODE_ENV === 'production' && (
-          <Script
-            src="https://cloud.umami.is/script.js"
-            data-website-id="23c57346-41a9-4b0f-a07a-76f8bf7c4ff3"
-            strategy="afterInteractive"
-          />
-        )}
+        <Analytics />
       </body>
     </html>
   )

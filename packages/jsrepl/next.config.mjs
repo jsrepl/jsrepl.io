@@ -29,6 +29,15 @@ const nextConfig = {
     ]
   },
 
+  rewrites() {
+    return [
+      {
+        source: '/a.js',
+        destination: 'https://cloud.umami.is/script.js',
+      },
+    ]
+  },
+
   webpack(config) {
     config.plugins.push(
       Icons({

@@ -198,6 +198,9 @@ importers:
       '@types/react-dom':
         specifier: ^18
         version: 18.3.0
+      '@types/umami':
+        specifier: ^2.10.0
+        version: 2.10.0
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.4.5(@types/node@20.16.5)(terser@5.32.0))
@@ -2597,6 +2600,9 @@ packages:
 
   '@types/serve-static@1.15.7':
     resolution: {integrity: sha512-W8Ym+h8nhuRwaKPaDw34QUkwsGi6Rc4yYqvKFo5rm2FUEhCFbzVWrxXUxuKK8TASjWsysJY0nsmNCGhCOIsrOw==}
+
+  '@types/umami@2.10.0':
+    resolution: {integrity: sha512-iWcs1KkcO3ooIi2rR9M5drmpQzlsT+sFiyWElIGmVwjdGlp+vQmy/VYIChYnF5ETqx7KrL80JfSkroS6dm37Hg==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -9257,6 +9263,8 @@ snapshots:
       '@types/http-errors': 2.0.4
       '@types/node': 22.5.5
       '@types/send': 0.17.4
+
+  '@types/umami@2.10.0': {}
 
   '@types/unist@2.0.11': {}
 
