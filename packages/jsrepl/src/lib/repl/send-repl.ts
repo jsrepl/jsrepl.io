@@ -64,6 +64,9 @@ export async function sendRepl({
 
     // Include it so tailwindcss will pick it up when processing css.
     input[htmlModel.filePath] = htmlModel.getValue()
+
+    // Include it so it will be present in the output bundle.
+    entryPoints.push(htmlModel.filePath)
   } else {
     for (const model of models.values()) {
       if (model.kind === 'client-script') {

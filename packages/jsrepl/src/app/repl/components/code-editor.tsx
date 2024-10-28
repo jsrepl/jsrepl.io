@@ -120,11 +120,7 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   useEffect(() => {
     editorRef.current?.setModel(currentTextModel)
-
-    const lang = currentTextModel?.getLanguageId()
-    if (lang === 'typescript' || lang === 'javascript') {
-      updateDecorationsRef.current()
-    }
+    updateDecorationsRef.current()
   }, [currentTextModel])
 
   const isReadOnly = useMemo(() => {

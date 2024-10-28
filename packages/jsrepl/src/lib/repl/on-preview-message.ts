@@ -39,30 +39,9 @@ export function onPreviewMessage(
       const payload = event.data.payload as ReplPayload
 
       if (payload.ctx.kind === 'window-error') {
-        const filePath = payload.ctx.filePath
-        const sourcemap = filePath
-          ? replDataRef.current.bundle?.result?.outputFiles?.find(
-              (x) => x.path === filePath + '.map'
-            )?.text
-          : undefined
-
-        if (sourcemap) {
-          const { line, column, source } = getOriginalPosition(
-            sourcemap,
-            payload.ctx.lineStart,
-            payload.ctx.colStart
-          )
-
-          if (line && source) {
-            payload.ctx.lineStart = line
-            payload.ctx.lineEnd = line
-            payload.ctx.colStart = column ?? 1
-            payload.ctx.colEnd = column ?? 1
-            payload.ctx.filePath = '/' + source
-
-            allPayloads.add(payload)
-            payloadMap.set(payload.ctx.id, payload)
-          }
+        if (resolveErrorLocation(payload)) {
+          allPayloads.add(payload)
+          payloadMap.set(payload.ctx.id, payload)
         }
       } else {
         allPayloads.add(payload)
@@ -74,4 +53,42 @@ export function onPreviewMessage(
       debouncedUpdateDecorations()
     }
   }
+}
+
+function resolveErrorLocation(payload: ReplPayload): boolean {
+  const filePath = payload.ctx.filePath
+
+  const sourcemap = filePath
+    ? replDataRef.current.bundle?.result?.outputFiles?.find((x) => x.path === filePath + '.map')
+        ?.text
+    : undefined
+
+  if (sourcemap) {
+    const { line, column, source } = getOriginalPosition(
+      sourcemap,
+      payload.ctx.lineStart,
+      payload.ctx.colStart
+    )
+
+    if (line && source) {
+      payload.ctx.lineStart = line
+      payload.ctx.lineEnd = line
+      payload.ctx.colStart = column ?? 1
+      payload.ctx.colEnd = column ?? 1
+      payload.ctx.filePath = '/' + source
+
+      return true
+    }
+  }
+
+  const fileExists = replDataRef.current.bundle?.result?.outputFiles?.some(
+    (x) => x.path === filePath
+  )
+
+  if (fileExists) {
+    payload.ctx.filePath = filePath
+    return true
+  }
+
+  return false
 }

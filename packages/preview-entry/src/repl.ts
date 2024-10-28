@@ -107,11 +107,15 @@ function onWindowError(event: ErrorEvent, token: number) {
   const error = event.error
   const win = event.target as PreviewWindow
 
-  const filePath = event.filename.startsWith('data:')
-    ? // base64 url -> bundle output file path
+  let filePath = event.filename
+  if (filePath.startsWith('data:')) {
+    // base64 url -> bundle output file path
+    filePath =
       Array.from(win.document.scripts).find((script) => script.src === event.filename)?.dataset
         .path ?? ''
-    : event.filename
+  } else if (filePath === 'about:srcdoc') {
+    filePath = '/index.html'
+  }
 
   postMessageRepl(token, win, error, true, {
     id: `window-error-${event.filename}-${event.lineno}:${event.colno}`,
