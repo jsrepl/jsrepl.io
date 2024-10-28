@@ -1,10 +1,11 @@
 import { useContext } from 'react'
-import { LucideEllipsisVertical, LucideRotateCw, LucideX } from 'lucide-react'
+import { LucideEllipsisVertical, LucideFullscreen, LucideRotateCw, LucideX } from 'lucide-react'
 import Resizable from '@/components/resizable'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -130,9 +131,15 @@ export default function ReplPreview({ className }: { className?: string }) {
                     <LucideEllipsisVertical size={16} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>Preview Position</DropdownMenuLabel>
+                <DropdownMenuContent className="w-56" align="end" alignOffset={-16}>
+                  <DropdownMenuItem onClick={enterFullscreen}>
+                    <LucideFullscreen size={16} />
+                    Enter Fullscreen
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-muted-foreground text-xs">
+                    Preview Position
+                  </DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={userState.previewPos}
                     onValueChange={(value) =>
@@ -161,7 +168,7 @@ export default function ReplPreview({ className }: { className?: string }) {
           <iframe
             id="preview-iframe"
             src={previewUrl}
-            className="min-h-0 min-w-0 flex-1"
+            className="backdrop:bg-secondary min-h-0 min-w-0 flex-1"
             allow={iframeAllow}
           />
         </div>
@@ -174,5 +181,12 @@ function restartRepl() {
   const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement | null
   if (previewIframe) {
     previewIframe.src += ''
+  }
+}
+
+function enterFullscreen() {
+  const previewIframe = document.getElementById('preview-iframe') as HTMLIFrameElement | null
+  if (previewIframe) {
+    previewIframe.requestFullscreen({ navigationUI: 'hide' })
   }
 }
