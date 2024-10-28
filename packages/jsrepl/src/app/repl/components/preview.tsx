@@ -24,6 +24,42 @@ const previewPositionOptions = [
   { value: PreviewPosition.AsideRight, label: 'Dock to right' },
 ]
 
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy#directives
+const iframeAllow = [
+  'accelerometer',
+  'ambient-light-sensor',
+  'attribution-reporting',
+  'autoplay',
+  'bluetooth',
+  'camera',
+  'compute-pressure',
+  'display-capture',
+  'encrypted-media',
+  'fullscreen',
+  'gamepad',
+  'geolocation',
+  'gyroscope',
+  'hid',
+  'identity-credentials-get',
+  'idle-detection',
+  'local-fonts',
+  'magnetometer',
+  'microphone',
+  'midi',
+  'otp-credentials',
+  'payment',
+  'picture-in-picture',
+  'publickey-credentials-create',
+  'publickey-credentials-get',
+  'screen-wake-lock',
+  'serial',
+  'speaker-selection',
+  'usb',
+  'web-share',
+  'window-management',
+  'xr-spatial-tracking',
+].join('; ')
+
 export default function ReplPreview({ className }: { className?: string }) {
   const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL
 
@@ -122,7 +158,12 @@ export default function ReplPreview({ className }: { className?: string }) {
               </Button>
             </div>
           </div>
-          <iframe id="preview-iframe" src={previewUrl} className="min-h-0 min-w-0 flex-1" />
+          <iframe
+            id="preview-iframe"
+            src={previewUrl}
+            className="min-h-0 min-w-0 flex-1"
+            allow={iframeAllow}
+          />
         </div>
       </Resizable>
     </div>
