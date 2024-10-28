@@ -184,7 +184,9 @@ function stringifyResult(result: ReplPayload['result']): string | null {
 
     const propsPart = propsStr.length > 0 ? `{${propsStr}}` : '{}'
 
-    return constructorName !== 'Object' ? `${constructorName} ${propsPart}` : `${propsPart}`
+    return constructorName && constructorName !== 'Object'
+      ? `${constructorName} ${propsPart}`
+      : `${propsPart}`
   }
 
   return null

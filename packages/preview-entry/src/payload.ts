@@ -133,7 +133,7 @@ function serializeRawObject(
 ): ReplPayloadResultRawObject {
   const obj = {
     __rpck__: ReplPayloadCustomKind.RawObject,
-    constructorName: rawResult.constructor.name,
+    constructorName: rawResult.constructor?.name,
     props: {} as Record<string, unknown>,
   } as ReplPayloadResultRawObject
 

@@ -51,7 +51,7 @@ export type ReplPayloadResultCyclicRef = {
 
 export type ReplPayloadResultRawObject = {
   __rpck__: ReplPayloadCustomKind.RawObject
-  constructorName: string
+  constructorName: string | undefined
   props: Record<string, unknown>
 }
 
