@@ -137,10 +137,21 @@ function serializeRawObject(
     props: {} as Record<string, unknown>,
   } as ReplPayloadResultRawObject
 
-  Object.entries(rawResult).forEach(([key, value]) => {
-    const newValue = transformResult(win, value, refs)
-    obj.props[key] = newValue
+  getAllPropertyNames(win, rawResult).forEach((propName) => {
+    const value = rawResult[propName as keyof typeof rawResult]
+    const transformedValue = transformResult(win, value, refs)
+    obj.props[propName] = transformedValue
   })
 
   return obj
+}
+
+// TODO: improve this, check https://stackoverflow.com/q/8024149
+function getAllPropertyNames(win: PreviewWindow, obj: object): string[] {
+  const Object = win.Object
+  const proto = Object.getPrototypeOf(obj)
+  const inherited = proto && proto !== Object.prototype ? getAllPropertyNames(win, proto) : []
+  return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))].filter(
+    (name) => name !== 'constructor'
+  )
 }

@@ -141,7 +141,7 @@ test('react starter', async ({ page }) => {
     {
       line: 5,
       content: "const root = createRoot(document.getElementById('root'));",
-      decors: ['root = ReactDOMRoot {}'],
+      decors: ['root = ReactDOMRoot {render: ƒ (children), unmount: ƒ}'],
     },
     {
       line: 6,

@@ -151,7 +151,7 @@ function stringifyResult(result: ReplPayload['result']): string | null {
     // TODO: support class definitions
     return `${isAsync ? 'async ' : ''}ƒ ${result.name.replace(/^bound /u, '') || ''}${
       fnArgs ? `(${fnArgs})` : ''
-    }`
+    }`.trim()
   }
 
   if (isSymbol(result)) {

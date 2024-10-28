@@ -191,6 +191,22 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       },
     },
   ],
+  [
+    // Like `navigator.connection`
+    'Object with non-enumerable properties',
+    (() => {
+      const obj = {}
+      Object.defineProperty(obj, 'foo', { value: 'bar', enumerable: false })
+      return obj
+    })(),
+    {
+      __rpck__: ReplPayloadCustomKind.RawObject,
+      constructorName: 'Object',
+      props: {
+        foo: 'bar',
+      },
+    },
+  ],
 ]
 
 testCases.forEach(([desc, rawResult, expectedResult]) => {
