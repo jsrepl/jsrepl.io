@@ -2,6 +2,8 @@ export const metadata = {
   title: 'About JSREPL.io',
 }
 
+29 October 2024
+
 # Discover JSREPL.io - A JavaScript and TypeScript REPL & Playground
 
 ## Intro
@@ -23,10 +25,10 @@ I still find myself turning to
 {''}<a href="https://developer.mozilla.org" target="_blank" rel="noreferrer">MDN</a>, opening the
 DevTools Console, and verifying things firsthand.
 
+![Chrome DevTools Console](/assets/articles/about/devtools-dark.png)
+
 DevTools Console is perfect for simple, short JavaScript snippets. But when it comes to more
 extensive code or npm packages, I need something more suitable.
-
-![Chrome DevTools Console](/assets/articles/about/devtools-dark.png)
 
 ### CodePen
 
@@ -87,6 +89,11 @@ logging in or waiting.
 
 Inspired by these ideas, I made [https://jsrepl.io](https://jsrepl.io).
 
+JSREPL is 99% serverless. The playground is powered by client-side JavaScript and WebAssembly. No
+login or registration is required. And you can still share your REPLs with others because the state
+is serialized right into the URL (yeah, I know, URLs feel bulky - this is a downside. I have plans
+to implement optional server-side saving).
+
 ## Use cases
 
 Here are some ways you can use JSREPL.io.
@@ -136,12 +143,9 @@ provided.
 Tailwind CSS is supported out of the box. Simply write Tailwind CSS directives in your CSS files,
 and enjoy Tailwind CSS IntelliSense and autocompletion in the editor.
 
-JSREPL offers a full Tailwind CSS experience. Unlike the official
-[Tailwind Playground](https://play.tailwindcss.com/), JSREPL doesn't use the static CDN version of
-Tailwind CSS. Instead, it uses the Tailwind CSS compiler to produce production-level CSS, just like
-in real projects. You can define your own Tailwind config, use the `@apply` directive, and the
-resulting CSS will only include used classes. Tailwind plugins are also supported, provided they're
-compatible with the browser environment.
+JSREPL offers a full Tailwind CSS experience. You can define your own Tailwind config, use the
+`@apply` directive, and the resulting CSS will only include used classes. Tailwind plugins are also
+supported, provided they're compatible with the browser environment.
 
 Note that Tailwind Preflight is disabled by default, but you can enable it if desired.
 
@@ -165,3 +169,6 @@ workflow.
 
 JSREPL is entirely free and open-source. You can check the source code on
 [GitHub](https://github.com/jsrepl/jsrepl.io).
+
+JSREPL.io is in its early stages, and I am actively working on adding new features. Stay tuned for
+updates!
