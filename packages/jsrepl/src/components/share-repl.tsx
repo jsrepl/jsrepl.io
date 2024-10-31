@@ -10,7 +10,7 @@ export default function ShareRepl({ setReplState }: { setReplState: SetReplStore
   const inputRef = useRef<HTMLInputElement>(null)
   const [copied, setCopied] = useState(false)
   const [sharableUrl, setSharableUrl] = useState(location.href)
-  let copiedTimeoutId: NodeJS.Timeout | undefined
+  const copiedTimeoutId = useRef<NodeJS.Timeout | undefined>()
 
   useEffect(() => {
     setReplState((prev) => prev, { saveImmediate: true })
@@ -21,8 +21,8 @@ export default function ShareRepl({ setReplState }: { setReplState: SetReplStore
     await navigator.clipboard.writeText(sharableUrl)
     setCopied(true)
 
-    clearTimeout(copiedTimeoutId)
-    copiedTimeoutId = setTimeout(() => {
+    clearTimeout(copiedTimeoutId.current)
+    copiedTimeoutId.current = setTimeout(() => {
       setCopied(false)
     }, 2000)
   }

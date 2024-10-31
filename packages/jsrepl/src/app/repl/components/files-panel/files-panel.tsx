@@ -57,9 +57,12 @@ export default function FilesPanel() {
       }
     }
 
-    treeDataRef.current = root.children!
     return root.children!
   }, [replState.fs, replInfo, editingItem])
+
+  useEffect(() => {
+    treeDataRef.current = treeData
+  }, [treeData])
 
   const [expandedItemIds, setExpandedItemIds] = useState<string[]>(
     getAutoExpandedItemIds(treeData, selectedItemId, true)

@@ -1,5 +1,4 @@
 import { type Dispatch, type SetStateAction } from 'react'
-import type debounce from 'debounce'
 import { getOriginalPosition } from '@/lib/sourcemap-utils'
 import { type ReplPayload } from '@/types'
 import { replDataRef } from './data'
@@ -17,7 +16,7 @@ export function onPreviewMessage(
     setPreviewIframeReadyId: Dispatch<SetStateAction<string | null>>
     allPayloads: Set<ReplPayload>
     payloadMap: Map<number | string, ReplPayload>
-    debouncedUpdateDecorations: debounce.DebouncedFunction<() => void>
+    debouncedUpdateDecorations: () => void
   }
 ) {
   if (

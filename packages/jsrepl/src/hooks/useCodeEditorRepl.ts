@@ -1,5 +1,5 @@
 import { RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import debounce from 'debounce'
+import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import { ReplInfoContext } from '@/context/repl-info-context'
@@ -30,10 +30,12 @@ export default function useCodeEditorRepl(
   const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
   const [depsReady, setDepsReady] = useState(false)
   const bundler = useMemo(() => getBundler(), [])
+  const debouncedDoRepl = useRef<DebouncedFunction<typeof doRepl>>()
+  const debouncedUpdateDecorations = useRef<DebouncedFunction<typeof updateDecorations>>()
 
   const updateDecorations = useCallback(() => {
-    const editor = editorRef.current!
-    const activeModel = editorRef.current?.getModel()
+    const editor = editorRef.current
+    const activeModel = editor?.getModel()
     if (!editor || !activeModel) {
       return
     }
@@ -84,25 +86,37 @@ export default function useCodeEditorRepl(
     previewIframeReadyId,
   ])
 
-  const debouncedDoRepl = useMemo(() => debounce(doRepl, 300), [doRepl])
-
-  const debouncedUpdateDecorations = useMemo(
-    () => debounce(updateDecorations, 1),
-    [updateDecorations]
-  )
-
   const onMessage = useCallback(
     (event: MessageEvent) => {
       onPreviewMessage(event, {
         setPreviewIframeReadyId,
         allPayloads,
         payloadMap,
-        //models,
-        debouncedUpdateDecorations,
+        debouncedUpdateDecorations() {
+          debouncedUpdateDecorations.current?.()
+        },
       })
     },
-    [payloadMap, allPayloads, debouncedUpdateDecorations]
+    [payloadMap, allPayloads]
   )
+
+  useEffect(() => {
+    const debounced = debounce(doRepl, 300)
+    debouncedDoRepl.current = debounced
+
+    return () => {
+      debounced.clear()
+    }
+  }, [doRepl])
+
+  useEffect(() => {
+    const debounced = debounce(updateDecorations, 1)
+    debouncedUpdateDecorations.current = debounced
+
+    return () => {
+      debounced.clear()
+    }
+  }, [updateDecorations])
 
   useEffect(() => {
     previewIframe.current = document.getElementById('preview-iframe') as HTMLIFrameElement
@@ -114,18 +128,6 @@ export default function useCodeEditorRepl(
       abortRepl()
     }
   }, [])
-
-  useEffect(() => {
-    return () => {
-      debouncedDoRepl.clear()
-    }
-  }, [debouncedDoRepl])
-
-  useEffect(() => {
-    return () => {
-      debouncedUpdateDecorations.clear()
-    }
-  }, [debouncedUpdateDecorations])
 
   useEffect(() => {
     const [, loadBabel] = getBabel()
@@ -148,14 +150,14 @@ export default function useCodeEditorRepl(
 
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
-        debouncedDoRepl()
+        debouncedDoRepl.current?.()
       })
     })
 
     return () => {
       disposables.forEach((disposable) => disposable.dispose())
     }
-  }, [models, debouncedDoRepl, userState.autostartOnCodeChange])
+  }, [models, userState.autostartOnCodeChange])
 
   useEffect(() => {
     themeRef.current = theme
@@ -190,5 +192,13 @@ export default function useCodeEditorRepl(
     }
   }, [userState.autostartOnCodeChange, doRepl])
 
-  return { updateDecorations }
+  useEffect(() => {
+    const disposable = editorRef.current?.onDidChangeModel(() => {
+      updateDecorations()
+    })
+
+    return () => {
+      disposable?.dispose()
+    }
+  }, [editorRef, updateDecorations])
 }

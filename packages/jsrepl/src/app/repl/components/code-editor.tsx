@@ -24,18 +24,12 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
-  const updateDecorationsRef = useRef(() => {})
-  const modelsDisposables = useRef<(() => void)[]>([])
-  const monacoModelMap = useRef<Map<string, monaco.editor.IModel>>(new Map())
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
 
   const models = useMemo(() => {
-    modelsDisposables.current.forEach((disposable) => disposable())
-    modelsDisposables.current = []
-
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
 
     replState.fs.walk('/', (path, entry) => {
@@ -44,41 +38,27 @@ export default function CodeEditor({ className }: { className?: string }) {
           ? virtualFilesStorage.get(entry.content) ?? entry.content
           : entry.content
 
-        let monacoModel = monacoModelMap.current.get(path)
+        const uri = monaco.Uri.parse('file://' + path)
+        let monacoModel = monaco.editor.getModel(uri)
         if (!monacoModel) {
-          const uri = monaco.Uri.parse('file://' + path)
-          monacoModel = monaco.editor.createModel(content, getMonacoLanguage(path), uri)
-          monacoModelMap.current.set(path, monacoModel)
+          monacoModel = monaco.editor.createModel(content, getMonacoLanguage(uri.path), uri)
         } else if (content !== monacoModel.getValue()) {
           monacoModel.setValue(content)
         }
 
         const model = new CodeEditorModel(entry, monacoModel)
-        map.set(path, model)
-
-        modelsDisposables.current.push(() => model.dispose())
+        map.set(uri.path, model)
       }
     })
 
-    for (const path of monacoModelMap.current.keys()) {
-      if (!map.has(path)) {
-        const monacoModel = monacoModelMap.current.get(path)!
+    for (const monacoModel of monaco.editor.getModels()) {
+      if (!map.has(monacoModel.uri.path)) {
         monacoModel.dispose()
-        monacoModelMap.current.delete(path)
       }
     }
 
     return map
   }, [replState.fs])
-
-  useEffect(() => {
-    return () => {
-      modelsDisposables.current.forEach((disposable) => disposable())
-      modelsDisposables.current = []
-      monacoModelMap.current.forEach((model) => model.dispose())
-      monacoModelMap.current = new Map()
-    }
-  }, [])
 
   useEffect(() => {
     setupMonaco()
@@ -120,7 +100,6 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   useEffect(() => {
     editorRef.current?.setModel(currentTextModel)
-    updateDecorationsRef.current()
   }, [currentTextModel])
 
   const isReadOnly = useMemo(() => {
@@ -171,6 +150,22 @@ export default function CodeEditor({ className }: { className?: string }) {
   }, [theme])
 
   useEffect(() => {
+    return () => {
+      for (const model of models.values()) {
+        model.dispose()
+      }
+    }
+  }, [models])
+
+  useEffect(() => {
+    return () => {
+      for (const monacoModel of monaco.editor.getModels()) {
+        monacoModel.dispose()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
     editorRef.current = editor
 
@@ -180,9 +175,7 @@ export default function CodeEditor({ className }: { className?: string }) {
   }, [])
 
   useCodeEditorDTS(editorRef, models)
-
-  const { updateDecorations } = useCodeEditorRepl(editorRef, models, { theme })
-  updateDecorationsRef.current = updateDecorations
+  useCodeEditorRepl(editorRef, models, { theme })
 
   return (
     <>

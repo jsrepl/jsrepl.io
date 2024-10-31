@@ -1,6 +1,6 @@
-import { type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import debounce from 'debounce'
+import debounce, { DebouncedFunction } from 'debounce'
 import { load, save } from '@/lib/repl-stored-state'
 import type { ReplStoredState } from '@/types/repl.types'
 
@@ -18,14 +18,7 @@ export function useReplStoredState(): [
   const searchParams = useSearchParams()
   const [state, _setState] = useState<ReplStoredState>(() => load(searchParams))
   const stateRef = useRef(state)
-
-  const debouncedSave = useMemo(
-    () =>
-      debounce(() => {
-        save(stateRef.current, router)
-      }, 500),
-    [router]
-  )
+  const debouncedSave = useRef<DebouncedFunction<() => void>>()
 
   const setState = useCallback(
     (
@@ -35,27 +28,41 @@ export function useReplStoredState(): [
       _setState(value)
       _setState((value) => {
         stateRef.current = value
-        debouncedSave()
+        debouncedSave.current?.()
 
         if (saveImmediate) {
-          debouncedSave.flush()
+          debouncedSave.current?.flush()
         }
 
         return value
       })
     },
-    [debouncedSave]
+    []
   )
 
-  useEffect(() => {
-    return () => {
-      debouncedSave.flush()
+  const saveState = useCallback((immediate = false) => {
+    debouncedSave.current?.()
+
+    if (immediate) {
+      debouncedSave.current?.flush()
     }
-  }, [debouncedSave])
+  }, [])
+
+  useEffect(() => {
+    const debounced = debounce(() => {
+      save(stateRef.current, router)
+    }, 500)
+
+    debouncedSave.current = debounced
+
+    return () => {
+      debounced.clear()
+    }
+  }, [router])
 
   useEffect(() => {
     const onWindowBeforeUnload = () => {
-      debouncedSave.flush()
+      debouncedSave.current?.flush()
     }
 
     window.addEventListener('beforeunload', onWindowBeforeUnload)
@@ -63,18 +70,7 @@ export function useReplStoredState(): [
     return () => {
       window.removeEventListener('beforeunload', onWindowBeforeUnload)
     }
-  }, [debouncedSave])
-
-  const saveState = useCallback(
-    (immediate = false) => {
-      debouncedSave()
-
-      if (immediate) {
-        debouncedSave.flush()
-      }
-    },
-    [debouncedSave]
-  )
+  }, [])
 
   return [state, setState, saveState]
 }

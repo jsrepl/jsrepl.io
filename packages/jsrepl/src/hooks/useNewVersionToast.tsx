@@ -6,6 +6,7 @@ import { parseVersion } from '@/lib/semver'
 export function useNewVersionToast() {
   const { userState, setUserState } = useContext(UserStateContext)!
   const userVersionRef = useRef(userState.version)
+  const toastIdRef = useRef<string | number | undefined>(undefined)
 
   useEffect(() => {
     const appVersion = process.env.NEXT_PUBLIC_APP_VERSION
@@ -25,17 +26,17 @@ export function useNewVersionToast() {
       return
     }
 
-    let toastId: string | number | undefined
-
     const timeoutId = setTimeout(async () => {
-      toastId = toast(`Updated to version ${appVersion}`, {
+      toastIdRef.current = toast(`Updated to version ${appVersion}`, {
         description: (
           <a
             href={`https://github.com/jsrepl/jsrepl.io/releases/tag/${appVersion}`}
             target="_blank"
             className="hover:text-primary underline underline-offset-4"
             onClick={() => {
-              toast.dismiss(toastId)
+              if (toastIdRef.current) {
+                toast.dismiss(toastIdRef.current)
+              }
             }}
           >
             View the Release Notes
@@ -52,8 +53,8 @@ export function useNewVersionToast() {
 
     return () => {
       clearTimeout(timeoutId)
-      if (toastId) {
-        toast.dismiss(toastId)
+      if (toastIdRef.current) {
+        toast.dismiss(toastIdRef.current)
       }
     }
   }, [setUserState])
