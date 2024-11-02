@@ -70,6 +70,68 @@ export async function assertReplLines(
   await Promise.all(promises)
 }
 
+export async function assertMonacoContentsWithDecors(page: Page, expectedContents: string) {
+  await expect(monacoLocator(page)).toHaveCount(1)
+
+  await expect
+    .poll(() => getMonacoContentsWithDecors(page), {
+      message: 'monaco contents with decors eventually match with expectedContents',
+      timeout: 5000,
+    })
+    .toBe(expectedContents)
+}
+
+async function getMonacoContentsWithDecors(page: Page): Promise<string> {
+  return await page.evaluate(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const monaco = (window as any).__monaco as typeof import('monaco-editor')
+    if (!monaco) {
+      throw new Error('test monaco ref not found')
+    }
+
+    const editor = monaco.editor.getEditors()[0]
+    if (!editor) {
+      throw new Error('editor instance not found')
+    }
+
+    const contents = editor.getValue()
+    const lines = contents.split('\n')
+    const linesWithDecors: string[] = lines.map((line, lineIndex) => {
+      const decors = editor.getLineDecorations(lineIndex + 1)
+      if (!decors || decors.length === 0) {
+        return line
+      }
+
+      const decorValues: string[] = decors
+        .map((decor) => {
+          const uniqClassName =
+            decor.options.afterContentClassName?.match(/jsrepl-decor-[0-9]+/)?.[0]
+          if (!uniqClassName) {
+            return null
+          }
+
+          const el = document.querySelector('.' + uniqClassName)
+          if (!el) {
+            return null
+          }
+
+          const content = getComputedStyle(el, ':after').getPropertyValue('content')
+
+          // Remove double quotation marks around the edges (always present in string `content`)
+          // and replace inner escaped double quotation marks with regular double quotation marks.
+          const value = content.slice(1, -1).replace(/\\"/g, '"')
+          return value
+        })
+        .filter((x) => x !== null)
+
+      return line + decorValues.map((decorValue) => ` // → ${decorValue}`).join('')
+    })
+
+    const contentsWithDecors: string = linesWithDecors.join('\n')
+    return contentsWithDecors
+  })
+}
+
 export async function visitPlayground(page: Page, state: ReplStoredState) {
   const qp = toQueryParams(state)
   await page.goto('/repl?' + new URLSearchParams(qp))

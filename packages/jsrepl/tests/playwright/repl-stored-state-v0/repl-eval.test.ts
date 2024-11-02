@@ -1,6 +1,6 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
-import { assertReplLines, monacoLocator, visitPlaygroundV0 } from '../utils'
+import { assertMonacoContentsWithDecors, visitPlaygroundV0 } from '../utils'
 
 test('simple expressions', async ({ page }) => {
   await visitPlaygroundV0(page, {
@@ -31,37 +31,19 @@ test('simple expressions', async ({ page }) => {
     ],
   })
 
-  const monaco = monacoLocator(page)
-  await assertReplLines(monaco, [
-    {
-      line: 3,
-      content: 'const n = 1;',
-      decors: ['n = 1'],
-    },
-    {
-      line: 4,
-      content: 'const m = n + 2;',
-      decors: ['m = 3'],
-    },
-    {
-      line: 6,
-      content: "const a = 'foo';",
-      decors: ['a = "foo"'],
-    },
-    {
-      line: 7,
-      content: "const b = a + 'bar';",
-      decors: ['b = "foobar"'],
-    },
-    {
-      line: 9,
-      content: "let now = new Date('2024');",
-      decors: ['now = Date(2024-01-01T00:00:00.000Z)'],
-    },
-    {
-      line: 10,
-      content: 'now.toISOString();',
-      decors: ['"2024-01-01T00:00:00.000Z"'],
-    },
-  ])
+  await assertMonacoContentsWithDecors(
+    page,
+    dedent`
+      import './index.css'
+
+      const n = 1; // → n = 1
+      const m = n + 2; // → m = 3
+
+      const a = 'foo'; // → a = "foo"
+      const b = a + 'bar'; // → b = "foobar"
+
+      let now = new Date('2024'); // → now = Date("2024-01-01T00:00:00.000Z")
+      now.toISOString(); // → "2024-01-01T00:00:00.000Z"
+    `
+  )
 })

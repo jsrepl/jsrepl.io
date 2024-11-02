@@ -18,6 +18,11 @@ import CodeEditorHeader from './code-editor-header'
 import styles from './code-editor.module.css'
 import { ErrorsNotification } from './errors-notification'
 
+if (process.env.NEXT_PUBLIC_NODE_ENV === 'test' && typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(window as any).__monaco = monaco
+}
+
 export default function CodeEditor({ className }: { className?: string }) {
   const { replState, saveReplState } = useContext(ReplStateContext)!
   const { userState } = useContext(UserStateContext)!

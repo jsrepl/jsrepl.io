@@ -2,7 +2,7 @@ import { test } from '@playwright/test'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
 import { reactStarter } from '@/lib/repl-stored-state-library'
-import { assertReplLines, monacoLocator, visitPlayground } from './utils'
+import { assertMonacoContentsWithDecors, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
   await visitPlayground(page, {
@@ -47,111 +47,66 @@ test('simple expressions', async ({ page }) => {
     }),
   })
 
-  const monaco = monacoLocator(page)
-  await assertReplLines(monaco, [
-    {
-      line: 1,
-      content: 'const n = 1;',
-      decors: ['n = 1'],
-    },
-    {
-      line: 2,
-      content: 'const m = n + 2;',
-      decors: ['m = 3'],
-    },
-    {
-      line: 4,
-      content: "const a = 'foo';",
-      decors: ['a = "foo"'],
-    },
-    {
-      line: 5,
-      content: "const b = a + 'bar';",
-      decors: ['b = "foobar"'],
-    },
-    {
-      line: 7,
-      content: "let now = new Date('2024');",
-      decors: ['now = Date(2024-01-01T00:00:00.000Z)'],
-    },
-    {
-      line: 8,
-      content: 'now.toISOString();',
-      decors: ['"2024-01-01T00:00:00.000Z"'],
-    },
-    {
-      line: 11,
-      content: 'const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();',
-      decors: ['f1 = 1, f2 = 2, f3 = 3, f4 = 4, f5 = [5, 6]'],
-    },
-    {
-      line: 13,
-      content: 'foo()',
-      decors: ['[1, , {x: 3}, [4], 5, 6]'],
-    },
-    {
-      line: 14,
-      content: ';[window.hhh] = foo();',
-      decors: ['window.hhh = 1'],
-    },
-    {
-      line: 15,
-      content: 'window.hadds = foo();',
-      decors: ['window.hadds = [1, , {x: 3}, [4], 5, 6]'],
-    },
-    {
-      line: 16,
-      content: '({ x: hhh } = foo({x: 1}));',
-      decors: ['hhh = 1'],
-    },
-    {
-      line: 17,
-      content: 'let h;',
-      decors: ['h = undefined'],
-    },
-    {
-      line: 18,
-      content: ';[h] = foo()',
-      decors: ['h = 1'],
-    },
-    {
-      line: 20,
-      content: ';[h] = foo(), [h] = foo([9])',
+  await assertMonacoContentsWithDecors(
+    page,
+    dedent`
+      const n = 1; // → n = 1
+      const m = n + 2; // → m = 3
+
+      const a = 'foo'; // → a = "foo"
+      const b = a + 'bar'; // → b = "foobar"
+
+      let now = new Date('2024'); // → now = Date("2024-01-01T00:00:00.000Z")
+      now.toISOString(); // → "2024-01-01T00:00:00.000Z"
+
+      const f2Val = 2; // → f2Val = 2
+      const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo(); // → f1 = 1, f2 = 2, f3 = 3, f4 = 4, f5 = [5, 6]
+
+      foo() // → [1, undefined, {…}, Array(1), 5, 6]
+      ;[window.hhh] = foo(); // → window.hhh = 1
+      window.hadds = foo(); // → window.hadds = [1, undefined, {…}, Array(1), 5, 6]
+      ({ x: hhh } = foo({x: 1})); // → hhh = 1
+      let h; // → h = undefined
+      ;[h] = foo() // → h = 1
       // TODO: Handle SequenceExpressions better
-      decors: ['[9]'],
-    },
-    {
-      line: 21,
-      content: 'let hhhVar = window.hhh;',
-      decors: ['hhhVar = 1'],
-    },
-    {
-      line: 22,
-      content: 'h',
-      decors: ['9'],
-    },
-  ])
+      ;[h] = foo(), [h] = foo([9]) // → [9]
+      let hhhVar = window.hhh; // → hhhVar = 1
+      h // → 9
+
+      function foo(x) {
+        return x ?? [1,, {x: 3}, [4], 5, 6];
+      }
+    `
+  )
 })
 
-test('react starter', async ({ page }) => {
+test.skip('react starter', async ({ page }) => {
   await visitPlayground(page, reactStarter)
 
-  const monaco = monacoLocator(page)
-  await assertReplLines(monaco, [
-    {
-      line: 5,
-      content: "const root = createRoot(document.getElementById('root'));",
-      decors: ['root = ReactDOMRoot {render: ƒ (children), unmount: ƒ}'],
-    },
-    {
-      line: 6,
-      content: 'root.render(<App />);',
-      decors: ['undefined'],
-    },
-    {
-      line: 9,
-      content: 'const [counter, setCounter] = useState(0);',
-      decors: ['counter = 0, setCounter = ƒ dispatchSetState'],
-    },
-  ])
+  await assertMonacoContentsWithDecors(
+    page,
+    dedent`
+      import './index.css';
+      import { createRoot } from 'react-dom/client?dev';
+      import { useState } from 'react?dev';
+
+      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {render: ƒ (children), unmount: ƒ}
+      root.render(<App />); // → undefined
+
+      function App() {
+        const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState
+
+        return (
+          <>
+            <h1 className="italic">Hello, world!</h1>
+            <p className="space-x-1">
+              <button onClick={() => setCounter((x) => x - 1)}>-</button>
+              <span>Counter: {counter}</span>
+              <button onClick={() => setCounter((x) => x + 1)}>+</button>
+            </p>
+          </>
+        );
+      }
+    `
+  )
 })

@@ -218,7 +218,7 @@ function _stringifyResult(
 
   if (result instanceof Date) {
     return {
-      value: `Date('${result.toISOString()}')`,
+      value: `Date("${result.toISOString()}")`,
       type: 'date',
       lang: 'js',
       detailsAfter:
