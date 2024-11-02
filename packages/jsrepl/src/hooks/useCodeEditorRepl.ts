@@ -211,22 +211,21 @@ export default function useCodeEditorRepl(
           return
         }
 
-        let hoverPayload: ReplPayload | null = null
+        const hoverPayloads: ReplPayload[] = []
         for (const payload of payloadMap.values()) {
           if (
             payload.ctx.filePath === model.uri.path &&
             payload.ctx.lineStart === position.lineNumber
           ) {
-            hoverPayload = payload
-            break
+            hoverPayloads.push(payload)
           }
         }
 
-        if (!hoverPayload) {
+        if (hoverPayloads.length === 0) {
           return
         }
 
-        return { contents: getHoverMessages(hoverPayload) }
+        return { contents: getHoverMessages(hoverPayloads) }
       },
     })
 

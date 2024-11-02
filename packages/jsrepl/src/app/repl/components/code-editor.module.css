@@ -32,6 +32,14 @@
       margin: 0 -8px -4px -8px !important;
       padding: 4px 8px !important;
       background-color: var(--vscode-editorHoverWidget-statusBarBackground);
+      font-size: 0.875em;
+    }
+  }
+
+  & :global(.monaco-editor .monaco-hover hr) {
+    &:only-child {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
     }
   }
 }
@@ -53,6 +61,12 @@
     text-decoration: none;
     background-color: rgba(0, 0, 0, 0);
     color: var(--color);
+  }
+
+  & + .jsreplDecor::before {
+    margin-left: 0;
+    content: ', ';
+    color: #666;
   }
 }
 

@@ -2,8 +2,11 @@ import type * as monaco from 'monaco-editor'
 import { type ReplPayload } from '@/types'
 import { StringifyResult, stringifyResult } from './stringify'
 
-export function getHoverMessages(payload: ReplPayload): monaco.IMarkdownString[] {
-  const strArr = stringifyPayload(payload)
+export function getHoverMessages(payloads: ReplPayload[]): monaco.IMarkdownString[] {
+  const strArr: string[] = payloads.flatMap((payload, index) => [
+    ...(index === 0 ? [] : ['<hr>']),
+    ...stringifyPayload(payload),
+  ])
 
   return [
     {
@@ -16,16 +19,14 @@ export function getHoverMessages(payload: ReplPayload): monaco.IMarkdownString[]
       supportHtml: true,
       isTrusted: true,
     },
-    ...strArr.map((str) => ({ value: str })),
+    ...strArr.map((str) => ({ value: str, supportHtml: true })),
     {
       value: `<span style="color:#03;">
         <a href="command:editor.foldAll" title="fold all1123">Fold All</a>
       </span>`,
       supportThemeIcons: true,
       supportHtml: true,
-      isTrusted: {
-        enabledCommands: ['editor.foldAll'],
-      },
+      isTrusted: true,
     },
     // {
     //   value:
@@ -52,12 +53,21 @@ function stringifyPayload(payload: ReplPayload): string[] {
     })
   }
 
-  if (payload.ctx.kind === 'variable' || payload.ctx.kind === 'assignment') {
-    const vars = payload.result as Array<{ name: string; value: unknown }>
-    return vars.flatMap(({ name, value }) => {
+  if (payload.ctx.kind === 'variable') {
+    const vars = payload.result as Array<{ kind: string; name: string; value: unknown }>
+    return vars.flatMap(({ kind, name, value }, index) => {
+      const prefix = `${kind} ${name} = `
       const stringified = stringifyResult(value, 'details')
-      // TODO: add `var/let/const` prefix (if it is a variable [const a = 1], not a assignment expression [window.a = 1])
-      return [`\`${name}\``, ...renderStringified(stringified)]
+      return [...(index === 0 ? [] : ['<hr>']), ...renderStringified(stringified, prefix)]
+    })
+  }
+
+  if (payload.ctx.kind === 'assignment') {
+    const vars = payload.result as Array<{ name: string; value: unknown }>
+    return vars.flatMap(({ name, value }, index) => {
+      const prefix = `${name} = `
+      const stringified = stringifyResult(value, 'details')
+      return [...(index === 0 ? [] : ['<hr>']), ...renderStringified(stringified, prefix)]
     })
   }
 
@@ -65,14 +75,15 @@ function stringifyPayload(payload: ReplPayload): string[] {
   return renderStringified(stringified)
 }
 
-function renderStringified(stringified: StringifyResult): string[] {
-  const strs = []
+function renderStringified(stringified: StringifyResult, prefix: string = ''): string[] {
+  const strs: string[] = []
 
   if (stringified.detailsBefore) {
     strs.push(...renderStringified(stringified.detailsBefore))
   }
 
-  strs.push(stringified.lang != null ? pre(stringified.value, stringified.lang) : stringified.value)
+  const value = prefix + stringified.value
+  strs.push(stringified.lang != null ? pre(value, stringified.lang) : value)
 
   if (stringified.detailsAfter) {
     strs.push(...renderStringified(stringified.detailsAfter))

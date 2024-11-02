@@ -182,6 +182,7 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           t.arrayExpression(
             identifiers.map((id) =>
               t.objectExpression([
+                t.objectProperty(t.identifier('kind'), t.stringLiteral(path.node.kind)),
                 t.objectProperty(t.identifier('name'), t.stringLiteral(id.name)),
                 t.objectProperty(t.identifier('value'), id),
               ])

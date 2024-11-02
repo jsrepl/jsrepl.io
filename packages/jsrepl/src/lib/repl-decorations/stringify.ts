@@ -265,8 +265,6 @@ function _stringifyResult(
   }
 
   if (isDomNode(result)) {
-    const meta = result.__meta__
-
     let value: string
     if (target === 'details') {
       value = nestingLevel === 0 ? result.serialized : stringifyDomNodeLong(result)
@@ -278,10 +276,10 @@ function _stringifyResult(
       value,
       type: 'dom-node',
       lang: 'html',
-      detailsBefore:
-        target === 'details' && meta.constructorName
-          ? { value: meta.constructorName, type: 'class-name', lang: 'js' }
-          : undefined,
+      // detailsAfter:
+      //   target === 'details' && meta.constructorName
+      //     ? { value: meta.constructorName, type: 'class-name', lang: 'js' }
+      //     : undefined,
     }
   }
 
@@ -299,7 +297,9 @@ function _stringifyResult(
       const fnName = meta.name.replace(/^bound /u, '')
       const fnArgsPart = `(${parsed?.args ?? ''})`
       const fnBodyPart =
-        target === 'details' && nestingLevel === 0 && isNative ? ' { [native code] }' : ''
+        target === 'details' && nestingLevel === 0 && isNative
+          ? [' {', t('[native code]', 1), t('}', 0)].join('\n')
+          : ''
       value = `${asyncPart}${fnKeywordPart}${fnName}${fnArgsPart}${fnBodyPart}`
     }
 
