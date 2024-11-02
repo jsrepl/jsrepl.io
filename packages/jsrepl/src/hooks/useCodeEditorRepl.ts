@@ -9,6 +9,7 @@ import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
 import { createDecorations } from '@/lib/repl-decorations'
+import { getHoverMessages } from '@/lib/repl-decorations/hover-messages'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
@@ -201,4 +202,36 @@ export default function useCodeEditorRepl(
       disposable?.dispose()
     }
   }, [editorRef, updateDecorations])
+
+  useEffect(() => {
+    const disposable = monaco.languages.registerHoverProvider('*', {
+      provideHover(model, position /*, token, context*/) {
+        const maxColumn = model.getLineMaxColumn(position.lineNumber)
+        if (position.column !== maxColumn) {
+          return
+        }
+
+        let hoverPayload: ReplPayload | null = null
+        for (const payload of payloadMap.values()) {
+          if (
+            payload.ctx.filePath === model.uri.path &&
+            payload.ctx.lineStart === position.lineNumber
+          ) {
+            hoverPayload = payload
+            break
+          }
+        }
+
+        if (!hoverPayload) {
+          return
+        }
+
+        return { contents: getHoverMessages(hoverPayload) }
+      },
+    })
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [payloadMap])
 }

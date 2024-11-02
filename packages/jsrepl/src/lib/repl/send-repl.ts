@@ -357,8 +357,6 @@ function getPayloadFromEsbuildMessage(
   }
 
   const payload: ReplPayload = {
-    isPromise: false,
-    promiseInfo: undefined,
     isError: true,
     result: msg.text,
     ctx: {

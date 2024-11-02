@@ -1,8 +1,8 @@
 import * as monaco from 'monaco-editor'
 import codeEditorStyles from '@/app/repl/components/code-editor.module.css'
 import { cssInject } from '@/lib/css-inject'
-import { stringifyPayload } from '@/lib/repl-payload'
 import { type ReplPayload } from '@/types'
+import { getDecorString } from './decor-string'
 
 let decorationUniqIndex = -1
 
@@ -32,16 +32,17 @@ function getDecorDef(
     decorationUniqIndex = (decorationUniqIndex + 1) % Number.MAX_VALUE
     const uniqClassName = `jsrepl-decor-${decorationUniqIndex}`
 
-    const stringifiedPayload = stringifyPayload(payload)
-    if (stringifiedPayload === null) {
+    const decorStr = getDecorString(payload)
+    if (decorStr === null) {
       return null
     }
 
-    const valueCssVar = CSS.escape(stringifiedPayload)
+    const valueCssVar = CSS.escape(decorStr)
     cssStylesRef.push(`.${uniqClassName}::after { --value: "${valueCssVar}"; }`)
 
     return {
       // line starts with 1, column starts with 1
+      // FIXME: sometimes when editing decors rendered shifted. Check token?
       range: new monaco!.Range(lineStart, 1, lineStart, 1),
       options: {
         isWholeLine: true,

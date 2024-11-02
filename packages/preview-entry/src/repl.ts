@@ -19,13 +19,9 @@ function repl(
   const { token, win } = this
 
   switch (ctx.kind) {
-    case 'expression': {
-      const value = args[0]
-      postMessageRepl(token, win, value, false, ctx)
-      return value
-    }
-
-    case 'variable': {
+    case 'expression':
+    case 'variable':
+    case 'assignment': {
       const value = args[0]
       postMessageRepl(token, win, value, false, ctx)
       return value
@@ -52,55 +48,14 @@ function postMessageRepl(
   isError: boolean,
   ctx: ReplPayload['ctx']
 ) {
-  const isPromise = checkIsPromise(result)
   postMessage(token, {
     type: 'repl',
     payload: transformPayload(win, {
-      isPromise,
-      promiseInfo: isPromise ? { status: 'pending' } : undefined,
       isError,
-      rawResult: isPromise ? undefined : result,
+      rawResult: result,
       ctx,
     }),
   })
-
-  if (isPromise) {
-    result.then(
-      (resolvedValue) => {
-        postMessage(token, {
-          type: 'repl',
-          payload: transformPayload(win, {
-            isPromise: true,
-            promiseInfo: { status: 'fulfilled' },
-            isError: false,
-            rawResult: resolvedValue,
-            ctx,
-          }),
-        })
-      },
-      (error) => {
-        postMessage(token, {
-          type: 'repl',
-          payload: transformPayload(win, {
-            isPromise: true,
-            promiseInfo: { status: 'rejected' },
-            isError: true,
-            rawResult: error,
-            ctx,
-          }),
-        })
-      }
-    )
-  }
-}
-
-function checkIsPromise<T, S>(value: PromiseLike<T> | S): value is PromiseLike<T> {
-  return (
-    !!value &&
-    (typeof value === 'object' || typeof value === 'function') &&
-    'then' in value &&
-    typeof value.then === 'function'
-  )
 }
 
 function onWindowError(event: ErrorEvent, token: number) {

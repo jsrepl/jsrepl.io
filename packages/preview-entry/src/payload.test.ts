@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
 import { expect, test } from 'vitest'
-import { type ReplPayload, ReplPayloadCustomKind } from '../../jsrepl/src/types'
+import {
+  type ReplPayload,
+  ReplPayloadCustomKind,
+  ReplPayloadResultDomNode,
+  ReplPayloadResultFunction,
+  ReplPayloadResultObject,
+  ReplPayloadResultSymbol,
+  ReplPayloadResultWeakMap,
+  ReplPayloadResultWeakRef,
+  ReplPayloadResultWeakSet,
+} from '../../jsrepl/src/types'
 import { transformPayload } from './payload'
 import type { PreviewWindow, ReplRawPayload } from './types'
 
 const payloadCommon = {
-  isPromise: false,
-  promiseInfo: undefined,
   isError: false,
   ctx: {
     id: -1,
@@ -32,13 +40,17 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     '<div>',
     document.createElement('div'),
     {
-      __rpck__: ReplPayloadCustomKind.DomNode,
-      tagName: 'div',
-      attributes: [],
-      hasChildNodes: false,
-      childElementCount: 0,
-      textContent: '',
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.DomNode,
+        tagName: 'div',
+        constructorName: 'HTMLDivElement',
+        attributes: [],
+        hasChildNodes: false,
+        childElementCount: 0,
+        textContent: '',
+      },
+      serialized: '<div></div>',
+    } as ReplPayloadResultDomNode,
   ],
   [
     '<div class="foo">lorem ipsum <span>dolor sit amet</span></div>',
@@ -54,29 +66,35 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return el
     })(),
     {
-      __rpck__: ReplPayloadCustomKind.DomNode,
-      tagName: 'div',
-      attributes: [
-        {
-          name: 'class',
-          value: 'foo',
-        },
-      ],
-      hasChildNodes: true,
-      childElementCount: 1,
-      textContent: 'lorem ipsum dolor sit amet',
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.DomNode,
+        tagName: 'div',
+        constructorName: 'HTMLDivElement',
+        attributes: [
+          {
+            name: 'class',
+            value: 'foo',
+          },
+        ],
+        hasChildNodes: true,
+        childElementCount: 1,
+        textContent: 'lorem ipsum dolor sit amet',
+      },
+      serialized: '<div class="foo">lorem ipsum <span>dolor sit amet</span></div>',
+    } as ReplPayloadResultDomNode,
   ],
   [
     'function() {}',
     function () {},
     {
-      __rpck__: ReplPayloadCustomKind.Function,
-      name: '',
+      __meta__: {
+        type: ReplPayloadCustomKind.Function,
+        name: '',
+      },
       // Weird whitespaces between curly braces?
-      // It seems to only happen in tests due to some vite/vitest/ts code transforms?
-      str: 'function() {\n    }',
-    },
+      // It seems to only happen in tests for some reason...
+      serialized: 'function() {\n    }',
+    } as ReplPayloadResultFunction,
   ],
   [
     'function foo(bar) { return bar }',
@@ -84,47 +102,55 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return bar
     },
     {
-      __rpck__: ReplPayloadCustomKind.Function,
-      name: 'foo',
+      __meta__: {
+        type: ReplPayloadCustomKind.Function,
+        name: 'foo',
+      },
       // Weird whitespaces between curly braces?
-      // It seems to only happen in tests due to some vite/vitest/ts code transforms?
-      str: 'function foo(bar) {\n      return bar;\n    }',
-    },
+      // It seems to only happen in tests for some reason...
+      serialized: 'function foo(bar) {\n      return bar;\n    }',
+    } as ReplPayloadResultFunction,
   ],
   [
     'Symbol("foo")',
     Symbol('foo'),
     {
-      __rpck__: ReplPayloadCustomKind.Symbol,
-      str: 'Symbol(foo)',
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.Symbol,
+      },
+      serialized: 'Symbol(foo)',
+    } as ReplPayloadResultSymbol,
   ],
   [
     'Symbol.for("foo")',
     Symbol.for('foo'),
     {
-      __rpck__: ReplPayloadCustomKind.Symbol,
-      str: 'Symbol(foo)',
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.Symbol,
+      },
+      serialized: 'Symbol(foo)',
+    } as ReplPayloadResultSymbol,
   ],
   [
     'cyclic refs',
     (() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const a: any = { b: 1 }
-      a.a = a
-      return a
+      const obj: any = { a: 1 }
+      obj.b = obj
+      return obj
     })(),
-    {
-      __rpck__: ReplPayloadCustomKind.RawObject,
-      constructorName: 'Object',
-      props: {
-        a: {
-          __rpck__: ReplPayloadCustomKind.CyclicRef,
+    (() => {
+      const obj = {
+        __meta__: {
+          type: ReplPayloadCustomKind.Object,
+          constructorName: 'Object',
         },
-        b: 1,
-      },
-    },
+        a: 1,
+      } as ReplPayloadResultObject
+
+      obj.b = obj
+      return obj
+    })(),
   ],
   [
     'WeakSet()',
@@ -134,8 +160,10 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return ws
     })(),
     {
-      __rpck__: ReplPayloadCustomKind.WeakSet,
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakSet,
+      },
+    } as ReplPayloadResultWeakSet,
   ],
   [
     'WeakMap()',
@@ -145,8 +173,10 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return wm
     })(),
     {
-      __rpck__: ReplPayloadCustomKind.WeakMap,
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakMap,
+      },
+    } as ReplPayloadResultWeakMap,
   ],
   [
     'WeakRef()',
@@ -155,8 +185,10 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return wr
     })(),
     {
-      __rpck__: ReplPayloadCustomKind.WeakRef,
-    },
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakRef,
+      },
+    } as ReplPayloadResultWeakRef,
   ],
   ["[1, 2, 3, 'a', 'b', 'c']", [1, 2, 3, 'a', 'b', 'c'], [1, 2, 3, 'a', 'b', 'c']],
   ["[1, 2, 3, ['a', 'b'], 'c']", [1, 2, 3, ['a', 'b'], 'c'], [1, 2, 3, ['a', 'b'], 'c']],
@@ -166,30 +198,30 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     'POJO',
     { foo: 'bar' },
     {
-      __rpck__: ReplPayloadCustomKind.RawObject,
-      constructorName: 'Object',
-      props: {
-        foo: 'bar',
+      __meta__: {
+        type: ReplPayloadCustomKind.Object,
+        constructorName: 'Object',
       },
-    },
+      foo: 'bar',
+    } as ReplPayloadResultObject,
   ],
   [
     'POJO nested',
-    { foo: 'bar', baz: { foo: 'bar' } },
+    { foo: 'bar', baz: { foo2: 'bar2' } },
     {
-      __rpck__: ReplPayloadCustomKind.RawObject,
-      constructorName: 'Object',
-      props: {
-        foo: 'bar',
-        baz: {
-          __rpck__: ReplPayloadCustomKind.RawObject,
-          constructorName: 'Object',
-          props: {
-            foo: 'bar',
-          },
-        },
+      __meta__: {
+        type: ReplPayloadCustomKind.Object,
+        constructorName: 'Object',
       },
-    },
+      foo: 'bar',
+      baz: {
+        __meta__: {
+          type: ReplPayloadCustomKind.Object,
+          constructorName: 'Object',
+        },
+        foo2: 'bar2',
+      },
+    } as ReplPayloadResultObject,
   ],
   [
     // Like `navigator.connection`
@@ -200,12 +232,12 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
       return obj
     })(),
     {
-      __rpck__: ReplPayloadCustomKind.RawObject,
-      constructorName: 'Object',
-      props: {
-        foo: 'bar',
+      __meta__: {
+        type: ReplPayloadCustomKind.Object,
+        constructorName: 'Object',
       },
-    },
+      foo: 'bar',
+    } as ReplPayloadResultObject,
   ],
 ]
 

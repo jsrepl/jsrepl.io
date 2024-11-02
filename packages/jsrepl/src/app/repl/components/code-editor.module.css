@@ -3,10 +3,42 @@
   & :global(.monaco-editor .action-widget) {
     box-sizing: content-box;
   }
+
+  & :global(.monaco-editor .hover-row-contents) {
+    flex: 1;
+  }
+
+  & :global(.monaco-editor .monaco-hover-content) {
+    padding-bottom: 0 !important;
+  }
+
+  /* HACK: custom styling for rendered markdown in hover messages */
+  & :global(.monaco-editor .hover-contents) {
+    & span[style='color:#01;'] {
+      & + span {
+        margin: 0 0 0 0.25em !important;
+      }
+    }
+
+    & span[style='color:#02;'] {
+      & + span {
+        margin: 0 !important;
+        vertical-align: -0.125em !important;
+      }
+    }
+
+    & span[style='color:#03;'] {
+      display: block !important;
+      margin: 0 -8px -4px -8px !important;
+      padding: 4px 8px !important;
+      background-color: var(--vscode-editorHoverWidget-statusBarBackground);
+    }
+  }
 }
 
 .jsreplDecor {
   --color: #666;
+  pointer-events: none;
 
   &::before {
     margin: 0 0 0 1em;

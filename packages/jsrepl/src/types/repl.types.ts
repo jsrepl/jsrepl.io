@@ -9,50 +9,60 @@ export enum ReplPayloadCustomKind {
   WeakSet = 'weak-set', // non-cloneable
   WeakMap = 'weak-map', // non-cloneable
   WeakRef = 'weak-ref', // non-cloneable
-  CyclicRef = 'cyclic-ref', // cloneable, but we simplify this case for traversing in transformPayload
-  RawObject = 'raw-object', // prototype chain is not preserved in structured clone
+  Object = 'object', // prototype chain is not preserved in structured clone
 }
 
 export type ReplPayloadResultDomNode = {
-  __rpck__: ReplPayloadCustomKind.DomNode
-  tagName: string
-  attributes: { name: string; value: string }[]
-  hasChildNodes: boolean
-  childElementCount: number
-  textContent: string | null
+  __meta__: {
+    type: ReplPayloadCustomKind.DomNode
+    tagName: string
+    constructorName: string | undefined
+    attributes: { name: string; value: string }[]
+    hasChildNodes: boolean
+    childElementCount: number
+    textContent: string | null
+  }
+  serialized: string
 }
 
 export type ReplPayloadResultFunction = {
-  __rpck__: ReplPayloadCustomKind.Function
-  name: string
-  str: string
+  __meta__: {
+    type: ReplPayloadCustomKind.Function
+    name: string
+  }
+  serialized: string
 }
 
 export type ReplPayloadResultSymbol = {
-  __rpck__: ReplPayloadCustomKind.Symbol
-  str: string
+  __meta__: {
+    type: ReplPayloadCustomKind.Symbol
+  }
+  serialized: string
 }
 
 export type ReplPayloadResultWeakSet = {
-  __rpck__: ReplPayloadCustomKind.WeakSet
+  __meta__: {
+    type: ReplPayloadCustomKind.WeakSet
+  }
 }
 
 export type ReplPayloadResultWeakMap = {
-  __rpck__: ReplPayloadCustomKind.WeakMap
+  __meta__: {
+    type: ReplPayloadCustomKind.WeakMap
+  }
 }
 
 export type ReplPayloadResultWeakRef = {
-  __rpck__: ReplPayloadCustomKind.WeakRef
+  __meta__: {
+    type: ReplPayloadCustomKind.WeakRef
+  }
 }
 
-export type ReplPayloadResultCyclicRef = {
-  __rpck__: ReplPayloadCustomKind.CyclicRef
-}
-
-export type ReplPayloadResultRawObject = {
-  __rpck__: ReplPayloadCustomKind.RawObject
-  constructorName: string | undefined
-  props: Record<string, unknown>
+export type ReplPayloadResultObject = Record<string, unknown> & {
+  __meta__: {
+    type: ReplPayloadCustomKind.Object
+    constructorName: string | undefined
+  }
 }
 
 export type ReplPayload = {
@@ -85,6 +95,7 @@ export type ReplPayload = {
     kind:
       | 'expression'
       | 'variable'
+      | 'assignment'
       | 'window-error'
       | 'error'
       | 'warning'
@@ -94,16 +105,6 @@ export type ReplPayload = {
       | 'console-warn'
       | 'console-error'
   }
-} & (ReplPromiseFields | ReplNonPromiseFields)
-
-type ReplPromiseFields = {
-  isPromise: true
-  promiseInfo: { status: 'pending' | 'fulfilled' | 'rejected' }
-}
-
-type ReplNonPromiseFields = {
-  isPromise: false
-  promiseInfo: undefined
 }
 
 export type ReplStoredState = {

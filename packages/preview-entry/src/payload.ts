@@ -1,10 +1,9 @@
 import {
   type ReplPayload,
   ReplPayloadCustomKind,
-  ReplPayloadResultCyclicRef,
   ReplPayloadResultDomNode,
   ReplPayloadResultFunction,
-  ReplPayloadResultRawObject,
+  ReplPayloadResultObject,
   ReplPayloadResultSymbol,
   ReplPayloadResultWeakMap,
   ReplPayloadResultWeakRef,
@@ -19,7 +18,7 @@ import type { PreviewWindow, ReplRawPayload } from './types'
 export function transformPayload(win: PreviewWindow, rawPayload: ReplRawPayload): ReplPayload {
   const { rawResult, ...props } = rawPayload
   const payload = props as unknown as ReplPayload
-  const result = transformResult(win, rawResult, new WeakSet())
+  const result = transformResult(win, rawResult, new WeakMap())
   payload.result = result
   return payload
 }
@@ -29,8 +28,13 @@ export function transformPayload(win: PreviewWindow, rawPayload: ReplRawPayload)
 function transformResult(
   win: PreviewWindow,
   rawResult: unknown /* do not mutate `rawResult` */,
-  refs: WeakSet<object>
+  refs: WeakMap<object, unknown>
 ): ReplPayload['result'] {
+  if (rawResult !== null && typeof rawResult === 'object' && refs.has(rawResult)) {
+    // Cyclic reference
+    return refs.get(rawResult)
+  }
+
   // ReplPayloadCustomKind.DomNode
   if (rawResult instanceof win.HTMLElement) {
     return serializeDomNode(rawResult)
@@ -44,8 +48,10 @@ function transformResult(
 
   if (typeof rawResult === 'symbol') {
     return {
-      __rpck__: ReplPayloadCustomKind.Symbol,
-      str: rawResult.toString(),
+      __meta__: {
+        type: ReplPayloadCustomKind.Symbol,
+      },
+      serialized: rawResult.toString(),
     } as ReplPayloadResultSymbol
   }
 
@@ -53,38 +59,55 @@ function transformResult(
     return rawResult
   }
 
-  if (typeof rawResult === 'object' && rawResult !== null) {
-    if (refs.has(rawResult)) {
-      return { __rpck__: ReplPayloadCustomKind.CyclicRef } as ReplPayloadResultCyclicRef
-    } else {
-      refs.add(rawResult)
-    }
-  }
-
   if (rawResult instanceof win.Set) {
-    return new Set(Array.from(rawResult).map((item) => transformResult(win, item, refs)))
+    const set = new Set()
+    refs.set(rawResult, set)
+    for (const item of rawResult) {
+      set.add(transformResult(win, item, refs))
+    }
+    return set
   }
 
   if (rawResult instanceof win.Map) {
-    return new Map(
-      Array.from(rawResult).map(([key, value]) => [key, transformResult(win, value, refs)])
-    )
+    const map = new Map()
+    refs.set(rawResult, map)
+    for (const [key, value] of rawResult) {
+      map.set(transformResult(win, key, refs), transformResult(win, value, refs))
+    }
+    return map
   }
 
   if (rawResult instanceof win.WeakSet) {
-    return { __rpck__: ReplPayloadCustomKind.WeakSet } as ReplPayloadResultWeakSet
+    return {
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakSet,
+      },
+    } as ReplPayloadResultWeakSet
   }
 
   if (rawResult instanceof win.WeakMap) {
-    return { __rpck__: ReplPayloadCustomKind.WeakMap } as ReplPayloadResultWeakMap
+    return {
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakMap,
+      },
+    } as ReplPayloadResultWeakMap
   }
 
   if (rawResult instanceof win.WeakRef) {
-    return { __rpck__: ReplPayloadCustomKind.WeakRef } as ReplPayloadResultWeakRef
+    return {
+      __meta__: {
+        type: ReplPayloadCustomKind.WeakRef,
+      },
+    } as ReplPayloadResultWeakRef
   }
 
-  if (Array.isArray(rawResult)) {
-    return rawResult.map((item) => transformResult(win, item, refs))
+  if (win.Array.isArray(rawResult)) {
+    const arr: unknown[] = []
+    refs.set(rawResult, arr)
+    for (const item of rawResult) {
+      arr.push(transformResult(win, item, refs))
+    }
+    return arr
   }
 
   if (rawResult instanceof win.Error) {
@@ -100,7 +123,21 @@ function transformResult(
   // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#javascript_types
 
   if (typeof rawResult === 'object' && rawResult !== null) {
-    return serializeRawObject(win, rawResult, refs)
+    const obj = {} as ReplPayloadResultObject
+    refs.set(rawResult, obj)
+
+    getAllPropertyNames(win, rawResult).forEach((propName) => {
+      const value = rawResult[propName as keyof typeof rawResult]
+      const transformedValue = transformResult(win, value, refs)
+      obj[propName] = transformedValue
+    })
+
+    obj.__meta__ = {
+      type: ReplPayloadCustomKind.Object,
+      constructorName: rawResult.constructor?.name,
+    }
+
+    return obj
   }
 
   return rawResult
@@ -108,42 +145,28 @@ function transformResult(
 
 function serializeDomNode(el: HTMLElement): ReplPayloadResultDomNode {
   return {
-    __rpck__: ReplPayloadCustomKind.DomNode,
-    tagName: el.tagName.toLowerCase(),
-    attributes: Array.from(el.attributes).map((attr) => ({ name: attr.name, value: attr.value })),
-    hasChildNodes: el.hasChildNodes(),
-    childElementCount: el.childElementCount,
-    textContent: el.textContent,
+    __meta__: {
+      type: ReplPayloadCustomKind.DomNode,
+      tagName: el.tagName.toLowerCase(),
+      constructorName: el.constructor?.name,
+      attributes: Array.from(el.attributes).map((attr) => ({ name: attr.name, value: attr.value })),
+      hasChildNodes: el.hasChildNodes(),
+      childElementCount: el.childElementCount,
+      textContent: el.textContent,
+    },
+    serialized: el.outerHTML,
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 function serializeFunction(fn: Function): ReplPayloadResultFunction {
   return {
-    __rpck__: ReplPayloadCustomKind.Function,
-    name: fn.name,
-    str: fn.toString(),
+    __meta__: {
+      type: ReplPayloadCustomKind.Function,
+      name: fn.name,
+    },
+    serialized: fn.toString(),
   }
-}
-
-function serializeRawObject(
-  win: PreviewWindow,
-  rawResult: object,
-  refs: WeakSet<object>
-): ReplPayloadResultRawObject {
-  const obj = {
-    __rpck__: ReplPayloadCustomKind.RawObject,
-    constructorName: rawResult.constructor?.name,
-    props: {} as Record<string, unknown>,
-  } as ReplPayloadResultRawObject
-
-  getAllPropertyNames(win, rawResult).forEach((propName) => {
-    const value = rawResult[propName as keyof typeof rawResult]
-    const transformedValue = transformResult(win, value, refs)
-    obj.props[propName] = transformedValue
-  })
-
-  return obj
 }
 
 // TODO: improve this, check https://stackoverflow.com/q/8024149

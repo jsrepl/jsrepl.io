@@ -256,7 +256,7 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
                 t,
                 path,
                 id: ++exprKey,
-                kind: 'variable',
+                kind: 'assignment',
               }),
             ]),
             t.arrayExpression(
