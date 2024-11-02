@@ -12,7 +12,7 @@ import {
 import { getBabel } from '../get-babel'
 
 const MAX_NESTING_LEVEL = 20
-const MAX_CYCLIC_REF_DEPTH = 10
+const MAX_CYCLIC_REF_DEPTH = 0
 
 export type StringifyResult = {
   value: string
@@ -22,22 +22,66 @@ export type StringifyResult = {
   detailsAfter?: StringifyResult
 }
 
+export type StringifyResultTarget = 'decor' | 'details'
+
 export function stringifyResult(
   result: ReplPayload['result'],
-  target: 'decor' | 'details',
-  nestingLevel = 0,
-  refs: WeakMap<object, { depth?: number }> = new WeakMap()
+  target: StringifyResultTarget
 ): StringifyResult {
-  if (nestingLevel++ > MAX_NESTING_LEVEL) {
+  return _stringifyResult(result, target, 0, {
+    map: new WeakMap(),
+    nextIndex: 1,
+  })
+}
+
+function _stringifyResult(
+  result: ReplPayload['result'],
+  target: StringifyResultTarget,
+  nestingLevel: number,
+  refs: {
+    map: WeakMap<object, { depth: number; index: number; caught: boolean }>
+    nextIndex: number
+  }
+): StringifyResult {
+  function putRef(ref: object) {
+    const data = refs.map.get(ref)
+    if (data) {
+      data.depth++
+    } else {
+      refs.map.set(ref, { depth: 0, index: -1, caught: false })
+    }
+
+    return () => {
+      refs.map.delete(ref)
+    }
+  }
+
+  function renderRef(ref: object): string {
+    const data = refs.map.get(ref)
+    return data?.caught ? `[ref *${data.index}] ` : ''
+  }
+
+  function next(result: ReplPayload['result'], target: StringifyResultTarget): StringifyResult {
+    return _stringifyResult(result, target, nestingLevel + 1, refs)
+  }
+
+  function t(str: string, relativeIndexLevel: number) {
+    const level = nestingLevel + relativeIndexLevel
+    return '  '.repeat(level) + str
+  }
+
+  if (nestingLevel > MAX_NESTING_LEVEL) {
     return { value: '(…)', type: 'unknown', lang: '' }
   }
 
   // Handle cyclic references
-  if (result !== null && typeof result === 'object' && refs.has(result)) {
-    const data = refs.get(result)!
-    data.depth ??= 0
-    if (data.depth++ >= MAX_CYCLIC_REF_DEPTH) {
-      return { value: '(⟳ cyclic ref)', type: 'cyclic-ref', lang: '' }
+  if (result !== null && typeof result === 'object' && refs.map.has(result)) {
+    const data = refs.map.get(result)!
+    if (data.depth >= MAX_CYCLIC_REF_DEPTH) {
+      data.caught = true
+      data.index = refs.nextIndex++
+      console.log('circular caught', result, data.index)
+      return { value: `[Circular *${data.index}]`, type: 'circular', lang: '' }
     }
   }
 
@@ -105,29 +149,27 @@ export function stringifyResult(
   }
 
   if (result instanceof Set) {
-    refs.set(result, {})
+    const releaseRef = putRef(result)
 
     let value: string
     if (target === 'details') {
       const inner = Array.from(result)
-        .map(
-          (item, index) =>
-            '\n' +
-            indent(`${index}: `, nestingLevel) +
-            stringifyResult(item, target, nestingLevel, refs).value
-        )
+        .map((item, index) => '\n' + t(`${index}: `, 1) + next(item, target).value)
         .join('')
-      value = `Set(${result.size}) `
-      value += inner ? `{${inner}\n${indent('}', nestingLevel - 1)}` : '{}'
+      value = `${renderRef(result)}Set(${result.size})`
+      value += inner ? ` {${inner}\n${t('}', 0)}` : ' {}'
     } else {
-      if (nestingLevel === 1) {
-        value = `Set(${result.size}) {${Array.from(result)
-          .map((item) => stringifyResult(item, target, nestingLevel, refs).value)
-          .join(', ')}}`
+      if (nestingLevel === 0) {
+        const inner = Array.from(result)
+          .map((item) => next(item, target).value)
+          .join(', ')
+        value = `${renderRef(result)}Set(${result.size}) {${inner}}`
       } else {
         value = `Set(${result.size})`
       }
     }
+
+    releaseRef()
 
     return {
       value,
@@ -137,32 +179,35 @@ export function stringifyResult(
   }
 
   if (result instanceof Map) {
-    refs.set(result, {})
+    const releaseRef = putRef(result)
 
     let value: string
     if (target === 'details') {
       const inner = Array.from(result)
         .map(([key, value], index) => {
-          const keyStr = stringifyResult(key, 'decor', nestingLevel, refs).value
-          const valueStr = stringifyResult(value, target, nestingLevel, refs).value
-          return '\n' + indent(`${index}: `, nestingLevel) + `{${keyStr} => ${valueStr}}`
+          const keyStr = next(key, 'decor').value
+          const valueStr = next(value, target).value
+          return '\n' + t(`${index}: `, 1) + `{${keyStr} => ${valueStr}}`
         })
         .join('')
-      value = `Map(${result.size}) `
-      value += inner ? `{${inner}\n${indent('}', nestingLevel - 1)}` : '{}'
+      value = `${renderRef(result)}Map(${result.size})`
+      value += inner ? ` {${inner}\n${t('}', 0)}` : ' {}'
     } else {
-      if (nestingLevel === 1) {
-        value = `Map(${result.size}) {${Array.from(result)
+      if (nestingLevel === 0) {
+        const inner = Array.from(result)
           .map(([key, value]) => {
-            const keyStr = stringifyResult(key, 'decor', nestingLevel, refs).value
-            const valueStr = stringifyResult(value, target, nestingLevel, refs).value
+            const keyStr = next(key, 'decor').value
+            const valueStr = next(value, target).value
             return `${keyStr} => ${valueStr}`
           })
-          .join(', ')}}`
+          .join(', ')
+        value = `${renderRef(result)}Map(${result.size}) {${inner}}`
       } else {
         value = `Map(${result.size})`
       }
     }
+
+    releaseRef()
 
     return {
       value,
@@ -177,7 +222,7 @@ export function stringifyResult(
       type: 'date',
       lang: 'js',
       detailsAfter:
-        target === 'details' && nestingLevel === 1
+        target === 'details' && nestingLevel === 0
           ? {
               value: result.toString(),
               lang: 'plaintext',
@@ -192,27 +237,25 @@ export function stringifyResult(
   }
 
   if (Array.isArray(result)) {
-    refs.set(result, {})
+    const releaseRef = putRef(result)
 
     let value: string
     if (target === 'details') {
       const inner = result
-        .map(
-          (item, index) =>
-            '\n' +
-            indent(`${index}: `, nestingLevel) +
-            stringifyResult(item, target, nestingLevel, refs).value
-        )
+        .map((item, index) => '\n' + t(`${index}: `, 1) + next(item, target).value)
         .join('')
-      value = nestingLevel === 1 ? `Array(${result.length}) ` : ''
-      value += inner ? `[${inner}\n${indent(']', nestingLevel - 1)}` : '[]'
+      value = nestingLevel === 0 ? `${renderRef(result)}Array(${result.length}) ` : ''
+      value += inner ? `[${inner}\n${t(']', 0)}` : '[]'
     } else {
-      if (nestingLevel === 1) {
-        value = `[${result.map((item) => stringifyResult(item, target, nestingLevel, refs).value).join(', ')}]`
+      if (nestingLevel === 0) {
+        const inner = result.map((item) => next(item, target).value).join(', ')
+        value = `${renderRef(result)}[${inner}]`
       } else {
         value = `Array(${result.length})`
       }
     }
+
+    releaseRef()
 
     return {
       value,
@@ -226,9 +269,9 @@ export function stringifyResult(
 
     let value: string
     if (target === 'details') {
-      value = nestingLevel === 1 ? result.serialized : stringifyDomNodeLong(result)
+      value = nestingLevel === 0 ? result.serialized : stringifyDomNodeLong(result)
     } else {
-      value = nestingLevel === 1 ? stringifyDomNodeLong(result) : stringifyDomNodeShort(result)
+      value = nestingLevel === 0 ? stringifyDomNodeLong(result) : stringifyDomNodeShort(result)
     }
 
     return {
@@ -247,16 +290,16 @@ export function stringifyResult(
     const isNative = result.serialized.includes('[native code]')
 
     let value: string
-    if (target === 'details' && nestingLevel === 1 && !isNative) {
+    if (target === 'details' && nestingLevel === 0 && !isNative) {
       value = result.serialized
     } else {
       const parsed = isNative ? null : parseFunction(result.serialized)
       const asyncPart = parsed?.isAsync ? 'async ' : ''
-      const fnKeywordPart = target === 'decor' || nestingLevel > 1 ? 'ƒ ' : 'function '
+      const fnKeywordPart = target === 'decor' || nestingLevel > 0 ? 'ƒ ' : 'function '
       const fnName = meta.name.replace(/^bound /u, '')
       const fnArgsPart = `(${parsed?.args ?? ''})`
       const fnBodyPart =
-        target === 'details' && nestingLevel === 1 && isNative ? ' { [native code] }' : ''
+        target === 'details' && nestingLevel === 0 && isNative ? ' { [native code] }' : ''
       value = `${asyncPart}${fnKeywordPart}${fnName}${fnArgsPart}${fnBodyPart}`
     }
 
@@ -281,52 +324,48 @@ export function stringifyResult(
   }
 
   if (isObject(result)) {
-    refs.set(result, {})
+    const releaseRef = putRef(result)
     const { __meta__: meta, ...props } = result
 
     const propEntries = () =>
       Object.entries(props).map(([key, value]) => {
-        const stringified = stringifyResult(value, target, nestingLevel, refs)
+        const stringified = next(value, target)
         return [key, stringified.value]
       })
 
+    let value: string
+
     if (target === 'decor') {
-      if (nestingLevel === 1) {
+      if (nestingLevel === 0) {
         const propsStr = propEntries()
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ')
         const propsPart = propsStr.length > 0 ? `{${propsStr}}` : '{}'
-        return {
-          value:
-            meta.constructorName && meta.constructorName !== 'Object'
-              ? `${meta.constructorName} ${propsPart}`
-              : `${propsPart}`,
-          type: 'object',
-          lang: '',
-        }
+        value =
+          meta.constructorName && meta.constructorName !== 'Object'
+            ? `${renderRef(result)}${meta.constructorName} ${propsPart}`
+            : `${renderRef(result)}${propsPart}`
       } else {
-        return {
-          value:
-            meta.constructorName && meta.constructorName !== 'Object'
-              ? `${meta.constructorName}`
-              : `{…}`,
-          type: 'object',
-          lang: '',
-        }
+        value =
+          meta.constructorName && meta.constructorName !== 'Object'
+            ? `${meta.constructorName}`
+            : `{…}`
       }
+    } else {
+      const propsStr = propEntries()
+        .map(([key, value]) => t(`${key}: ${value}`, 1))
+        .join('\n')
+      const propsPart = propsStr.length > 0 ? `{\n${propsStr}\n${t('}', 0)}` : '{}'
+      value =
+        meta.constructorName && meta.constructorName !== 'Object'
+          ? `${renderRef(result)}${meta.constructorName} ${propsPart}`
+          : `${renderRef(result)}${propsPart}`
     }
 
-    const propsStr = propEntries()
-      .map(([key, value]) => indent(`${key}: ${value}`, nestingLevel))
-      .join('\n')
-    const propsPart =
-      propsStr.length > 0 ? `{\n${propsStr}\n${indent('}', nestingLevel - 1)}` : '{}'
+    releaseRef()
 
     return {
-      value:
-        meta.constructorName && meta.constructorName !== 'Object'
-          ? `${meta.constructorName} ${propsPart}`
-          : `${propsPart}`,
+      value,
       type: 'object',
       lang: '',
     }
@@ -337,10 +376,6 @@ export function stringifyResult(
     type: 'unknown',
     lang: '',
   }
-}
-
-function indent(str: string, level: number): string {
-  return '  '.repeat(level) + str
 }
 
 // Let babel to parse this madness.
