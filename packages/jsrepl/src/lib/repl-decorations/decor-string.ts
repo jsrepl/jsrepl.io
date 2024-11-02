@@ -1,5 +1,5 @@
 import { type ReplPayload } from '@/types'
-import { stringifyResult } from './utils'
+import { stringifyResult } from './stringify'
 
 export function getDecorString(payload: ReplPayload): string | null {
   const str = _stringifyPayload(payload)

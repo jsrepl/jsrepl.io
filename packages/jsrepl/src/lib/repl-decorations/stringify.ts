@@ -80,7 +80,6 @@ function _stringifyResult(
     if (data.depth >= MAX_CYCLIC_REF_DEPTH) {
       data.caught = true
       data.index = refs.nextIndex++
-      console.log('circular caught', result, data.index)
       return { value: `[Circular *${data.index}]`, type: 'circular', lang: '' }
     }
   }
@@ -217,12 +216,13 @@ function _stringifyResult(
   }
 
   if (result instanceof Date) {
+    const isValid = !isNaN(result.getTime())
     return {
-      value: `Date("${result.toISOString()}")`,
+      value: isValid ? `Date("${result.toISOString()}")` : 'Invalid Date',
       type: 'date',
       lang: 'js',
       detailsAfter:
-        target === 'details' && nestingLevel === 0
+        target === 'details' && nestingLevel === 0 && isValid
           ? {
               value: result.toString(),
               lang: 'plaintext',
@@ -472,31 +472,31 @@ function stringifyDomNodeLong(result: ReplPayloadResultDomNode): string {
   return `<${meta.tagName}${attrsStr.length > 0 ? ' ' + attrsStr : ''}>${closing}`
 }
 
-export function isDomNode(result: object): result is ReplPayloadResultDomNode {
+function isDomNode(result: object): result is ReplPayloadResultDomNode {
   return getMetaType(result) === ReplPayloadCustomKind.DomNode
 }
 
-export function isFunction(result: object): result is ReplPayloadResultFunction {
+function isFunction(result: object): result is ReplPayloadResultFunction {
   return getMetaType(result) === ReplPayloadCustomKind.Function
 }
 
-export function isSymbol(result: object): result is ReplPayloadResultSymbol {
+function isSymbol(result: object): result is ReplPayloadResultSymbol {
   return getMetaType(result) === ReplPayloadCustomKind.Symbol
 }
 
-export function isWeakSet(result: object): result is ReplPayloadResultWeakSet {
+function isWeakSet(result: object): result is ReplPayloadResultWeakSet {
   return getMetaType(result) === ReplPayloadCustomKind.WeakSet
 }
 
-export function isWeakMap(result: object): result is ReplPayloadResultWeakMap {
+function isWeakMap(result: object): result is ReplPayloadResultWeakMap {
   return getMetaType(result) === ReplPayloadCustomKind.WeakMap
 }
 
-export function isWeakRef(result: object): result is ReplPayloadResultWeakRef {
+function isWeakRef(result: object): result is ReplPayloadResultWeakRef {
   return getMetaType(result) === ReplPayloadCustomKind.WeakRef
 }
 
-export function isObject(result: object): result is ReplPayloadResultObject {
+function isObject(result: object): result is ReplPayloadResultObject {
   return getMetaType(result) === ReplPayloadCustomKind.Object
 }
 

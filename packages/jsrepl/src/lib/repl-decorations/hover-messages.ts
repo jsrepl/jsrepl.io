@@ -1,6 +1,6 @@
 import type * as monaco from 'monaco-editor'
 import { type ReplPayload } from '@/types'
-import { StringifyResult, stringifyResult } from './utils'
+import { StringifyResult, stringifyResult } from './stringify'
 
 export function getHoverMessages(payload: ReplPayload): monaco.IMarkdownString[] {
   const strArr = stringifyPayload(payload)
