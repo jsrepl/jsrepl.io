@@ -1,13 +1,8 @@
 import type * as monaco from 'monaco-editor'
 import { type ReplPayload } from '@/types'
-import { StringifyResult, stringifyResult } from './stringify'
+import { type StringifyResult, stringifyResult } from './stringify'
 
-export function getHoverMessages(payloads: ReplPayload[]): monaco.IMarkdownString[] {
-  const strArr: string[] = payloads.flatMap((payload, index) => [
-    ...(index === 0 ? [] : ['<hr>']),
-    ...stringifyPayload(payload),
-  ])
-
+export function renderToHoverContents(payloads: ReplPayload[]): monaco.IMarkdownString[] {
   return [
     {
       value: `**REPL SNAPSHOT** <span style="color:#01;"></span><span 
@@ -19,28 +14,29 @@ export function getHoverMessages(payloads: ReplPayload[]): monaco.IMarkdownStrin
       supportHtml: true,
       isTrusted: true,
     },
-    ...strArr.map((str) => ({ value: str, supportHtml: true })),
-    {
-      value: `<span style="color:#03;">
-        <a href="command:editor.foldAll" title="fold all1123">Fold All</a>
-      </span>`,
-      supportThemeIcons: true,
-      supportHtml: true,
-      isTrusted: true,
-    },
-    // {
-    //   value:
-    //     'hey <b>Explore/View/Stick (details between lines)</b> <b>Copy value</b> <b>Dump to console</b> <span style="color:#ff0000;">yes</span>',
-    //   isTrusted: {
-    //     enabledCommands: ['editor.foldAll'],
-    //   },
-    //   supportThemeIcons: true,
-    //   supportHtml: true,
-    // },
+    ...payloads.flatMap((payload, index) => [
+      ...(index === 0 ? [] : [{ value: '<hr>', supportHtml: true }]),
+      ...renderPayload(payload).map((str) => ({ value: str, supportHtml: true })),
+      {
+        value: `<span style="color:#03;">
+          <a href="${getCommandHref('jsrepl.dumpPayloadAsMockObjectToConsole', payload.id, true)}" title="Write snapshot value into global variable and output it to Browser Console">Dump object</a>
+          <a href="${getCommandHref('jsrepl.copyPayloadAsText', payload.id, true)}" title="Copy snapshot as text">Copy text</a>
+          <a href="${getCommandHref('jsrepl.copyPayloadAsJSON', payload.id, true)}" title="Copy snapshot value as JSON">Copy json</a>
+          &nbsp;&nbsp;
+        </span>`,
+        supportThemeIcons: true,
+        supportHtml: true,
+        isTrusted: true,
+      },
+    ]),
   ]
 }
 
-function stringifyPayload(payload: ReplPayload): string[] {
+function getCommandHref(commandId: string, ...args: unknown[]) {
+  return `command:${commandId}?${encodeURIComponent(JSON.stringify(args))}`
+}
+
+function renderPayload(payload: ReplPayload): string[] {
   if (
     ['console-log', 'console-debug', 'console-info', 'console-warn', 'console-error'].includes(
       payload.ctx.kind

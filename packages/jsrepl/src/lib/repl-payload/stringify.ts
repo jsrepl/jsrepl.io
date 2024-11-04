@@ -1,15 +1,6 @@
-import {
-  ReplPayload,
-  ReplPayloadCustomKind,
-  type ReplPayloadResultDomNode,
-  type ReplPayloadResultFunction,
-  type ReplPayloadResultObject,
-  type ReplPayloadResultSymbol,
-  type ReplPayloadResultWeakMap,
-  type ReplPayloadResultWeakRef,
-  type ReplPayloadResultWeakSet,
-} from '@/types'
+import { ReplPayload, type ReplPayloadResultDomNode } from '@/types'
 import { getBabel } from '../get-babel'
+import * as utils from './payload-utils'
 
 const MAX_NESTING_LEVEL = 20
 const MAX_CYCLIC_REF_DEPTH = 0
@@ -264,7 +255,7 @@ function _stringifyResult(
     }
   }
 
-  if (isDomNode(result)) {
+  if (utils.isMarshalledDomNode(result)) {
     let value: string
     if (target === 'details') {
       value = nestingLevel === 0 ? result.serialized : stringifyDomNodeLong(result)
@@ -283,7 +274,7 @@ function _stringifyResult(
     }
   }
 
-  if (isFunction(result)) {
+  if (utils.isMarshalledFunction(result)) {
     const meta = result.__meta__
     const isNative = result.serialized.includes('[native code]')
 
@@ -307,23 +298,23 @@ function _stringifyResult(
     return { value, type: 'function', lang: 'js' }
   }
 
-  if (isSymbol(result)) {
+  if (utils.isMarshalledSymbol(result)) {
     return { value: result.serialized, type: 'symbol', lang: 'js' }
   }
 
-  if (isWeakSet(result)) {
+  if (utils.isMarshalledWeakSet(result)) {
     return { value: 'WeakSet()', type: 'weakset', lang: 'js' }
   }
 
-  if (isWeakMap(result)) {
+  if (utils.isMarshalledWeakMap(result)) {
     return { value: 'WeakMap()', type: 'weakmap', lang: 'js' }
   }
 
-  if (isWeakRef(result)) {
+  if (utils.isMarshalledWeakRef(result)) {
     return { value: 'WeakRef()', type: 'weakref', lang: 'js' }
   }
 
-  if (isObject(result)) {
+  if (utils.isMarshalledObject(result)) {
     const releaseRef = putRef(result)
     const { __meta__: meta, ...props } = result
 
@@ -470,42 +461,4 @@ function stringifyDomNodeLong(result: ReplPayloadResultDomNode): string {
   const childrenStr = meta.hasChildNodes ? '…' : ''
   const closing = isSelfClosing ? '' : `${childrenStr}</${meta.tagName}>`
   return `<${meta.tagName}${attrsStr.length > 0 ? ' ' + attrsStr : ''}>${closing}`
-}
-
-function isDomNode(result: object): result is ReplPayloadResultDomNode {
-  return getMetaType(result) === ReplPayloadCustomKind.DomNode
-}
-
-function isFunction(result: object): result is ReplPayloadResultFunction {
-  return getMetaType(result) === ReplPayloadCustomKind.Function
-}
-
-function isSymbol(result: object): result is ReplPayloadResultSymbol {
-  return getMetaType(result) === ReplPayloadCustomKind.Symbol
-}
-
-function isWeakSet(result: object): result is ReplPayloadResultWeakSet {
-  return getMetaType(result) === ReplPayloadCustomKind.WeakSet
-}
-
-function isWeakMap(result: object): result is ReplPayloadResultWeakMap {
-  return getMetaType(result) === ReplPayloadCustomKind.WeakMap
-}
-
-function isWeakRef(result: object): result is ReplPayloadResultWeakRef {
-  return getMetaType(result) === ReplPayloadCustomKind.WeakRef
-}
-
-function isObject(result: object): result is ReplPayloadResultObject {
-  return getMetaType(result) === ReplPayloadCustomKind.Object
-}
-
-function getMetaType(result: object): ReplPayloadCustomKind | null {
-  return '__meta__' in result &&
-    result.__meta__ !== null &&
-    typeof result.__meta__ === 'object' &&
-    'type' in result.__meta__ &&
-    typeof result.__meta__.type === 'string'
-    ? (result.__meta__.type as ReplPayloadCustomKind)
-    : null
 }

@@ -1,8 +1,8 @@
 import { type ReplPayload } from '@/types'
 import { stringifyResult } from './stringify'
 
-export function getDecorString(payload: ReplPayload): string | null {
-  const str = _stringifyPayload(payload)
+export function renderToDecorString(payload: ReplPayload): string | null {
+  const str = renderPayload(payload)
   if (str && str.length > 100) {
     return str.slice(0, 100) + '…'
   }
@@ -10,7 +10,7 @@ export function getDecorString(payload: ReplPayload): string | null {
   return str
 }
 
-function _stringifyPayload(payload: ReplPayload): string | null {
+function renderPayload(payload: ReplPayload): string | null {
   if (
     ['console-log', 'console-debug', 'console-info', 'console-warn', 'console-error'].includes(
       payload.ctx.kind

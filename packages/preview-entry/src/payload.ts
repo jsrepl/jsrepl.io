@@ -1,6 +1,6 @@
 import {
   type ReplPayload,
-  ReplPayloadCustomKind,
+  ReplPayloadMarshalledType,
   ReplPayloadResultDomNode,
   ReplPayloadResultFunction,
   ReplPayloadResultObject,
@@ -31,7 +31,7 @@ function transformResult(
   refs: WeakMap<object, unknown>
 ): ReplPayload['result'] {
   if (rawResult !== null && typeof rawResult === 'object' && refs.has(rawResult)) {
-    // Cyclic reference
+    // Circular reference
     return refs.get(rawResult)
   }
 
@@ -49,7 +49,7 @@ function transformResult(
   if (typeof rawResult === 'symbol') {
     return {
       __meta__: {
-        type: ReplPayloadCustomKind.Symbol,
+        type: ReplPayloadMarshalledType.Symbol,
       },
       serialized: rawResult.toString(),
     } as ReplPayloadResultSymbol
@@ -80,7 +80,7 @@ function transformResult(
   if (rawResult instanceof win.WeakSet) {
     return {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakSet,
+        type: ReplPayloadMarshalledType.WeakSet,
       },
     } as ReplPayloadResultWeakSet
   }
@@ -88,7 +88,7 @@ function transformResult(
   if (rawResult instanceof win.WeakMap) {
     return {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakMap,
+        type: ReplPayloadMarshalledType.WeakMap,
       },
     } as ReplPayloadResultWeakMap
   }
@@ -96,7 +96,7 @@ function transformResult(
   if (rawResult instanceof win.WeakRef) {
     return {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakRef,
+        type: ReplPayloadMarshalledType.WeakRef,
       },
     } as ReplPayloadResultWeakRef
   }
@@ -133,7 +133,7 @@ function transformResult(
     })
 
     obj.__meta__ = {
-      type: ReplPayloadCustomKind.Object,
+      type: ReplPayloadMarshalledType.Object,
       constructorName: rawResult.constructor?.name,
     }
 
@@ -146,7 +146,7 @@ function transformResult(
 function serializeDomNode(el: HTMLElement): ReplPayloadResultDomNode {
   return {
     __meta__: {
-      type: ReplPayloadCustomKind.DomNode,
+      type: ReplPayloadMarshalledType.DomNode,
       tagName: el.tagName.toLowerCase(),
       constructorName: el.constructor?.name,
       attributes: Array.from(el.attributes).map((attr) => ({ name: attr.name, value: attr.value })),
@@ -162,7 +162,7 @@ function serializeDomNode(el: HTMLElement): ReplPayloadResultDomNode {
 function serializeFunction(fn: Function): ReplPayloadResultFunction {
   return {
     __meta__: {
-      type: ReplPayloadCustomKind.Function,
+      type: ReplPayloadMarshalledType.Function,
       name: fn.name,
     },
     serialized: fn.toString(),

@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import {
   type ReplPayload,
-  ReplPayloadCustomKind,
+  ReplPayloadMarshalledType,
   ReplPayloadResultDomNode,
   ReplPayloadResultFunction,
   ReplPayloadResultObject,
@@ -41,7 +41,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     document.createElement('div'),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.DomNode,
+        type: ReplPayloadMarshalledType.DomNode,
         tagName: 'div',
         constructorName: 'HTMLDivElement',
         attributes: [],
@@ -67,7 +67,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.DomNode,
+        type: ReplPayloadMarshalledType.DomNode,
         tagName: 'div',
         constructorName: 'HTMLDivElement',
         attributes: [
@@ -88,7 +88,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     function () {},
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Function,
+        type: ReplPayloadMarshalledType.Function,
         name: '',
       },
       // Weird whitespaces between curly braces?
@@ -103,7 +103,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     },
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Function,
+        type: ReplPayloadMarshalledType.Function,
         name: 'foo',
       },
       // Weird whitespaces between curly braces?
@@ -116,7 +116,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     Symbol('foo'),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Symbol,
+        type: ReplPayloadMarshalledType.Symbol,
       },
       serialized: 'Symbol(foo)',
     } as ReplPayloadResultSymbol,
@@ -126,7 +126,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     Symbol.for('foo'),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Symbol,
+        type: ReplPayloadMarshalledType.Symbol,
       },
       serialized: 'Symbol(foo)',
     } as ReplPayloadResultSymbol,
@@ -142,7 +142,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     (() => {
       const obj = {
         __meta__: {
-          type: ReplPayloadCustomKind.Object,
+          type: ReplPayloadMarshalledType.Object,
           constructorName: 'Object',
         },
         a: 1,
@@ -161,7 +161,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakSet,
+        type: ReplPayloadMarshalledType.WeakSet,
       },
     } as ReplPayloadResultWeakSet,
   ],
@@ -174,7 +174,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakMap,
+        type: ReplPayloadMarshalledType.WeakMap,
       },
     } as ReplPayloadResultWeakMap,
   ],
@@ -186,7 +186,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.WeakRef,
+        type: ReplPayloadMarshalledType.WeakRef,
       },
     } as ReplPayloadResultWeakRef,
   ],
@@ -199,7 +199,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     { foo: 'bar' },
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Object,
+        type: ReplPayloadMarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',
@@ -210,13 +210,13 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     { foo: 'bar', baz: { foo2: 'bar2' } },
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Object,
+        type: ReplPayloadMarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',
       baz: {
         __meta__: {
-          type: ReplPayloadCustomKind.Object,
+          type: ReplPayloadMarshalledType.Object,
           constructorName: 'Object',
         },
         foo2: 'bar2',
@@ -233,7 +233,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Object,
+        type: ReplPayloadMarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',

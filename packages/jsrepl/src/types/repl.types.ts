@@ -1,8 +1,8 @@
 import type * as esbuild from 'esbuild-wasm'
 import type { BundledTheme } from 'shiki'
-import * as ReplFS from '@/lib/repl-fs'
+import type * as ReplFS from '@/lib/repl-fs'
 
-export enum ReplPayloadCustomKind {
+export enum ReplPayloadMarshalledType {
   DomNode = 'dom-node', // non-cloneable
   Function = 'function', // non-cloneable
   Symbol = 'symbol', // non-cloneable
@@ -14,7 +14,7 @@ export enum ReplPayloadCustomKind {
 
 export type ReplPayloadResultDomNode = {
   __meta__: {
-    type: ReplPayloadCustomKind.DomNode
+    type: ReplPayloadMarshalledType.DomNode
     tagName: string
     constructorName: string | undefined
     attributes: { name: string; value: string }[]
@@ -27,7 +27,7 @@ export type ReplPayloadResultDomNode = {
 
 export type ReplPayloadResultFunction = {
   __meta__: {
-    type: ReplPayloadCustomKind.Function
+    type: ReplPayloadMarshalledType.Function
     name: string
   }
   serialized: string
@@ -35,40 +35,54 @@ export type ReplPayloadResultFunction = {
 
 export type ReplPayloadResultSymbol = {
   __meta__: {
-    type: ReplPayloadCustomKind.Symbol
+    type: ReplPayloadMarshalledType.Symbol
   }
   serialized: string
 }
 
 export type ReplPayloadResultWeakSet = {
   __meta__: {
-    type: ReplPayloadCustomKind.WeakSet
+    type: ReplPayloadMarshalledType.WeakSet
   }
 }
 
 export type ReplPayloadResultWeakMap = {
   __meta__: {
-    type: ReplPayloadCustomKind.WeakMap
+    type: ReplPayloadMarshalledType.WeakMap
   }
 }
 
 export type ReplPayloadResultWeakRef = {
   __meta__: {
-    type: ReplPayloadCustomKind.WeakRef
+    type: ReplPayloadMarshalledType.WeakRef
   }
 }
 
 export type ReplPayloadResultObject = Record<string, unknown> & {
   __meta__: {
-    type: ReplPayloadCustomKind.Object
+    type: ReplPayloadMarshalledType.Object
     constructorName: string | undefined
   }
 }
 
 export type ReplPayload = {
+  /**
+   * Unique identifier for the payload.
+   */
+  id: string
+  /**
+   * Whether `result` is an error (not necessarily of type Error).
+   */
   isError: boolean
+  /**
+   * Result of the expression.
+   * Structured cloneable, but may not be serializable with JSON.stringify (Date, Set, Map, circular references, etc).
+   */
   result: unknown
   ctx: {
+    /**
+     * Expression identifier.
+     */
     id: number | string
     /**
      * Starts with 1.

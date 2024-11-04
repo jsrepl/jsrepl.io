@@ -2,7 +2,7 @@ import * as monaco from 'monaco-editor'
 import codeEditorStyles from '@/app/repl/components/code-editor.module.css'
 import { cssInject } from '@/lib/css-inject'
 import { type ReplPayload } from '@/types'
-import { getDecorString } from './decor-string'
+import { renderToDecorString } from './render-decor'
 
 let decorationUniqIndex = -1
 
@@ -32,7 +32,7 @@ function getDecorDef(
     decorationUniqIndex = (decorationUniqIndex + 1) % Number.MAX_VALUE
     const uniqClassName = `jsrepl-decor-${decorationUniqIndex}`
 
-    const decorStr = getDecorString(payload)
+    const decorStr = renderToDecorString(payload)
     if (decorStr === null) {
       return null
     }

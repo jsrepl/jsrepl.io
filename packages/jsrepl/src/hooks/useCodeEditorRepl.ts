@@ -1,15 +1,28 @@
-import { RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  RefObject,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
+import ToastDescriptionCopiedToClipboard from '@/components/toast-description-copied-to-clipboard'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
-import { createDecorations } from '@/lib/repl-decorations'
-import { getHoverMessages } from '@/lib/repl-decorations/hover-messages'
+import { createDecorations } from '@/lib/repl-payload/decorations'
+import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
+import { renderToJSONString } from '@/lib/repl-payload/render-json'
+import { renderToMockObject } from '@/lib/repl-payload/render-mock-object'
+import { renderToText } from '@/lib/repl-payload/render-text'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
@@ -225,7 +238,7 @@ export default function useCodeEditorRepl(
           return
         }
 
-        return { contents: getHoverMessages(hoverPayloads) }
+        return { contents: renderToHoverContents(hoverPayloads) }
       },
     })
 
@@ -233,4 +246,130 @@ export default function useCodeEditorRepl(
       disposable.dispose()
     }
   }, [payloadMap])
+
+  useEffect(() => {
+    const disposable = monaco.editor.registerCommand(
+      'jsrepl.copyPayloadAsText',
+      async (accessor, payloadId: string, showNotification: boolean) => {
+        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        if (!payload) {
+          return
+        }
+
+        let text: string
+        try {
+          text = renderToText(payload)
+          await navigator.clipboard.writeText(text)
+        } catch (e) {
+          toast.error('Failed to copy snapshot as text', {
+            description: e instanceof Error ? e.message : undefined,
+            duration: 2000,
+          })
+
+          return
+        }
+
+        if (showNotification) {
+          toast.success('Copied to clipboard', {
+            description: createElement(ToastDescriptionCopiedToClipboard, { text }),
+            duration: 2000,
+          })
+        }
+      }
+    )
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [allPayloads])
+
+  useEffect(() => {
+    const disposable = monaco.editor.registerCommand(
+      'jsrepl.copyPayloadAsJSON',
+      async (accessor, payloadId: string, showNotification: boolean) => {
+        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        if (!payload) {
+          return
+        }
+
+        let text: string
+        try {
+          text = renderToJSONString(payload, 2)
+          await navigator.clipboard.writeText(text)
+        } catch (e) {
+          toast.error('Failed to copy snapshot as JSON', {
+            description: e instanceof Error ? e.message : undefined,
+            duration: 2000,
+          })
+
+          return
+        }
+
+        if (showNotification) {
+          toast.success('Copied to clipboard', {
+            description: createElement(ToastDescriptionCopiedToClipboard, { text }),
+            duration: 2000,
+          })
+        }
+      }
+    )
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [allPayloads])
+
+  useEffect(() => {
+    const disposable = monaco.editor.registerCommand(
+      'jsrepl.dumpPayloadAsMockObjectToConsole',
+      async (accessor, payloadId: string, showNotification: boolean) => {
+        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        if (!payload) {
+          return
+        }
+
+        let obj: unknown
+        try {
+          obj = renderToMockObject(payload)
+        } catch (e) {
+          toast.error('Failed to dump snapshot value', {
+            description: e instanceof Error ? e.message : undefined,
+            duration: 2000,
+          })
+
+          return
+        }
+
+        let suffix = 1
+        while (`tmp${suffix}` in window) {
+          suffix++
+        }
+
+        const varName = `tmp${suffix}`
+
+        // @ts-expect-error -- I don't care
+        window[varName] = obj
+
+        console.log(varName)
+        const isChrome = 'chrome' in window && navigator.userAgent.includes('Chrome')
+        const isSafari = 'safari' in window && navigator.userAgent.includes('Safari')
+        if (isChrome || isSafari) {
+          console.log('%o', obj)
+        } else {
+          console.log(typeof obj === 'string' ? JSON.stringify(obj) : obj)
+        }
+
+        if (showNotification) {
+          toast.success('Snapshot dumped to console', {
+            description: createElement('pre', null, `↪ window.${varName}`),
+            duration: 2000,
+          })
+        }
+      }
+    )
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [allPayloads])
 }

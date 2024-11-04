@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { ReplPayload, ReplPayloadCustomKind, ReplPayloadResultObject } from '@/types'
+import { ReplPayload, ReplPayloadMarshalledType, ReplPayloadResultObject } from '@/types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['value']][] = [
@@ -15,7 +15,7 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     '{}',
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Object,
+        type: ReplPayloadMarshalledType.Object,
         constructorName: 'Object',
       },
     } as ReplPayloadResultObject,
@@ -26,7 +26,7 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     '{ foo: 1, bar: [1,2,3] }',
     {
       __meta__: {
-        type: ReplPayloadCustomKind.Object,
+        type: ReplPayloadMarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 1,
@@ -39,7 +39,7 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     (() => {
       const obj = {
         __meta__: {
-          type: ReplPayloadCustomKind.Object,
+          type: ReplPayloadMarshalledType.Object,
           constructorName: 'Object',
         },
       } as ReplPayloadResultObject

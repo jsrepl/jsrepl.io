@@ -51,6 +51,7 @@ function postMessageRepl(
   postMessage(token, {
     type: 'repl',
     payload: transformPayload(win, {
+      id: crypto.randomUUID(),
       isError,
       rawResult: result,
       ctx,

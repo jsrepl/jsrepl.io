@@ -28,7 +28,9 @@
     }
 
     & span[style='color:#03;'] {
-      display: block !important;
+      display: flex !important;
+      align-items: center;
+      gap: 12px;
       margin: 0 -8px -4px -8px !important;
       padding: 4px 8px !important;
       background-color: var(--vscode-editorHoverWidget-statusBarBackground);

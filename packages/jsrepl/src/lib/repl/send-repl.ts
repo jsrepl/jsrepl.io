@@ -357,6 +357,7 @@ function getPayloadFromEsbuildMessage(
   }
 
   const payload: ReplPayload = {
+    id: crypto.randomUUID(),
     isError: true,
     result: msg.text,
     ctx: {
