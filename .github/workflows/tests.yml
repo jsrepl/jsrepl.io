@@ -7,6 +7,28 @@ on:
     branches: ['**']
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    # https://github.com/orgs/community/discussions/26940
+    # https://github.com/zopefoundation/meta/issues/145
+    if: github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name !=
+      github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run lint
+        run: pnpm lint
+
   vitest:
     name: Vitest
     runs-on: ubuntu-latest
@@ -54,8 +76,6 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=8192'
       - name: Install Playwright Browsers
         run: pnpm -F jsrepl exec playwright install --with-deps
-      - name: Start Supabase
-        run: pnpm -F jsrepl supabase:start
       - name: Run Playwright tests
         run: pnpm -F jsrepl test:playwright
         env:
