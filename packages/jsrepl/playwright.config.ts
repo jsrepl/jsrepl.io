@@ -83,16 +83,26 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    // Workaround: with `turbo test:playwright:web-server:start` the servers do not shut down after tests
-    // (the problem is like here https://github.com/microsoft/playwright/issues/11907).
-    command: 'pnpm -r test:playwright:web-server:start',
-    cwd: fileURLToPath(new URL('../..', import.meta.url)),
-    url: 'http://localhost:3000',
-    // env vars are different for dev mode and test mode: .env and .env.test respectively
-    reuseExistingServer: false,
-    stdout: 'pipe',
-    stderr: 'pipe',
-    // env: {},
-  },
+  webServer: [
+    {
+      command: 'pnpm -F @jsrepl/preview test:playwright:web-server:start',
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      url: 'http://localhost:5199',
+      // env vars are different for dev mode and test mode: .env and .env.test respectively
+      reuseExistingServer: false,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      // env: {},
+    },
+    {
+      command: 'pnpm -F @jsrepl/jsrepl test:playwright:web-server:start',
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      url: 'http://localhost:3000',
+      // env vars are different for dev mode and test mode: .env and .env.test respectively
+      reuseExistingServer: false,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      // env: {},
+    },
+  ],
 })

@@ -52,6 +52,23 @@
         "VERCEL_URL"
       ]
     },
+    "@jsrepl/preview-entry#test:playwright:web-server:build": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["../jsrepl/public/e.js"],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_PREVIEW_URL",
+        "NEXT_PUBLIC_APP_VERSION",
+        "JSREPL_ORIGIN",
+        "SUPABASE_URL",
+        "SUPABASE_KEY",
+        "SUPABASE_SERVICE_KEY",
+        "VERCEL_ENV",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "VERCEL_URL"
+      ]
+    },
     "test:playwright:web-server:start": {
       "cache": false,
       "persistent": true,
