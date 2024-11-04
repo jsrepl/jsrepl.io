@@ -9,7 +9,7 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
   ['0', 0, '0'],
   ['1', 1, '1'],
   ['NaN', NaN, 'NaN'],
-  ['Date', new Date('2024'), 'Date("2024-01-01T00:00:00.000Z")'],
+  ['Date', new Date('2024'), 'Date(2024-01-01T00:00:00.000Z)'],
   ['Invalid Date', new Date('qwerty'), 'Invalid Date'],
   [
     '{}',

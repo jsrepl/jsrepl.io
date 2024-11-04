@@ -56,7 +56,7 @@ test('simple expressions', async ({ page }) => {
       const a = 'foo'; // → a = "foo"
       const b = a + 'bar'; // → b = "foobar"
 
-      let now = new Date('2024'); // → now = Date("2024-01-01T00:00:00.000Z")
+      let now = new Date('2024'); // → now = Date(2024-01-01T00:00:00.000Z)
       now.toISOString(); // → "2024-01-01T00:00:00.000Z"
 
       const f2Val = 2; // → f2Val = 2

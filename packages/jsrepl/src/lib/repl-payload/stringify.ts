@@ -110,8 +110,8 @@ function _stringifyResult(
 
     return {
       value: result.includes('\n')
-        ? '`' + result.replace(/\`/g, '\\`') + '`'
-        : '"' + result.replace(/\"/g, '\\"') + '"',
+        ? '`' + result.replace(/\\/g, '\\\\').replace(/\`/g, '\\`') + '`'
+        : JSON.stringify(result),
       type: 'string',
       lang: 'js',
     }
@@ -207,19 +207,18 @@ function _stringifyResult(
   }
 
   if (result instanceof Date) {
-    const isValid = !isNaN(result.getTime())
+    let value: string
+    if (target === 'decor') {
+      const isValid = !isNaN(result.getTime())
+      value = isValid ? `Date(${result.toISOString()})` : 'Invalid Date'
+    } else {
+      value = result.toString()
+    }
+
     return {
-      value: isValid ? `Date("${result.toISOString()}")` : 'Invalid Date',
+      value,
       type: 'date',
       lang: 'js',
-      detailsAfter:
-        target === 'details' && nestingLevel === 0 && isValid
-          ? {
-              value: result.toString(),
-              lang: 'plaintext',
-              type: 'date',
-            }
-          : undefined,
     }
   }
 
