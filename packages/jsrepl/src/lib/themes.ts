@@ -1,5 +1,5 @@
+import type { Theme } from '@jsrepl/shared-types'
 import type { BundledTheme } from 'shiki'
-import { type Theme } from '@/types'
 
 export const Themes: Theme[] = [
   { id: 'light-plus', label: 'Light', isDark: false },

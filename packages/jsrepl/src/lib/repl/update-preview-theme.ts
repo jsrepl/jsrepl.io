@@ -1,4 +1,4 @@
-import { Theme } from '@/types'
+import { type Theme, type UpdateThemeMessageData } from '@jsrepl/shared-types'
 
 const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL!
 
@@ -11,7 +11,7 @@ export async function updatePreviewTheme(previewIframe: HTMLIFrameElement, theme
         id: theme.id,
         isDark: theme.isDark,
       },
-    },
+    } as UpdateThemeMessageData,
     previewUrl
   )
 }

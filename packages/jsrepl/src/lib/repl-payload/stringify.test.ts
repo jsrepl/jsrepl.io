@@ -1,5 +1,5 @@
+import { MarshalledObject, MarshalledType, ReplPayload } from '@jsrepl/shared-types'
 import { describe, expect, test } from 'vitest'
-import { ReplPayload, ReplPayloadMarshalledType, ReplPayloadResultObject } from '@/types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['value']][] = [
@@ -15,10 +15,10 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     '{}',
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Object,
+        type: MarshalledType.Object,
         constructorName: 'Object',
       },
-    } as ReplPayloadResultObject,
+    } as MarshalledObject,
     '{}',
   ],
   ['[]', [], '[]'],
@@ -26,12 +26,12 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     '{ foo: 1, bar: [1,2,3] }',
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Object,
+        type: MarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 1,
       bar: [1, 2, 3],
-    } as ReplPayloadResultObject,
+    } as MarshalledObject,
     '{foo: 1, bar: Array(3)}',
   ],
   [
@@ -39,10 +39,10 @@ const testCasesTargetDecor: [string, ReplPayload['result'], StringifyResult['val
     (() => {
       const obj = {
         __meta__: {
-          type: ReplPayloadMarshalledType.Object,
+          type: MarshalledType.Object,
           constructorName: 'Object',
         },
-      } as ReplPayloadResultObject
+      } as MarshalledObject
       obj.x = obj
       return obj
     })(),

@@ -1,6 +1,7 @@
 {
-  "name": "jsrepl.io",
+  "name": "@jsrepl/jsrepl.io",
   "description": "JavaScript REPL & Playground",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "license": "MIT",

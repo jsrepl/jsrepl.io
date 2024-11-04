@@ -1,4 +1,4 @@
-import { ReplPayload } from '@/types'
+import { type ReplPayload } from '@jsrepl/shared-types'
 import * as utils from './payload-utils'
 
 export function renderToJSONString(payload: ReplPayload, indent?: number): string {

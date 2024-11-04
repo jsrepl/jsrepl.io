@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval' ${process.env.NEXT_PUBLIC_NODE_ENV === 'production' ? '' : `'unsafe-eval'`};
+    script-src 'self' https: 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval' 'unsafe-eval';
     style-src 'self' https: 'unsafe-inline';
     img-src 'self' blob: data: https://avatars.githubusercontent.com https://github.com https://cdn.buymeacoffee.com;
     font-src 'self';

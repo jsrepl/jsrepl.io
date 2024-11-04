@@ -1,5 +1,5 @@
+import { type ReplPayload } from '@jsrepl/shared-types'
 import type * as monaco from 'monaco-editor'
-import { type ReplPayload } from '@/types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 export function renderToHoverContents(payloads: ReplPayload[]): monaco.IMarkdownString[] {

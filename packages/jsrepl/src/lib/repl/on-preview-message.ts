@@ -1,6 +1,10 @@
 import { type Dispatch, type SetStateAction } from 'react'
+import {
+  type ReplPayload,
+  ReplPayloadMessageData,
+  ReplStatusMessageData,
+} from '@jsrepl/shared-types'
 import { getOriginalPosition } from '@/lib/sourcemap-utils'
-import { type ReplPayload } from '@/types'
 import { replDataRef } from './data'
 
 const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL!
@@ -19,39 +23,48 @@ export function onPreviewMessage(
     debouncedUpdateDecorations: () => void
   }
 ) {
-  if (
-    event.origin === previewUrl &&
-    event.data?.source === 'jsreplPreview' &&
-    event.data.type === 'ready' &&
-    event.data.token === -1
-  ) {
-    setPreviewIframeReadyId(event.data.previewId as string)
+  if (!validateEvent(event)) {
     return
   }
 
-  if (
-    event.origin === previewUrl &&
-    event.data?.source === 'jsreplPreview' &&
-    event.data.token === replDataRef.current.token
-  ) {
-    if (event.data.type === 'repl') {
-      const payload = event.data.payload as ReplPayload
+  const { data } = event
 
-      if (payload.ctx.kind === 'window-error') {
-        if (resolveErrorLocation(payload)) {
-          allPayloads.add(payload)
-          payloadMap.set(payload.ctx.id, payload)
-        }
-      } else {
+  if (data.type === 'ready' && data.token === -1) {
+    setPreviewIframeReadyId(data.previewId)
+  }
+
+  if (data.type === 'repl' && data.token === replDataRef.current.token) {
+    const { payload } = data
+
+    if (payload.ctx.kind === 'window-error') {
+      if (resolveErrorLocation(payload)) {
         allPayloads.add(payload)
         payloadMap.set(payload.ctx.id, payload)
       }
-    }
-
-    if (event.data.type === 'repl' || event.data.type === 'script-complete') {
-      debouncedUpdateDecorations()
+    } else {
+      allPayloads.add(payload)
+      payloadMap.set(payload.ctx.id, payload)
     }
   }
+
+  if (
+    (data.type === 'repl' || data.type === 'script-complete') &&
+    data.token === replDataRef.current.token
+  ) {
+    debouncedUpdateDecorations()
+  }
+}
+
+function validateEvent(
+  event: MessageEvent<unknown>
+): event is MessageEvent<ReplPayloadMessageData | ReplStatusMessageData> {
+  return (
+    event.origin === previewUrl &&
+    event.data !== null &&
+    typeof event.data === 'object' &&
+    'source' in event.data &&
+    event.data.source === 'jsreplPreview'
+  )
 }
 
 function resolveErrorLocation(payload: ReplPayload): boolean {

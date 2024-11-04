@@ -61,11 +61,11 @@
       "cache": false,
       "persistent": true
     },
-    "jsrepl#build": {
-      "dependsOn": ["preview-entry#build"]
+    "@jsrepl/jsrepl#build": {
+      "dependsOn": ["@jsrepl/preview-entry#build"]
     },
-    "jsrepl#test:playwright:web-server:build": {
-      "dependsOn": ["preview-entry#test:playwright:web-server:build"]
+    "@jsrepl/jsrepl#test:playwright:web-server:build": {
+      "dependsOn": ["@jsrepl/preview-entry#test:playwright:web-server:build"]
     }
   },
   "envMode": "loose"

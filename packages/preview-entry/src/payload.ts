@@ -1,15 +1,16 @@
 import {
-  type ReplPayload,
-  ReplPayloadMarshalledType,
-  ReplPayloadResultDomNode,
-  ReplPayloadResultFunction,
-  ReplPayloadResultObject,
-  ReplPayloadResultSymbol,
-  ReplPayloadResultWeakMap,
-  ReplPayloadResultWeakRef,
-  ReplPayloadResultWeakSet,
-} from '../../jsrepl/src/types'
-import type { PreviewWindow, ReplRawPayload } from './types'
+  MarshalledDomNode,
+  MarshalledFunction,
+  MarshalledObject,
+  MarshalledSymbol,
+  MarshalledType,
+  MarshalledWeakMap,
+  MarshalledWeakRef,
+  MarshalledWeakSet,
+  ReplPayload,
+  ReplRawPayload,
+} from '@jsrepl/shared-types'
+import type { PreviewWindow } from './types'
 
 // Traverse everything and replace non-clonable stuff for structured clone algorithm,
 // to ensure postMessage will be able to transfer the payload.
@@ -49,10 +50,10 @@ function transformResult(
   if (typeof rawResult === 'symbol') {
     return {
       __meta__: {
-        type: ReplPayloadMarshalledType.Symbol,
+        type: MarshalledType.Symbol,
       },
       serialized: rawResult.toString(),
-    } as ReplPayloadResultSymbol
+    } as MarshalledSymbol
   }
 
   if (rawResult instanceof win.Date) {
@@ -80,25 +81,25 @@ function transformResult(
   if (rawResult instanceof win.WeakSet) {
     return {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakSet,
+        type: MarshalledType.WeakSet,
       },
-    } as ReplPayloadResultWeakSet
+    } as MarshalledWeakSet
   }
 
   if (rawResult instanceof win.WeakMap) {
     return {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakMap,
+        type: MarshalledType.WeakMap,
       },
-    } as ReplPayloadResultWeakMap
+    } as MarshalledWeakMap
   }
 
   if (rawResult instanceof win.WeakRef) {
     return {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakRef,
+        type: MarshalledType.WeakRef,
       },
-    } as ReplPayloadResultWeakRef
+    } as MarshalledWeakRef
   }
 
   if (win.Array.isArray(rawResult)) {
@@ -123,7 +124,7 @@ function transformResult(
   // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#javascript_types
 
   if (typeof rawResult === 'object' && rawResult !== null) {
-    const obj = {} as ReplPayloadResultObject
+    const obj = {} as MarshalledObject
     refs.set(rawResult, obj)
 
     getAllPropertyNames(win, rawResult).forEach((propName) => {
@@ -133,7 +134,7 @@ function transformResult(
     })
 
     obj.__meta__ = {
-      type: ReplPayloadMarshalledType.Object,
+      type: MarshalledType.Object,
       constructorName: rawResult.constructor?.name,
     }
 
@@ -143,10 +144,10 @@ function transformResult(
   return rawResult
 }
 
-function serializeDomNode(el: HTMLElement): ReplPayloadResultDomNode {
+function serializeDomNode(el: HTMLElement): MarshalledDomNode {
   return {
     __meta__: {
-      type: ReplPayloadMarshalledType.DomNode,
+      type: MarshalledType.DomNode,
       tagName: el.tagName.toLowerCase(),
       constructorName: el.constructor?.name,
       attributes: Array.from(el.attributes).map((attr) => ({ name: attr.name, value: attr.value })),
@@ -159,10 +160,10 @@ function serializeDomNode(el: HTMLElement): ReplPayloadResultDomNode {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-function serializeFunction(fn: Function): ReplPayloadResultFunction {
+function serializeFunction(fn: Function): MarshalledFunction {
   return {
     __meta__: {
-      type: ReplPayloadMarshalledType.Function,
+      type: MarshalledType.Function,
       name: fn.name,
     },
     serialized: fn.toString(),

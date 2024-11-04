@@ -1,4 +1,4 @@
-import { type ReplPayload } from '@/types'
+import { type ReplPayload } from '@jsrepl/shared-types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 export function renderToText(payload: ReplPayload): string {

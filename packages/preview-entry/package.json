@@ -1,7 +1,6 @@
 {
-  "name": "preview-entry",
+  "name": "@jsrepl/preview-entry",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
@@ -13,6 +12,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@jsrepl/shared-types": "workspace:*",
     "@types/node": "^22.1.0",
     "eslint": "^9.9.1",
     "globals": "^15.9.0",

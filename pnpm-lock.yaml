@@ -35,6 +35,9 @@ importers:
       '@jridgewell/trace-mapping':
         specifier: ^0.3.25
         version: 0.3.25
+      '@jsrepl/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
       '@mdx-js/loader':
         specifier: ^3.0.1
         version: 3.0.1(webpack@5.94.0(esbuild@0.23.1))
@@ -282,6 +285,9 @@ importers:
       '@eslint/js':
         specifier: ^9.9.1
         version: 9.10.0
+      '@jsrepl/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
       '@types/node':
         specifier: ^22.1.0
         version: 22.5.5
@@ -306,6 +312,12 @@ importers:
       vitest:
         specifier: ^2.0.5
         version: 2.1.1(@types/node@22.5.5)(happy-dom@15.7.4)(jsdom@25.0.0)(terser@5.32.0)
+
+  packages/shared-types:
+    dependencies:
+      shiki:
+        specifier: ^1.11.1
+        version: 1.17.6
 
 packages:
 

@@ -1,18 +1,19 @@
 // @vitest-environment jsdom
-import { expect, test } from 'vitest'
 import {
+  MarshalledDomNode,
+  MarshalledFunction,
+  MarshalledObject,
+  MarshalledSymbol,
+  MarshalledType,
+  MarshalledWeakMap,
+  MarshalledWeakRef,
+  MarshalledWeakSet,
   type ReplPayload,
-  ReplPayloadMarshalledType,
-  ReplPayloadResultDomNode,
-  ReplPayloadResultFunction,
-  ReplPayloadResultObject,
-  ReplPayloadResultSymbol,
-  ReplPayloadResultWeakMap,
-  ReplPayloadResultWeakRef,
-  ReplPayloadResultWeakSet,
-} from '../../jsrepl/src/types'
+  type ReplRawPayload,
+} from '@jsrepl/shared-types'
+import { expect, test } from 'vitest'
 import { transformPayload } from './payload'
-import type { PreviewWindow, ReplRawPayload } from './types'
+import type { PreviewWindow } from './types'
 
 const payloadCommon = {
   isError: false,
@@ -41,7 +42,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     document.createElement('div'),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.DomNode,
+        type: MarshalledType.DomNode,
         tagName: 'div',
         constructorName: 'HTMLDivElement',
         attributes: [],
@@ -50,7 +51,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
         textContent: '',
       },
       serialized: '<div></div>',
-    } as ReplPayloadResultDomNode,
+    } as MarshalledDomNode,
   ],
   [
     '<div class="foo">lorem ipsum <span>dolor sit amet</span></div>',
@@ -67,7 +68,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.DomNode,
+        type: MarshalledType.DomNode,
         tagName: 'div',
         constructorName: 'HTMLDivElement',
         attributes: [
@@ -81,20 +82,20 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
         textContent: 'lorem ipsum dolor sit amet',
       },
       serialized: '<div class="foo">lorem ipsum <span>dolor sit amet</span></div>',
-    } as ReplPayloadResultDomNode,
+    } as MarshalledDomNode,
   ],
   [
     'function() {}',
     function () {},
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Function,
+        type: MarshalledType.Function,
         name: '',
       },
       // Weird whitespaces between curly braces?
       // It seems to only happen in tests for some reason...
       serialized: 'function() {\n    }',
-    } as ReplPayloadResultFunction,
+    } as MarshalledFunction,
   ],
   [
     'function foo(bar) { return bar }',
@@ -103,33 +104,33 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     },
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Function,
+        type: MarshalledType.Function,
         name: 'foo',
       },
       // Weird whitespaces between curly braces?
       // It seems to only happen in tests for some reason...
       serialized: 'function foo(bar) {\n      return bar;\n    }',
-    } as ReplPayloadResultFunction,
+    } as MarshalledFunction,
   ],
   [
     'Symbol("foo")',
     Symbol('foo'),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Symbol,
+        type: MarshalledType.Symbol,
       },
       serialized: 'Symbol(foo)',
-    } as ReplPayloadResultSymbol,
+    } as MarshalledSymbol,
   ],
   [
     'Symbol.for("foo")',
     Symbol.for('foo'),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Symbol,
+        type: MarshalledType.Symbol,
       },
       serialized: 'Symbol(foo)',
-    } as ReplPayloadResultSymbol,
+    } as MarshalledSymbol,
   ],
   [
     'cyclic refs',
@@ -142,11 +143,11 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     (() => {
       const obj = {
         __meta__: {
-          type: ReplPayloadMarshalledType.Object,
+          type: MarshalledType.Object,
           constructorName: 'Object',
         },
         a: 1,
-      } as ReplPayloadResultObject
+      } as MarshalledObject
 
       obj.b = obj
       return obj
@@ -161,9 +162,9 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakSet,
+        type: MarshalledType.WeakSet,
       },
-    } as ReplPayloadResultWeakSet,
+    } as MarshalledWeakSet,
   ],
   [
     'WeakMap()',
@@ -174,9 +175,9 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakMap,
+        type: MarshalledType.WeakMap,
       },
-    } as ReplPayloadResultWeakMap,
+    } as MarshalledWeakMap,
   ],
   [
     'WeakRef()',
@@ -186,9 +187,9 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.WeakRef,
+        type: MarshalledType.WeakRef,
       },
-    } as ReplPayloadResultWeakRef,
+    } as MarshalledWeakRef,
   ],
   ["[1, 2, 3, 'a', 'b', 'c']", [1, 2, 3, 'a', 'b', 'c'], [1, 2, 3, 'a', 'b', 'c']],
   ["[1, 2, 3, ['a', 'b'], 'c']", [1, 2, 3, ['a', 'b'], 'c'], [1, 2, 3, ['a', 'b'], 'c']],
@@ -199,29 +200,29 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     { foo: 'bar' },
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Object,
+        type: MarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',
-    } as ReplPayloadResultObject,
+    } as MarshalledObject,
   ],
   [
     'POJO nested',
     { foo: 'bar', baz: { foo2: 'bar2' } },
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Object,
+        type: MarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',
       baz: {
         __meta__: {
-          type: ReplPayloadMarshalledType.Object,
+          type: MarshalledType.Object,
           constructorName: 'Object',
         },
         foo2: 'bar2',
       },
-    } as ReplPayloadResultObject,
+    } as MarshalledObject,
   ],
   [
     // Like `navigator.connection`
@@ -233,11 +234,11 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
     })(),
     {
       __meta__: {
-        type: ReplPayloadMarshalledType.Object,
+        type: MarshalledType.Object,
         constructorName: 'Object',
       },
       foo: 'bar',
-    } as ReplPayloadResultObject,
+    } as MarshalledObject,
   ],
 ]
 

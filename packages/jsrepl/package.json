@@ -1,6 +1,5 @@
 {
-  "name": "jsrepl",
-  "version": "0.3.0",
+  "name": "@jsrepl/jsrepl",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,6 +18,7 @@
   "dependencies": {
     "@babel/standalone": "^7.24.10",
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@jsrepl/shared-types": "workspace:*",
     "@mdx-js/loader": "^3.0.1",
     "@mdx-js/react": "^3.0.1",
     "@nag5000/monaco-tailwindcss": "0.6.1-fork.0",

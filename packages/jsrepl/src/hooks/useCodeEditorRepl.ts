@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { type ReplPayload, type Theme } from '@jsrepl/shared-types'
 import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
@@ -26,7 +27,6 @@ import { renderToText } from '@/lib/repl-payload/render-text'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
-import { type ReplPayload, type Theme } from '@/types'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,

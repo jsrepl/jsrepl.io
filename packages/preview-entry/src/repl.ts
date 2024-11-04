@@ -1,4 +1,4 @@
-import { ReplPayload } from '../../jsrepl/src/types'
+import { ReplPayload } from '@jsrepl/shared-types'
 import { transformPayload } from './payload'
 import { postMessage } from './post-message'
 import type { PreviewWindow } from './types'

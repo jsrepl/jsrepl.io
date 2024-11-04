@@ -1,48 +1,48 @@
 import {
-  ReplPayloadMarshalledType,
-  ReplPayloadResultDomNode,
-  ReplPayloadResultFunction,
-  ReplPayloadResultObject,
-  ReplPayloadResultSymbol,
-  ReplPayloadResultWeakMap,
-  ReplPayloadResultWeakRef,
-  ReplPayloadResultWeakSet,
-} from '@/types'
+  MarshalledDomNode,
+  MarshalledFunction,
+  MarshalledObject,
+  MarshalledSymbol,
+  MarshalledType,
+  MarshalledWeakMap,
+  MarshalledWeakRef,
+  MarshalledWeakSet,
+} from '@jsrepl/shared-types'
 
-export function isMarshalledDomNode(result: object): result is ReplPayloadResultDomNode {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.DomNode
+export function isMarshalledDomNode(result: object): result is MarshalledDomNode {
+  return getMarshalledType(result) === MarshalledType.DomNode
 }
 
-export function isMarshalledFunction(result: object): result is ReplPayloadResultFunction {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.Function
+export function isMarshalledFunction(result: object): result is MarshalledFunction {
+  return getMarshalledType(result) === MarshalledType.Function
 }
 
-export function isMarshalledSymbol(result: object): result is ReplPayloadResultSymbol {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.Symbol
+export function isMarshalledSymbol(result: object): result is MarshalledSymbol {
+  return getMarshalledType(result) === MarshalledType.Symbol
 }
 
-export function isMarshalledWeakSet(result: object): result is ReplPayloadResultWeakSet {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.WeakSet
+export function isMarshalledWeakSet(result: object): result is MarshalledWeakSet {
+  return getMarshalledType(result) === MarshalledType.WeakSet
 }
 
-export function isMarshalledWeakMap(result: object): result is ReplPayloadResultWeakMap {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.WeakMap
+export function isMarshalledWeakMap(result: object): result is MarshalledWeakMap {
+  return getMarshalledType(result) === MarshalledType.WeakMap
 }
 
-export function isMarshalledWeakRef(result: object): result is ReplPayloadResultWeakRef {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.WeakRef
+export function isMarshalledWeakRef(result: object): result is MarshalledWeakRef {
+  return getMarshalledType(result) === MarshalledType.WeakRef
 }
 
-export function isMarshalledObject(result: object): result is ReplPayloadResultObject {
-  return getMarshalledType(result) === ReplPayloadMarshalledType.Object
+export function isMarshalledObject(result: object): result is MarshalledObject {
+  return getMarshalledType(result) === MarshalledType.Object
 }
 
-export function getMarshalledType(result: object): ReplPayloadMarshalledType | null {
+export function getMarshalledType(result: object): MarshalledType | null {
   return '__meta__' in result &&
     result.__meta__ !== null &&
     typeof result.__meta__ === 'object' &&
     'type' in result.__meta__ &&
     typeof result.__meta__.type === 'string'
-    ? (result.__meta__.type as ReplPayloadMarshalledType)
+    ? (result.__meta__.type as MarshalledType)
     : null
 }

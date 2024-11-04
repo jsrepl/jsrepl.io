@@ -1,14 +1,10 @@
+import { UpdateReplMessageData, UpdateThemeMessageData } from '@jsrepl/shared-types'
 import { consoleLogRepl } from '../../jsrepl/src/lib/console-utils'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
 import { setupRepl } from './repl'
-import type {
-  PreviewEntryWindow,
-  PreviewWindow,
-  ReplMessageData,
-  UpdateThemeMessageData,
-} from './types'
+import type { PreviewEntryWindow, PreviewWindow } from './types'
 
 const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 let currentToken: number | undefined
@@ -52,7 +48,7 @@ function onMessage(event: MessageEvent) {
 
   clearInterval(postReadyIntervalId)
 
-  const data = event.data as ReplMessageData | UpdateThemeMessageData
+  const data = event.data as UpdateReplMessageData | UpdateThemeMessageData
 
   if (data.type === 'repl') {
     onReplMessage(data)
@@ -61,7 +57,7 @@ function onMessage(event: MessageEvent) {
   }
 }
 
-async function onReplMessage(data: ReplMessageData) {
+async function onReplMessage(data: UpdateReplMessageData) {
   const { token, srcdoc } = data
   currentToken = token
 

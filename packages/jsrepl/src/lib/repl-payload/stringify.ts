@@ -1,4 +1,4 @@
-import { ReplPayload, type ReplPayloadResultDomNode } from '@/types'
+import { type MarshalledDomNode, type ReplPayload } from '@jsrepl/shared-types'
 import { getBabel } from '../get-babel'
 import * as utils from './payload-utils'
 
@@ -422,7 +422,7 @@ function parseFunction(
   return null
 }
 
-function stringifyDomNodeShort(result: ReplPayloadResultDomNode): string {
+function stringifyDomNodeShort(result: MarshalledDomNode): string {
   const meta = result.__meta__
   const idAttr = meta.attributes.find((attr) => attr.name === 'id')
   const classAttr = meta.attributes.find((attr) => attr.name === 'class')
@@ -436,7 +436,7 @@ function stringifyDomNodeShort(result: ReplPayloadResultDomNode): string {
   return `${meta.tagName}${idPart}${classPart}`
 }
 
-function stringifyDomNodeLong(result: ReplPayloadResultDomNode): string {
+function stringifyDomNodeLong(result: MarshalledDomNode): string {
   const meta = result.__meta__
   const attrsStr = meta.attributes.map((attr) => `${attr.name}="${attr.value}"`).join(' ')
 

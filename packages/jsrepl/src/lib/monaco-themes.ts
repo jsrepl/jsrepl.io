@@ -1,3 +1,4 @@
+import type { Theme } from '@jsrepl/shared-types'
 import { shikiToMonaco } from '@shikijs/monaco'
 import * as monaco from 'monaco-editor'
 import {
@@ -6,7 +7,6 @@ import {
   type HighlighterGeneric,
   createHighlighter,
 } from 'shiki'
-import type { Theme } from '@/types'
 
 let shikiHighlighter: HighlighterGeneric<BundledLanguage, BundledTheme> | null = null
 

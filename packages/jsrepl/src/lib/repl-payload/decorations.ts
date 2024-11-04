@@ -1,7 +1,7 @@
+import { type ReplPayload } from '@jsrepl/shared-types'
 import * as monaco from 'monaco-editor'
 import codeEditorStyles from '@/app/repl/components/code-editor.module.css'
 import { cssInject } from '@/lib/css-inject'
-import { type ReplPayload } from '@/types'
 import { renderToDecorString } from './render-decor'
 
 let decorationUniqIndex = -1

@@ -1,4 +1,4 @@
-import { type ReplPayload } from '@/types'
+import { type ReplPayload } from '@jsrepl/shared-types'
 import { stringifyResult } from './stringify'
 
 export function renderToDecorString(payload: ReplPayload): string | null {

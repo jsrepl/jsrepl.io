@@ -1,3 +1,4 @@
+import { type ReplPayload, type Theme, type UpdateReplMessageData } from '@jsrepl/shared-types'
 import type { MonacoTailwindcss, TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import type * as esbuild from 'esbuild-wasm'
@@ -6,7 +7,7 @@ import { type BuildResult } from '@/lib/bundler/bundler-worker'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
-import { type ImportMap, type ReplInfo, type ReplPayload, type Theme } from '@/types'
+import { type ImportMap, type ReplInfo } from '@/types'
 import { consoleLogRepl } from '../console-utils'
 import { type ReplData, replDataRef } from './data'
 
@@ -188,7 +189,7 @@ export async function sendRepl({
         type: 'repl',
         token: replData.token,
         srcdoc,
-      },
+      } as UpdateReplMessageData,
       previewUrl
     )
   }

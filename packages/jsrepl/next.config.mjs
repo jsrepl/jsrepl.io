@@ -63,7 +63,8 @@ function envVars() {
   process.env.NEXT_PUBLIC_NODE_ENV = process.env.NODE_ENV
 
   if (!process.env.NEXT_PUBLIC_APP_VERSION) {
-    const packageJson = readFileSync('package.json', 'utf8')
+    // Root package.json
+    const packageJson = readFileSync('../../package.json', 'utf8')
     const packageJsonData = JSON.parse(packageJson)
     process.env.NEXT_PUBLIC_APP_VERSION = packageJsonData.version
   }
