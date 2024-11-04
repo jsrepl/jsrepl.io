@@ -4,7 +4,7 @@ import codeEditorStyles from '@/app/repl/components/code-editor.module.css'
 import { cssInject } from '@/lib/css-inject'
 import { renderToDecorString } from './render-decor'
 
-let decorationUniqIndex = -1
+let decorationUniqId = -1
 
 export function createDecorations(editor: monaco.editor.ICodeEditor, payloads: ReplPayload[]) {
   const cssStyles: string[] = []
@@ -13,11 +13,11 @@ export function createDecorations(editor: monaco.editor.ICodeEditor, payloads: R
     .filter((x) => x !== null)
 
   const decorations = editor.createDecorationsCollection(decorationDefs)
-  const removeStyle = cssInject(cssStyles.join('\n'))
+  const removeCSS = cssInject(cssStyles.join('\n'), 'jsrepl-decor-defs')
 
   return () => {
     decorations.clear()
-    removeStyle()
+    removeCSS()
   }
 }
 
@@ -29,8 +29,8 @@ function getDecorDef(
     const { /* result, */ ctx } = payload
     const { lineStart, kind /* lineEnd, colStart, colEnd, source */ } = ctx
 
-    decorationUniqIndex = (decorationUniqIndex + 1) % Number.MAX_VALUE
-    const uniqClassName = `jsrepl-decor-${decorationUniqIndex}`
+    decorationUniqId = (decorationUniqId + 1) % Number.MAX_VALUE
+    const uniqClassName = `jsrepl-decor-${decorationUniqId}`
 
     const decorStr = renderToDecorString(payload)
     if (decorStr === null) {
@@ -38,7 +38,7 @@ function getDecorDef(
     }
 
     const valueCssVar = CSS.escape(decorStr)
-    cssStylesRef.push(`.${uniqClassName}::after { --value: "${valueCssVar}"; }`)
+    cssStylesRef.push(`.${uniqClassName} { --value: "${valueCssVar}"; }`)
 
     return {
       // line starts with 1, column starts with 1

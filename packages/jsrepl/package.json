@@ -86,7 +86,6 @@
     "jsdom": "^25.0.0",
     "monaco-editor": "^0.50.0",
     "postcss": "^8",
-    "regexp.escape": "^2.0.1",
     "storybook": "^8.3.2",
     "string-dedent": "^3.0.1",
     "tailwindcss": "^3.4.1",

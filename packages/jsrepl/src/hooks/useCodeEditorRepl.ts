@@ -17,6 +17,7 @@ import { ReplInfoContext } from '@/context/repl-info-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
+import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
 import { createDecorations } from '@/lib/repl-payload/decorations'
@@ -372,4 +373,26 @@ export default function useCodeEditorRepl(
       disposable.dispose()
     }
   }, [allPayloads])
+
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) {
+      return
+    }
+
+    const disposable = editor.addAction({
+      id: 'jsrepl.copyContentsWithDecors',
+      label: 'Copy With REPL Decorations',
+      async run(editor) {
+        const contents = getEditorContentsWithReplDecors(editor)
+        if (contents !== null) {
+          await navigator.clipboard.writeText(contents)
+        }
+      },
+    })
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [editorRef])
 }
