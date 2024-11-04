@@ -265,7 +265,7 @@ function _stringifyResult(
     return {
       value,
       type: 'dom-node',
-      lang: 'html',
+      lang: 'jsx',
       // detailsAfter:
       //   target === 'details' && meta.constructorName
       //     ? { value: meta.constructorName, type: 'class-name', lang: 'js' }

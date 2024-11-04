@@ -88,6 +88,11 @@ function renderStringified(stringified: StringifyResult, prefix: string = ''): s
   return strs
 }
 
+const langAlias: Record<string, string> = {
+  jsx: 'js',
+  tsx: 'ts',
+}
+
 function pre(contents: string, lang: string) {
-  return `\`\`\`${lang}\n${contents}\n\`\`\``
+  return `\`\`\`${langAlias[lang] ?? lang}\n${contents}\n\`\`\``
 }
