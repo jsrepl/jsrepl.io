@@ -17,6 +17,8 @@ let monacoTailwindcss: MonacoTailwindcss | null = null
 
 let _abortController: AbortController | null = null
 
+let replIndex = 0
+
 export function abortRepl() {
   if (_abortController && !_abortController.signal.aborted) {
     _abortController.abort()
@@ -38,6 +40,9 @@ export async function sendRepl({
   previewIframe: HTMLIFrameElement
   theme: Theme
 }): Promise<ReplInfo> {
+  const replData: ReplData = replDataRef.current
+  const token = replDataRef.current.token
+
   abortRepl()
 
   const abortController = (_abortController = new AbortController())
@@ -45,12 +50,13 @@ export async function sendRepl({
     if (abortController && abortController.signal.aborted) {
       throw 'aborted'
     }
+
+    if (token !== replDataRef.current.token) {
+      throw 'aborted'
+    }
   }
 
-  const replData: ReplData = (replDataRef.current = {
-    token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
-    bundle: null,
-  })
+  consoleLogRepl('debug', `%c REPL begin (${++replIndex})`, 'font-weight: bold;')
 
   const input: Record<string, string> = {}
   const entryPoints: string[] = []
@@ -172,7 +178,7 @@ export async function sendRepl({
     processPreviewDoc(previewDoc, {
       bundle,
       theme,
-      token: replData.token,
+      token,
       entryPointScripts,
       entryPointStylesheets,
     })
@@ -187,7 +193,7 @@ export async function sendRepl({
       {
         source: 'jsrepl',
         type: 'repl',
-        token: replData.token,
+        token,
         srcdoc,
       } as UpdateReplMessageData,
       previewUrl

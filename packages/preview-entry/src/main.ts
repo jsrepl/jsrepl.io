@@ -1,5 +1,4 @@
 import { UpdateReplMessageData, UpdateThemeMessageData } from '@jsrepl/shared-types'
-import { consoleLogRepl } from '../../jsrepl/src/lib/console-utils'
 import { setupConsole } from './console'
 import { postMessage } from './post-message'
 import { defer } from './promise-with-resolvers'
@@ -96,7 +95,6 @@ function onUpdateThemeMessage(data: UpdateThemeMessageData) {
 function setup(previewWindow: PreviewWindow, token: number) {
   setupRepl(previewWindow, token)
   setupConsole(previewWindow)
-  consoleLogRepl('debug', `%c REPL begin (${token})`, 'font-weight: bold;')
 }
 
 function afterJsScript(_window: PreviewWindow, token: number) {

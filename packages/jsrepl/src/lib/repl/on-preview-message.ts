@@ -70,9 +70,9 @@ function validateEvent(
 function resolveErrorLocation(payload: ReplPayload): boolean {
   const filePath = payload.ctx.filePath
 
+  const outputFiles = replDataRef.current.bundle?.result?.outputFiles
   const sourcemap = filePath
-    ? replDataRef.current.bundle?.result?.outputFiles?.find((x) => x.path === filePath + '.map')
-        ?.text
+    ? outputFiles?.find((x) => x.path === filePath + '.map')?.text
     : undefined
 
   if (sourcemap) {
@@ -93,10 +93,7 @@ function resolveErrorLocation(payload: ReplPayload): boolean {
     }
   }
 
-  const fileExists = replDataRef.current.bundle?.result?.outputFiles?.some(
-    (x) => x.path === filePath
-  )
-
+  const fileExists = outputFiles?.some((x) => x.path === filePath)
   if (fileExists) {
     payload.ctx.filePath = filePath
     return true

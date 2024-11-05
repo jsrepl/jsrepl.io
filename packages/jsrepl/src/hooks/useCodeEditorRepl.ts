@@ -25,6 +25,7 @@ import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
 import { renderToJSONString } from '@/lib/repl-payload/render-json'
 import { renderToMockObject } from '@/lib/repl-payload/render-mock-object'
 import { renderToText } from '@/lib/repl-payload/render-text'
+import { replDataRef } from '@/lib/repl/data'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
@@ -165,6 +166,11 @@ export default function useCodeEditorRepl(
 
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
+        replDataRef.current = {
+          token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
+        }
+
+        debouncedUpdateDecorations.current?.clear()
         debouncedDoRepl.current?.()
       })
     })
