@@ -1,26 +1,19 @@
-import { type ReplPayload } from '@jsrepl/shared-types'
+import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
 import * as utils from './payload-utils'
 
 export function renderToJSONString(payload: ReplPayload, indent?: number): string {
+  const kind = payload.ctx.kind
   let value = payload.result
 
   if (
-    ['console-log', 'console-debug', 'console-info', 'console-warn', 'console-error'].includes(
-      payload.ctx.kind
-    )
+    kind === 'console-log' ||
+    kind === 'console-debug' ||
+    kind === 'console-info' ||
+    kind === 'console-warn' ||
+    kind === 'console-error'
   ) {
-    const args = payload.result as ReplPayload['result'][]
+    const args = (payload as ReplPayloadConsoleLog).result
     value = args.length > 1 ? args : args[0]
-  }
-
-  if (payload.ctx.kind === 'variable') {
-    const vars = payload.result as Array<{ kind: string; name: string; value: unknown }>
-    value = vars.length > 1 ? vars.map(({ value }) => value) : vars[0].value
-  }
-
-  if (payload.ctx.kind === 'assignment') {
-    const vars = payload.result as Array<{ name: string; value: unknown }>
-    value = vars.length > 1 ? vars.map(({ value }) => value) : vars[0].value
   }
 
   return JSON.stringify(value, replacer, indent)

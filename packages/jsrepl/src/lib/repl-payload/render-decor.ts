@@ -1,4 +1,4 @@
-import { type ReplPayload } from '@jsrepl/shared-types'
+import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
 import { stringifyResult } from './stringify'
 
 export function renderToDecorString(payload: ReplPayload): string | null {
@@ -11,20 +11,27 @@ export function renderToDecorString(payload: ReplPayload): string | null {
 }
 
 function renderPayload(payload: ReplPayload): string | null {
-  if (
-    ['console-log', 'console-debug', 'console-info', 'console-warn', 'console-error'].includes(
-      payload.ctx.kind
-    )
-  ) {
-    const args = payload.result as ReplPayload['result'][]
-    return args.map((arg) => stringifyResult(arg, 'decor').value).join(' ')
+  const kind = payload.ctx.kind
+
+  if (kind === 'variable') {
+    const { varName } = payload.ctx
+    return `${varName} = ${stringifyResult(payload.result, 'decor').value}`
   }
 
-  if (payload.ctx.kind === 'variable' || payload.ctx.kind === 'assignment') {
-    const vars = payload.result as Array<{ name: string; value: unknown }>
-    return vars
-      .map(({ name, value }) => `${name} = ${stringifyResult(value, 'decor').value}`)
-      .join(', ')
+  if (kind === 'assignment') {
+    const { memberName } = payload.ctx
+    return `${memberName} = ${stringifyResult(payload.result, 'decor').value}`
+  }
+
+  if (
+    kind === 'console-log' ||
+    kind === 'console-debug' ||
+    kind === 'console-info' ||
+    kind === 'console-warn' ||
+    kind === 'console-error'
+  ) {
+    const args = (payload as ReplPayloadConsoleLog).result
+    return args.map((arg) => stringifyResult(arg, 'decor').value).join(' ')
   }
 
   return stringifyResult(payload.result, 'decor').value

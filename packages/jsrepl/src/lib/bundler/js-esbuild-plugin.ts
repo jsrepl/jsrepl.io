@@ -144,13 +144,16 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
 
         processedNodes.add(path.node)
 
-        const declarations = path.get('declarations')
-        const identifiers: types.Identifier[] = []
+        const vars: {
+          path: NodePath<types.Identifier | types.LVal>
+          identifier: types.Identifier
+        }[] = []
 
+        const declarations = path.get('declarations')
         declarations.forEach((declaration) => {
           const declarationId = declaration.get('id')
           if (t.isIdentifier(declarationId.node)) {
-            identifiers.push(declarationId.node)
+            vars.push({ path: declarationId, identifier: declarationId.node })
           } else {
             declarationId.traverse({
               AssignmentPattern(path) {
@@ -160,37 +163,29 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
                 path.skipKey('key')
               },
               Identifier(path) {
-                identifiers.push(path.node)
+                vars.push({ path, identifier: path.node })
               },
             })
           }
         })
 
-        if (identifiers.length === 0) {
-          return
+        for (const variable of vars) {
+          const callExpression = t.callExpression(t.identifier('__r'), [
+            t.objectExpression([
+              ...getCommonWrapperFields.call(this, {
+                t,
+                path: variable.path,
+                id: ++exprKey,
+                kind: 'variable',
+              }),
+              t.objectProperty(t.identifier('varName'), t.stringLiteral(variable.identifier.name)),
+              t.objectProperty(t.identifier('varKind'), t.stringLiteral(path.node.kind)),
+            ]),
+            variable.identifier,
+          ])
+
+          path.insertAfter(t.expressionStatement(callExpression))
         }
-
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
-              path,
-              id: ++exprKey,
-              kind: 'variable',
-            }),
-          ]),
-          t.arrayExpression(
-            identifiers.map((id) =>
-              t.objectExpression([
-                t.objectProperty(t.identifier('kind'), t.stringLiteral(path.node.kind)),
-                t.objectProperty(t.identifier('name'), t.stringLiteral(id.name)),
-                t.objectProperty(t.identifier('value'), id),
-              ])
-            )
-          ),
-        ])
-
-        path.insertAfter(t.expressionStatement(callExpression))
       },
 
       // foo()
@@ -219,14 +214,20 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         // window.hhh = foo();
         // let h; [h] = foo()
         if (t.isAssignmentExpression(path.node.expression)) {
-          const vars: { name: string; node: types.Identifier | types.MemberExpression }[] = []
+          const members: {
+            name: string
+            path: NodePath
+            node: types.Identifier | types.MemberExpression
+          }[] = []
+
           const left = path.get('expression.left') as NodePath<types.Node>
+
           if (t.isIdentifier(left.node)) {
             // asd = bar()
-            vars.push({ name: left.node.name, node: left.node })
+            members.push({ name: left.node.name, path: left, node: left.node })
           } else if (t.isMemberExpression(left.node)) {
             // window.hhh = foo();
-            vars.push({ name: left.toString(), node: left.node })
+            members.push({ name: left.toString(), path: left, node: left.node })
           } else {
             // ;[window.hhh] = foo();
             // ({ x: hhh } = foo({x: 1}));
@@ -238,39 +239,32 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
                 path.skipKey('key')
               },
               MemberExpression(path) {
-                vars.push({ name: path.toString(), node: path.node })
+                members.push({ name: path.toString(), path, node: path.node })
                 path.skip()
               },
               Identifier(path) {
-                vars.push({ name: path.node.name, node: path.node })
+                members.push({ name: path.node.name, path, node: path.node })
               },
             })
           }
 
-          if (vars.length === 0) {
-            return
+          for (const member of members) {
+            const callExpression = t.callExpression(t.identifier('__r'), [
+              t.objectExpression([
+                ...getCommonWrapperFields.call(this, {
+                  t,
+                  path: member.path,
+                  id: ++exprKey,
+                  kind: 'assignment',
+                }),
+                t.objectProperty(t.identifier('memberName'), t.stringLiteral(member.name)),
+              ]),
+              member.node,
+            ])
+
+            path.insertAfter(t.expressionStatement(callExpression))
           }
 
-          const callExpression = t.callExpression(t.identifier('__r'), [
-            t.objectExpression([
-              ...getCommonWrapperFields.call(this, {
-                t,
-                path,
-                id: ++exprKey,
-                kind: 'assignment',
-              }),
-            ]),
-            t.arrayExpression(
-              vars.map((_var) => {
-                return t.objectExpression([
-                  t.objectProperty(t.identifier('name'), t.stringLiteral(_var.name)),
-                  t.objectProperty(t.identifier('value'), _var.node),
-                ])
-              })
-            ),
-          ])
-
-          path.insertAfter(t.expressionStatement(callExpression))
           return
         }
 

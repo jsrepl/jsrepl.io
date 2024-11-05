@@ -1,4 +1,4 @@
-export type ReplPayload = {
+export type ReplPayloadBase = {
   /**
    * Unique identifier for the payload.
    */
@@ -39,20 +39,49 @@ export type ReplPayload = {
      * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
      */
     filePath: string
-    kind:
-      | 'expression'
-      | 'variable'
-      | 'assignment'
-      | 'window-error'
-      | 'error'
-      | 'warning'
-      | 'console-log'
-      | 'console-debug'
-      | 'console-info'
-      | 'console-warn'
-      | 'console-error'
   }
 }
+
+export type ReplPayloadExpression = ReplPayloadBase & {
+  ctx: {
+    kind: 'expression'
+  }
+}
+
+export type ReplPayloadVariable = ReplPayloadBase & {
+  ctx: {
+    kind: 'variable'
+    varName: string
+    varKind: string
+  }
+}
+
+export type ReplPayloadAssignment = ReplPayloadBase & {
+  ctx: {
+    kind: 'assignment'
+    memberName: string
+  }
+}
+
+export type ReplPayloadConsoleLog = ReplPayloadBase & {
+  result: unknown[]
+  ctx: {
+    kind: 'console-log' | 'console-debug' | 'console-info' | 'console-warn' | 'console-error'
+  }
+}
+
+export type ReplPayloadOther = ReplPayloadBase & {
+  ctx: {
+    kind: 'window-error' | 'error' | 'warning'
+  }
+}
+
+export type ReplPayload =
+  | ReplPayloadExpression
+  | ReplPayloadVariable
+  | ReplPayloadAssignment
+  | ReplPayloadConsoleLog
+  | ReplPayloadOther
 
 export type ReplRawPayload = Omit<ReplPayload, 'result'> & { rawResult: unknown }
 

@@ -40,8 +40,8 @@
 
   & :global(.monaco-editor .monaco-hover hr) {
     &:only-child {
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
+      margin-top: -4px;
+      margin-bottom: 0;
     }
   }
 }

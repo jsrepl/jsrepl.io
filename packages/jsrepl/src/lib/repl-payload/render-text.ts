@@ -1,39 +1,35 @@
-import { type ReplPayload } from '@jsrepl/shared-types'
+import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 export function renderToText(payload: ReplPayload): string {
+  const kind = payload.ctx.kind
+
+  if (kind === 'variable') {
+    const { varKind, varName } = payload.ctx
+    const prefix = `${varKind} ${varName} = `
+    const stringified = stringifyResult(payload.result, 'details')
+    return renderStringified(stringified, prefix)
+  }
+
+  if (kind === 'assignment') {
+    const { memberName } = payload.ctx
+    const prefix = `${memberName} = `
+    const stringified = stringifyResult(payload.result, 'details')
+    return renderStringified(stringified, prefix)
+  }
+
   if (
-    ['console-log', 'console-debug', 'console-info', 'console-warn', 'console-error'].includes(
-      payload.ctx.kind
-    )
+    kind === 'console-log' ||
+    kind === 'console-debug' ||
+    kind === 'console-info' ||
+    kind === 'console-warn' ||
+    kind === 'console-error'
   ) {
-    const args = payload.result as ReplPayload['result'][]
+    const args = (payload as ReplPayloadConsoleLog).result
     return args
       .map((arg) => {
         const stringified = stringifyResult(arg, 'details')
         return renderStringified(stringified)
-      })
-      .join('\n\n')
-  }
-
-  if (payload.ctx.kind === 'variable') {
-    const vars = payload.result as Array<{ kind: string; name: string; value: unknown }>
-    return vars
-      .map(({ kind, name, value }) => {
-        const prefix = `${kind} ${name} = `
-        const stringified = stringifyResult(value, 'details')
-        return renderStringified(stringified, prefix)
-      })
-      .join('\n\n')
-  }
-
-  if (payload.ctx.kind === 'assignment') {
-    const vars = payload.result as Array<{ name: string; value: unknown }>
-    return vars
-      .map(({ name, value }) => {
-        const prefix = `${name} = `
-        const stringified = stringifyResult(value, 'details')
-        return renderStringified(stringified, prefix)
       })
       .join('\n\n')
   }
