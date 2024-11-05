@@ -169,7 +169,7 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           }
         })
 
-        for (const variable of vars) {
+        for (const variable of vars.reverse()) {
           const callExpression = t.callExpression(t.identifier('__r'), [
             t.objectExpression([
               ...getCommonWrapperFields.call(this, {
@@ -248,7 +248,7 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
             })
           }
 
-          for (const member of members) {
+          for (const member of members.reverse()) {
             const callExpression = t.callExpression(t.identifier('__r'), [
               t.objectExpression([
                 ...getCommonWrapperFields.call(this, {
