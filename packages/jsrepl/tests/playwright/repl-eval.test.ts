@@ -80,7 +80,7 @@ test('simple expressions', async ({ page }) => {
   )
 })
 
-test.skip('react starter', async ({ page }) => {
+test('react starter', async ({ page }) => {
   await visitPlayground(page, reactStarter)
 
   await assertMonacoContentsWithDecors(
@@ -90,11 +90,11 @@ test.skip('react starter', async ({ page }) => {
       import { createRoot } from 'react-dom/client?dev';
       import { useState } from 'react?dev';
 
-      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {render: ƒ (children), unmount: ƒ}
+      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children), unmount: ƒ ()}
       root.render(<App />); // → undefined
 
       function App() {
-        const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState
+        const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState()
 
         return (
           <>
