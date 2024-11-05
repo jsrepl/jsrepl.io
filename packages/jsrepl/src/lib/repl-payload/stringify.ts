@@ -284,7 +284,7 @@ function _stringifyResult(
       const parsed = isNative ? null : parseFunction(result.serialized)
       const asyncPart = parsed?.isAsync ? 'async ' : ''
       const fnKeywordPart = target === 'decor' || nestingLevel > 0 ? 'ƒ ' : 'function '
-      const fnName = meta.name.replace(/^bound /u, '')
+      const fnName = meta.name
       const fnArgsPart = `(${parsed?.args ?? ''})`
       const fnBodyPart =
         target === 'details' && nestingLevel === 0 && isNative

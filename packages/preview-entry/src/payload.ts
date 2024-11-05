@@ -164,7 +164,7 @@ function serializeFunction(fn: Function): MarshalledFunction {
   return {
     __meta__: {
       type: MarshalledType.Function,
-      name: fn.name,
+      name: fn.name.replace(/^bound /u, ''),
     },
     serialized: fn.toString(),
   }
