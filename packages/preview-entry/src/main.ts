@@ -99,5 +99,7 @@ function setup(previewWindow: PreviewWindow, token: number) {
 
 function afterJsScript(_window: PreviewWindow, token: number) {
   postMessage(token, { type: 'script-complete' })
-  afterJsScriptDeferred?.resolve()
+  setTimeout(() => {
+    afterJsScriptDeferred?.resolve()
+  }, 0)
 }
