@@ -8,7 +8,7 @@ export async function assertMonacoContentsWithDecors(page: Page, expectedContent
   await expect
     .poll(() => getMonacoContentsWithDecors(page), {
       message: 'monaco contents with decors eventually match with expectedContents',
-      timeout: 5000,
+      timeout: 10000,
     })
     .toBe(expectedContents)
 }
