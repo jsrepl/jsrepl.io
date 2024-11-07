@@ -76,7 +76,7 @@ export default function ReplPreview({ className }: { className?: string }) {
         pos === 'aside-right' && 'relative min-w-0 [grid-area:right-sidebar]',
         pos === 'float-bottom-right' && 'absolute bottom-1 right-4 z-10',
         pos === 'float-top-right' && 'absolute right-4 top-10 z-10',
-        !replState.showPreview && 'pointer-events-none !absolute !-left-full !right-auto opacity-0'
+        !replState.showPreview && 'pointer-events-none !absolute opacity-0'
       )}
     >
       {/* iframe must not be .sr-only or .hidden, otherwise timers will be throttled */}
