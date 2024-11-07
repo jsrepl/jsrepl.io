@@ -93,6 +93,65 @@ function isNewlyCreatedPath(path: NodePath) {
 function replPlugin({ types: t }: { types: typeof types }): PluginObj {
   const processedNodes = new WeakSet()
 
+  function ForInOrOfStatement(
+    this: PluginPass,
+    path: NodePath<types.ForInStatement | types.ForOfStatement>
+  ) {
+    if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+      return
+    }
+
+    processedNodes.add(path.node)
+    path.skipKey('left')
+
+    const leftPath = path.get('left')
+    if (t.isVariableDeclaration(leftPath.node) && t.isBlockStatement(path.node.body)) {
+      const vars: {
+        path: NodePath<types.Identifier | types.LVal>
+        identifier: types.Identifier
+      }[] = []
+
+      const declarations = leftPath.get('declarations') as NodePath<types.VariableDeclarator>[]
+      declarations.forEach((declaration) => {
+        const declarationId = declaration.get('id')
+        if (t.isIdentifier(declarationId.node)) {
+          vars.push({ path: declarationId, identifier: declarationId.node })
+        } else {
+          declarationId.traverse({
+            AssignmentPattern(path) {
+              path.skipKey('right')
+            },
+            ObjectProperty(path) {
+              path.skipKey('key')
+            },
+            Identifier(path) {
+              vars.push({ path, identifier: path.node })
+            },
+          })
+        }
+      })
+
+      const bodyPath = path.get('body') as NodePath<types.BlockStatement>
+
+      for (const variable of vars.reverse()) {
+        const callExpression = t.callExpression(t.identifier('__r'), [
+          t.objectExpression([
+            ...getCommonWrapperFields.call(this, {
+              t,
+              path: variable.path,
+              id: ++exprKey,
+              kind: 'assignment',
+            }),
+            t.objectProperty(t.identifier('memberName'), t.stringLiteral(variable.identifier.name)),
+          ]),
+          variable.identifier,
+        ])
+
+        bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
+      }
+    }
+  }
+
   return {
     visitor: {
       CallExpression(path) {
@@ -132,6 +191,63 @@ function replPlugin({ types: t }: { types: typeof types }): PluginObj {
             ])
           )
         }
+      },
+
+      ForStatement(path) {
+        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+          return
+        }
+
+        processedNodes.add(path.node)
+        path.skipKey('init')
+        path.skipKey('update')
+
+        const updatePath = path.get('update')
+        if (
+          t.isUpdateExpression(updatePath.node) &&
+          t.isIdentifier(updatePath.node.argument) &&
+          t.isBlockStatement(path.node.body)
+        ) {
+          const vars: {
+            path: NodePath<types.Identifier>
+            identifier: types.Identifier
+          }[] = [
+            {
+              path: updatePath.get('argument') as NodePath<types.Identifier>,
+              identifier: updatePath.node.argument,
+            },
+          ]
+
+          const bodyPath = path.get('body') as NodePath<types.BlockStatement>
+
+          for (const variable of vars.reverse()) {
+            const callExpression = t.callExpression(t.identifier('__r'), [
+              t.objectExpression([
+                ...getCommonWrapperFields.call(this, {
+                  t,
+                  path: variable.path,
+                  id: ++exprKey,
+                  kind: 'assignment',
+                }),
+                t.objectProperty(
+                  t.identifier('memberName'),
+                  t.stringLiteral(variable.identifier.name)
+                ),
+              ]),
+              variable.identifier,
+            ])
+
+            bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
+          }
+        }
+      },
+
+      ForInStatement(path) {
+        ForInOrOfStatement.call(this, path)
+      },
+
+      ForOfStatement(path) {
+        ForInOrOfStatement.call(this, path)
       },
 
       // const z = foo()
