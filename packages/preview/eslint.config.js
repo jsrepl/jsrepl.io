@@ -13,5 +13,8 @@ export default [
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
   },
 ]

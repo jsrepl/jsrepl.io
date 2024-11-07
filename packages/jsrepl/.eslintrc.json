@@ -4,6 +4,7 @@
   "ignorePatterns": ["public/e.js"],
   "rules": {
     "react-compiler/react-compiler": "error",
-    "@next/next/no-img-element": "off"
+    "@next/next/no-img-element": "off",
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
   }
 }
