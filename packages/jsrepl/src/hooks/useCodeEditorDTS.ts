@@ -67,7 +67,7 @@ export default function useCodeEditorDTS(
           }
 
           const sourceFile = ts.createSourceFile(
-            model.monacoModel.uri.path,
+            model.filePath,
             model.getValue(),
             ts.ScriptTarget.ESNext,
             true,

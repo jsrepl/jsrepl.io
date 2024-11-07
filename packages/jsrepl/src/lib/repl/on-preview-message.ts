@@ -13,14 +13,12 @@ export function onPreviewMessage(
   event: MessageEvent,
   {
     setPreviewIframeReadyId,
-    allPayloads,
-    payloadMap,
-    debouncedUpdateDecorations,
+    addPayload,
+    refreshPayloads,
   }: {
     setPreviewIframeReadyId: Dispatch<SetStateAction<string | null>>
-    allPayloads: Set<ReplPayload>
-    payloadMap: Map<number | string, ReplPayload>
-    debouncedUpdateDecorations: () => void
+    addPayload: (token: number | string, payload: ReplPayload) => void
+    refreshPayloads: (token: number | string) => void
   }
 ) {
   if (!validateEvent(event)) {
@@ -38,12 +36,10 @@ export function onPreviewMessage(
 
     if (payload.ctx.kind === 'window-error') {
       if (resolveErrorLocation(payload)) {
-        allPayloads.add(payload)
-        payloadMap.set(payload.ctx.id, payload)
+        addPayload(data.token, payload)
       }
     } else {
-      allPayloads.add(payload)
-      payloadMap.set(payload.ctx.id, payload)
+      addPayload(data.token, payload)
     }
   }
 
@@ -51,7 +47,7 @@ export function onPreviewMessage(
     (data.type === 'repl' || data.type === 'script-complete') &&
     data.token === replDataRef.current.token
   ) {
-    debouncedUpdateDecorations()
+    refreshPayloads(data.token)
   }
 }
 

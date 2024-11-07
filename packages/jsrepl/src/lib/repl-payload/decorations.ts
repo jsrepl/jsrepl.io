@@ -6,14 +6,23 @@ import { renderToDecorString } from './render-decor'
 
 let decorationUniqId = -1
 
-export function createDecorations(editor: monaco.editor.ICodeEditor, payloads: ReplPayload[]) {
-  const cssStyles: string[] = []
+export function createDecorations(
+  editor: monaco.editor.ICodeEditor,
+  payloads: ReplPayload[],
+  { highlightedPayloadIds }: { highlightedPayloadIds: string[] }
+) {
+  const cssStylesRef: string[] = []
   const decorationDefs = payloads
-    .map((payload) => getDecorDef(payload, cssStyles))
+    .map((payload) =>
+      getDecorDef(payload, {
+        cssStylesRef,
+        isHighlighted: highlightedPayloadIds.includes(payload.id),
+      })
+    )
     .filter((x) => x !== null)
 
   const decorations = editor.createDecorationsCollection(decorationDefs)
-  const removeCSS = cssInject(cssStyles.join('\n'), 'jsrepl-decor-defs')
+  const removeCSS = cssInject(cssStylesRef.join('\n'), 'jsrepl-decor-defs')
 
   return () => {
     decorations.clear()
@@ -23,7 +32,7 @@ export function createDecorations(editor: monaco.editor.ICodeEditor, payloads: R
 
 function getDecorDef(
   payload: ReplPayload,
-  cssStylesRef: string[]
+  { cssStylesRef, isHighlighted }: { cssStylesRef: string[]; isHighlighted: boolean }
 ): monaco.editor.IModelDeltaDecoration | null {
   try {
     const { /* result, */ ctx } = payload
@@ -46,7 +55,7 @@ function getDecorDef(
       range: new monaco!.Range(lineStart, 1, lineStart, 1),
       options: {
         isWholeLine: true,
-        afterContentClassName: `${codeEditorStyles.jsreplDecor} ${codeEditorStyles[`jsreplDecor-${kind}`] ?? ''} ${uniqClassName}`,
+        afterContentClassName: `${codeEditorStyles.jsreplDecor} ${codeEditorStyles[`jsreplDecor-${kind}`] ?? ''} ${uniqClassName} ${isHighlighted ? codeEditorStyles.jsreplDecorHighlighted : ''}`,
       },
     }
   } catch (e) {

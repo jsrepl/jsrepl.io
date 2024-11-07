@@ -27,16 +27,12 @@ export function abortRepl() {
 
 export async function sendRepl({
   models,
-  allPayloads,
-  payloadMap,
-  updateDecorations,
+  addPayload,
   previewIframe,
   theme,
 }: {
   models: Map<string, CodeEditorModel>
-  allPayloads: Set<ReplPayload>
-  payloadMap: Map<number | string, ReplPayload>
-  updateDecorations: () => void
+  addPayload: (token: number | string, payload: ReplPayload) => void
   previewIframe: HTMLIFrameElement
   theme: Theme
 }): Promise<ReplInfo> {
@@ -79,7 +75,7 @@ export async function sendRepl({
       if (model.kind === 'client-script') {
         const script = previewDoc.createElement('script')
         script.type = 'module'
-        script.src = model.monacoModel.uri.path
+        script.src = model.filePath
         previewDoc.head.appendChild(script)
       }
     }
@@ -149,9 +145,6 @@ export async function sendRepl({
   replData.bundle = bundle
   debugLog(DebugLog.REPL, 'esbuild bundle', bundle)
 
-  allPayloads.clear()
-  payloadMap.clear()
-
   const bundleErrors: esbuild.Message[] = [
     ...(bundle.error?.errors ?? []),
     ...(bundle.result?.errors ?? []),
@@ -164,14 +157,12 @@ export async function sendRepl({
 
   for (const error of bundleErrors) {
     const payload = getPayloadFromEsbuildMessage(error, 'error')
-    allPayloads.add(payload)
-    payloadMap.set(payload.ctx.id, payload)
+    addPayload(token, payload)
   }
 
   for (const warning of bundleWarnings) {
     const payload = getPayloadFromEsbuildMessage(warning, 'warning')
-    allPayloads.add(payload)
-    payloadMap.set(payload.ctx.id, payload)
+    addPayload(token, payload)
   }
 
   if (bundle.ok) {
@@ -202,7 +193,6 @@ export async function sendRepl({
 
   if (bundle.error) {
     consoleLogRepl('error', bundle.error.message)
-    updateDecorations()
   }
 
   const replInfo: ReplInfo = {

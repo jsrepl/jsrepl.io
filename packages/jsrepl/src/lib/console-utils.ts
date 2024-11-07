@@ -39,5 +39,6 @@ export function consoleLogRepl(
 ) {
   const extraStyles = typeof args[0] === 'string' && args[0].startsWith('%c') ? args.shift() : ''
   args = [`%cREPL${extraStyles}`, styles[level], ...args]
+  // eslint-disable-next-line no-console
   console[level](...args)
 }

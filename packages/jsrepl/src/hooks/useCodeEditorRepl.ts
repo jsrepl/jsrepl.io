@@ -4,24 +4,21 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react'
-import { type ReplPayload, type Theme } from '@jsrepl/shared-types'
+import { type Theme } from '@jsrepl/shared-types'
 import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import ToastDescriptionCopiedToClipboard from '@/components/toast-description-copied-to-clipboard'
 import { ReplInfoContext } from '@/context/repl-info-context'
+import { ReplPayloadsContext } from '@/context/repl-payloads-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
-import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
-import { createDecorations } from '@/lib/repl-payload/decorations'
-import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
 import { renderToJSONString } from '@/lib/repl-payload/render-json'
 import { renderToMockObject } from '@/lib/repl-payload/render-mock-object'
 import { renderToText } from '@/lib/repl-payload/render-text'
@@ -29,40 +26,23 @@ import { replDataRef } from '@/lib/repl/data'
 import { onPreviewMessage } from '@/lib/repl/on-preview-message'
 import { abortRepl, sendRepl } from '@/lib/repl/send-repl'
 import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
+import useReplDecorations from './useReplDecorations'
 
 export default function useCodeEditorRepl(
   editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>,
   { theme }: { theme: Theme }
 ) {
-  const { setReplInfo } = useContext(ReplInfoContext)!
   const { userState } = useContext(UserStateContext)!
+  const { setReplInfo } = useContext(ReplInfoContext)!
+  const { addPayload, refreshPayloads, payloads } = useContext(ReplPayloadsContext)!
+  useReplDecorations(editorRef)
 
-  const payloadMap = useMemo(() => new Map<number, ReplPayload>(), [])
-  const allPayloads = useMemo(() => new Set<ReplPayload>(), [])
-  const decorationsDisposable = useRef<() => void>()
   const previewIframe = useRef<HTMLIFrameElement>()
   const themeRef = useRef(theme)
   const [previewIframeReadyId, setPreviewIframeReadyId] = useState<string | null>(null)
   const [depsReady, setDepsReady] = useState(false)
-  const bundler = useMemo(() => getBundler(), [])
   const debouncedDoRepl = useRef<DebouncedFunction<typeof doRepl>>()
-  const debouncedUpdateDecorations = useRef<DebouncedFunction<typeof updateDecorations>>()
-
-  const updateDecorations = useCallback(() => {
-    const editor = editorRef.current
-    const activeModel = editor?.getModel()
-    if (!editor || !activeModel) {
-      return
-    }
-
-    decorationsDisposable.current?.()
-    const payloads = Array.from(payloadMap.values()).filter(
-      (payload) => payload.ctx.filePath === activeModel.uri.path
-    )
-    decorationsDisposable.current =
-      payloads.length > 0 ? createDecorations(editor, payloads) : undefined
-  }, [editorRef, payloadMap])
 
   const doRepl = useCallback(async () => {
     try {
@@ -72,9 +52,7 @@ export default function useCodeEditorRepl(
 
       const replInfo = await sendRepl({
         models,
-        allPayloads,
-        payloadMap,
-        updateDecorations,
+        addPayload,
         previewIframe: previewIframe.current!,
         theme: themeRef.current,
       })
@@ -92,28 +70,17 @@ export default function useCodeEditorRepl(
         duration: Infinity,
       })
     }
-  }, [
-    payloadMap,
-    allPayloads,
-    models,
-    setReplInfo,
-    updateDecorations,
-    depsReady,
-    previewIframeReadyId,
-  ])
+  }, [addPayload, models, setReplInfo, depsReady, previewIframeReadyId])
 
   const onMessage = useCallback(
     (event: MessageEvent) => {
       onPreviewMessage(event, {
         setPreviewIframeReadyId,
-        allPayloads,
-        payloadMap,
-        debouncedUpdateDecorations() {
-          debouncedUpdateDecorations.current?.()
-        },
+        addPayload,
+        refreshPayloads,
       })
     },
-    [payloadMap, allPayloads]
+    [addPayload, refreshPayloads]
   )
 
   useEffect(() => {
@@ -126,28 +93,18 @@ export default function useCodeEditorRepl(
   }, [doRepl])
 
   useEffect(() => {
-    const debounced = debounce(updateDecorations, 1)
-    debouncedUpdateDecorations.current = debounced
-
-    return () => {
-      debounced.clear()
-    }
-  }, [updateDecorations])
-
-  useEffect(() => {
     previewIframe.current = document.getElementById('preview-iframe') as HTMLIFrameElement
   }, [])
 
   useEffect(() => {
     return () => {
-      decorationsDisposable.current?.()
       abortRepl()
     }
   }, [])
 
   useEffect(() => {
     const [, loadBabel] = getBabel()
-    Promise.all([bundler.setup(), loadBabel()]).then(([bundlerSetupResult]) => {
+    Promise.all([getBundler().setup(), loadBabel()]).then(([bundlerSetupResult]) => {
       if (!bundlerSetupResult.ok) {
         toast.error('Failed to setup bundler', {
           duration: Infinity,
@@ -157,7 +114,7 @@ export default function useCodeEditorRepl(
 
       setDepsReady(true)
     })
-  }, [models, bundler])
+  }, [])
 
   useEffect(() => {
     if (!userState.autostartOnCodeChange) {
@@ -166,11 +123,7 @@ export default function useCodeEditorRepl(
 
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
-        replDataRef.current = {
-          token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
-        }
-
-        debouncedUpdateDecorations.current?.clear()
+        updateToken()
         debouncedDoRepl.current?.()
       })
     })
@@ -196,13 +149,13 @@ export default function useCodeEditorRepl(
   }, [onMessage])
 
   useEffect(() => {
-    if (depsReady && previewIframeReadyId) {
-      doRepl()
-    }
-  }, [depsReady, previewIframeReadyId, doRepl])
+    updateToken()
+    doRepl()
+  }, [doRepl])
 
   useEffect(() => {
     const onStartReplEvent = () => {
+      updateToken()
       doRepl()
     }
 
@@ -211,54 +164,13 @@ export default function useCodeEditorRepl(
     return () => {
       window.removeEventListener('jsrepl-start-repl', onStartReplEvent)
     }
-  }, [userState.autostartOnCodeChange, doRepl])
-
-  useEffect(() => {
-    const disposable = editorRef.current?.onDidChangeModel(() => {
-      updateDecorations()
-    })
-
-    return () => {
-      disposable?.dispose()
-    }
-  }, [editorRef, updateDecorations])
-
-  useEffect(() => {
-    const disposable = monaco.languages.registerHoverProvider('*', {
-      provideHover(model, position /*, token, context*/) {
-        const maxColumn = model.getLineMaxColumn(position.lineNumber)
-        if (position.column !== maxColumn) {
-          return
-        }
-
-        const hoverPayloads: ReplPayload[] = []
-        for (const payload of payloadMap.values()) {
-          if (
-            payload.ctx.filePath === model.uri.path &&
-            payload.ctx.lineStart === position.lineNumber
-          ) {
-            hoverPayloads.push(payload)
-          }
-        }
-
-        if (hoverPayloads.length === 0) {
-          return
-        }
-
-        return { contents: renderToHoverContents(hoverPayloads) }
-      },
-    })
-
-    return () => {
-      disposable.dispose()
-    }
-  }, [payloadMap])
+  }, [doRepl])
 
   useEffect(() => {
     const disposable = monaco.editor.registerCommand(
       'jsrepl.copyPayloadAsText',
       async (accessor, payloadId: string, showNotification: boolean) => {
-        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        const payload = payloads.find((payload) => payload.id === payloadId)
         if (!payload) {
           return
         }
@@ -288,13 +200,14 @@ export default function useCodeEditorRepl(
     return () => {
       disposable.dispose()
     }
-  }, [allPayloads])
+  }, [payloads])
 
   useEffect(() => {
     const disposable = monaco.editor.registerCommand(
       'jsrepl.copyPayloadAsJSON',
       async (accessor, payloadId: string, showNotification: boolean) => {
-        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        const payload = payloads.find((payload) => payload.id === payloadId)
+        console.log('test')
         if (!payload) {
           return
         }
@@ -324,13 +237,13 @@ export default function useCodeEditorRepl(
     return () => {
       disposable.dispose()
     }
-  }, [allPayloads])
+  }, [payloads])
 
   useEffect(() => {
     const disposable = monaco.editor.registerCommand(
       'jsrepl.dumpPayloadAsMockObjectToConsole',
       async (accessor, payloadId: string, showNotification: boolean) => {
-        const payload = Array.from(allPayloads).find((payload) => payload.id === payloadId)
+        const payload = payloads.find((payload) => payload.id === payloadId)
         if (!payload) {
           return
         }
@@ -357,12 +270,15 @@ export default function useCodeEditorRepl(
         // @ts-expect-error -- I don't care
         window[varName] = obj
 
+        // eslint-disable-next-line no-console
         console.log(varName)
         const isChrome = 'chrome' in window && navigator.userAgent.includes('Chrome')
         const isSafari = 'safari' in window && navigator.userAgent.includes('Safari')
         if (isChrome || isSafari) {
+          // eslint-disable-next-line no-console
           console.log('%o', obj)
         } else {
+          // eslint-disable-next-line no-console
           console.log(typeof obj === 'string' ? JSON.stringify(obj) : obj)
         }
 
@@ -378,27 +294,11 @@ export default function useCodeEditorRepl(
     return () => {
       disposable.dispose()
     }
-  }, [allPayloads])
+  }, [payloads])
+}
 
-  useEffect(() => {
-    const editor = editorRef.current
-    if (!editor) {
-      return
-    }
-
-    const disposable = editor.addAction({
-      id: 'jsrepl.copyContentsWithDecors',
-      label: 'Copy With REPL Decorations',
-      async run(editor) {
-        const contents = getEditorContentsWithReplDecors(editor)
-        if (contents !== null) {
-          await navigator.clipboard.writeText(contents)
-        }
-      },
-    })
-
-    return () => {
-      disposable.dispose()
-    }
-  }, [editorRef])
+function updateToken() {
+  replDataRef.current = {
+    token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
+  }
 }

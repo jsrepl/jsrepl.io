@@ -1,5 +1,7 @@
 import React from 'react'
+import ReplHistoryModeProvider from '@/components/repl-history-mode-provider'
 import ReplInfoProvider from '@/components/repl-info-provider'
+import ReplPayloadsProvider from '@/components/repl-payloads-provider'
 import ReplStateProvider from '@/components/repl-state-provider'
 import UserStateProvider from '@/components/user-state-provider'
 
@@ -7,7 +9,11 @@ export default function ReplPlaygroundProviders({ children }: { children: React.
   return (
     <ReplStateProvider>
       <UserStateProvider>
-        <ReplInfoProvider>{children}</ReplInfoProvider>
+        <ReplInfoProvider>
+          <ReplHistoryModeProvider>
+            <ReplPayloadsProvider>{children}</ReplPayloadsProvider>
+          </ReplHistoryModeProvider>
+        </ReplInfoProvider>
       </UserStateProvider>
     </ReplStateProvider>
   )

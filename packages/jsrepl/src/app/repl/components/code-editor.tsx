@@ -1,6 +1,7 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
@@ -13,7 +14,6 @@ import * as ReplFS from '@/lib/repl-fs'
 import { readOnlyFiles } from '@/lib/repl-fs-meta'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { virtualFilesStorage } from '@/lib/virtual-files-storage'
 import CodeEditorHeader from './code-editor-header'
 import styles from './code-editor.module.css'
 import { ErrorsNotification } from './errors-notification'
@@ -26,9 +26,11 @@ if (process.env.NEXT_PUBLIC_NODE_ENV === 'test' && typeof window !== 'undefined'
 export default function CodeEditor({ className }: { className?: string }) {
   const { replState, saveReplState } = useContext(ReplStateContext)!
   const { userState } = useContext(UserStateContext)!
+  const { historyMode } = useContext(ReplHistoryModeContext)!
 
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const monacoModelRefs = useRef(new Set<monaco.editor.ITextModel>())
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
@@ -36,28 +38,19 @@ export default function CodeEditor({ className }: { className?: string }) {
 
   const models = useMemo(() => {
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
+    console.log('models')
 
     replState.fs.walk('/', (path, entry) => {
       if (entry.kind === ReplFS.Kind.File) {
-        const content = entry.content.startsWith('virtual://')
-          ? virtualFilesStorage.get(entry.content) ?? entry.content
-          : entry.content
-
         const uri = monaco.Uri.parse('file://' + path)
-        let monacoModel = monaco.editor.getModel(uri)
-        if (!monacoModel) {
-          monacoModel = monaco.editor.createModel(content, getMonacoLanguage(uri.path), uri)
-        } else if (content !== monacoModel.getValue()) {
-          monacoModel.setValue(content)
-        }
-
-        const model = new CodeEditorModel(entry, monacoModel)
+        const model = new CodeEditorModel(uri, entry)
         map.set(uri.path, model)
       }
     })
 
     for (const monacoModel of monaco.editor.getModels()) {
       if (!map.has(monacoModel.uri.path)) {
+        console.log('monacoModel dispose in models', monacoModel.uri.path)
         monacoModel.dispose()
       }
     }
@@ -66,64 +59,73 @@ export default function CodeEditor({ className }: { className?: string }) {
   }, [replState.fs])
 
   useEffect(() => {
+    const _monacoModelRefs = new Set<monaco.editor.ITextModel>()
+
+    for (const model of models.values()) {
+      const value = model.getValue()
+      let monacoModel = monaco.editor.getModel(model.uri)
+      if (!monacoModel) {
+        monacoModel = monaco.editor.createModel(value, getMonacoLanguage(model.filePath), model.uri)
+      } else if (value !== monacoModel.getValue()) {
+        monacoModel.setValue(value)
+      }
+
+      model.monacoModel = monacoModel
+      _monacoModelRefs.add(monacoModel)
+    }
+
+    for (const monacoModel of monacoModelRefs.current) {
+      if (!_monacoModelRefs.has(monacoModel)) {
+        monacoModel.dispose()
+      }
+    }
+
+    monacoModelRefs.current = _monacoModelRefs
+  }, [models])
+
+  useEffect(() => {
+    return () => {
+      for (const monacoModel of monacoModelRefs.current) {
+        monacoModel.dispose()
+      }
+
+      monacoModelRefs.current = new Set<monaco.editor.ITextModel>()
+    }
+  }, [])
+
+  useEffect(() => {
     setupMonaco()
     setupTailwindCSS()
   }, [])
 
-  const onModelChange = useCallback(
-    (editorModel: InstanceType<typeof CodeEditorModel>) => {
-      if (readOnlyFiles.has(editorModel.filePath)) {
-        return
-      }
-
-      if (editorModel.filePath.startsWith('virtual://')) {
-        virtualFilesStorage.set(editorModel.filePath, editorModel.getValue())
-      } else {
-        editorModel.file.content = editorModel.getValue()
-      }
-      saveReplState()
-    },
-    [saveReplState]
-  )
-
   useEffect(() => {
     const disposables = Array.from(models.values()).map((model) => {
       return model.monacoModel.onDidChangeContent(() => {
-        onModelChange(model)
+        model.setValue(model.monacoModel.getValue())
+        saveReplState()
       })
     })
 
     return () => {
       disposables.forEach((disposable) => disposable.dispose())
     }
-  }, [models, onModelChange])
-
-  const currentTextModel = useMemo(
-    () => models.get(replState.activeModel)?.monacoModel ?? null,
-    [models, replState.activeModel]
-  )
-
-  useEffect(() => {
-    editorRef.current?.setModel(currentTextModel)
-  }, [currentTextModel])
+  }, [models, saveReplState])
 
   const isReadOnly = useMemo(() => {
-    const path = currentTextModel?.uri.path
+    if (historyMode) {
+      return true
+    }
+
+    const path = replState.activeModel
     if (path && readOnlyFiles.has(path)) {
       return true
     }
 
     return false
-  }, [currentTextModel])
-
-  useEffect(() => {
-    if (isReadOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id)) {
-      editorRef.current?.updateOptions({ readOnly: isReadOnly })
-    }
-  }, [isReadOnly])
+  }, [replState.activeModel, historyMode])
 
   const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
-    model: currentTextModel,
+    model: null,
     automaticLayout: true,
     padding: { top: 16, bottom: 16 },
     // TODO: make it configurable
@@ -144,6 +146,21 @@ export default function CodeEditor({ className }: { className?: string }) {
   })
 
   useEffect(() => {
+    const currentTextModel = models.get(replState.activeModel)?.monacoModel ?? null
+
+    console.log('editor setModel', currentTextModel, editorRef)
+    editorRef.current?.setModel(currentTextModel)
+    editorInitialOptions.current.model = currentTextModel
+  }, [models, replState.activeModel])
+
+  useEffect(() => {
+    editorInitialOptions.current.readOnly = isReadOnly
+    if (isReadOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id)) {
+      editorRef.current?.updateOptions({ readOnly: isReadOnly })
+    }
+  }, [isReadOnly])
+
+  useEffect(() => {
     editorRef.current?.updateOptions({ fontSize: userState.editorFontSize })
   }, [userState.editorFontSize])
 
@@ -155,30 +172,18 @@ export default function CodeEditor({ className }: { className?: string }) {
   }, [theme])
 
   useEffect(() => {
-    return () => {
-      for (const model of models.values()) {
-        model.dispose()
-      }
-    }
-  }, [models])
-
-  useEffect(() => {
-    return () => {
-      for (const monacoModel of monaco.editor.getModels()) {
-        monacoModel.dispose()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
+    console.log('editor create', editorRef)
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
     editorRef.current = editor
 
     return () => {
+      console.log('editor dispose')
+      editorRef.current = null
       editor.dispose()
     }
   }, [])
 
+  // TODO: move deeper in components tree, to not cause unnecessary re-renders due to "payloads" context dependency
   useCodeEditorDTS(editorRef, models)
   useCodeEditorRepl(editorRef, models, { theme })
 

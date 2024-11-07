@@ -1,7 +1,14 @@
 import { useCallback, useContext } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
-import { LucideFiles, LucidePlay } from 'lucide-react'
+import { ResumeIcon } from '@radix-ui/react-icons'
+import {
+  LucideChevronLeft,
+  LucideChevronRight,
+  LucideFiles,
+  LucidePause,
+  LucidePlay,
+} from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
 import IconPause from '~icons/mdi/pause.jsx'
 import IconGithub from '~icons/simple-icons/github.jsx'
@@ -18,6 +25,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
+import { ReplPayloadsContext } from '@/context/repl-payloads-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { Themes } from '@/lib/themes'
@@ -27,10 +36,61 @@ export default function ActivityBar() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { userState, setUserState } = useContext(UserStateContext)!
+  const { historyMode, setHistoryMode } = useContext(ReplHistoryModeContext)!
+  const { payloads } = useContext(ReplPayloadsContext)!
 
   const startRepl = useCallback(() => {
     window.dispatchEvent(new Event('jsrepl-start-repl'))
   }, [])
+
+  const toggleHistoryMode = useCallback(() => {
+    const lastPayload = payloads[payloads.length - 1]
+    if (!lastPayload) {
+      return
+    }
+
+    setHistoryMode((prev) => ({ ...prev, currentPayloadId: lastPayload.id }))
+  }, [payloads, setHistoryMode])
+
+  const historyModeGoPrev = useCallback(() => {
+    if (!historyMode) {
+      return
+    }
+
+    const currentIndex = payloads.findIndex(
+      (payload) => payload.id === historyMode.currentPayloadId
+    )
+    if (currentIndex === -1) {
+      return
+    }
+
+    const prevPayload = payloads[currentIndex - 1]
+    if (!prevPayload) {
+      return
+    }
+
+    setHistoryMode((prev) => ({ ...prev, currentPayloadId: prevPayload.id }))
+  }, [payloads, setHistoryMode, historyMode])
+
+  const historyModeGoNext = useCallback(() => {
+    if (!historyMode) {
+      return
+    }
+
+    const currentIndex = payloads.findIndex(
+      (payload) => payload.id === historyMode.currentPayloadId
+    )
+    if (currentIndex === -1) {
+      return
+    }
+
+    const nextPayload = payloads[currentIndex + 1]
+    if (!nextPayload) {
+      return
+    }
+
+    setHistoryMode((prev) => ({ ...prev, currentPayloadId: nextPayload.id }))
+  }, [payloads, setHistoryMode, historyMode])
 
   return (
     <div className="bg-activityBar flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
@@ -121,6 +181,33 @@ export default function ActivityBar() {
           </div>
         </TooltipContent>
       </Tooltip>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        className="text-activityBar-foreground"
+        onClick={toggleHistoryMode}
+      >
+        {historyMode ? <ResumeIcon width={18} height={18} /> : <LucidePause size={18} />}
+      </Button>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        className="text-activityBar-foreground"
+        onClick={historyModeGoPrev}
+      >
+        <LucideChevronLeft size={18} />
+      </Button>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        className="text-activityBar-foreground"
+        onClick={historyModeGoNext}
+      >
+        <LucideChevronRight size={18} />
+      </Button>
 
       <div className="flex-1" />
 

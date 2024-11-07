@@ -82,3 +82,7 @@
 .jsreplDecor-console-error {
   --color: rgb(177, 35, 35);
 }
+
+.jsreplDecorHighlighted {
+  outline: 2px solid green;
+}
