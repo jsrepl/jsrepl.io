@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
+import { MonacoEditorContext } from '@/context/monaco-editor-context'
 import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
@@ -14,22 +15,20 @@ import * as ReplFS from '@/lib/repl-fs'
 import { readOnlyFiles } from '@/lib/repl-fs-meta'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import CodeEditorHeader from './code-editor-header'
 import styles from './code-editor.module.css'
-import { ErrorsNotification } from './errors-notification'
 
 if (process.env.NEXT_PUBLIC_NODE_ENV === 'test' && typeof window !== 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(window as any).__monaco = monaco
 }
 
-export default function CodeEditor({ className }: { className?: string }) {
+export default function CodeEditor() {
   const { replState, saveReplState } = useContext(ReplStateContext)!
   const { userState } = useContext(UserStateContext)!
   const { historyMode } = useContext(ReplHistoryModeContext)!
+  const { editorRef, setEditor } = useContext(MonacoEditorContext)!
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const monacoModelRefs = useRef(new Set<monaco.editor.ITextModel>())
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
@@ -151,18 +150,18 @@ export default function CodeEditor({ className }: { className?: string }) {
     console.log('editor setModel', currentTextModel, editorRef)
     editorRef.current?.setModel(currentTextModel)
     editorInitialOptions.current.model = currentTextModel
-  }, [models, replState.activeModel])
+  }, [models, replState.activeModel, editorRef])
 
   useEffect(() => {
     editorInitialOptions.current.readOnly = isReadOnly
     if (isReadOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id)) {
       editorRef.current?.updateOptions({ readOnly: isReadOnly })
     }
-  }, [isReadOnly])
+  }, [isReadOnly, editorRef])
 
   useEffect(() => {
     editorRef.current?.updateOptions({ fontSize: userState.editorFontSize })
-  }, [userState.editorFontSize])
+  }, [userState.editorFontSize, editorRef])
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {
@@ -172,32 +171,25 @@ export default function CodeEditor({ className }: { className?: string }) {
   }, [theme])
 
   useEffect(() => {
-    console.log('editor create', editorRef)
+    console.log('editor create')
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
-    editorRef.current = editor
+    setEditor(editor)
 
     return () => {
       console.log('editor dispose')
-      editorRef.current = null
       editor.dispose()
+      setEditor(null)
     }
-  }, [])
+  }, [setEditor])
 
-  // TODO: move deeper in components tree, to not cause unnecessary re-renders due to "payloads" context dependency
-  useCodeEditorDTS(editorRef, models)
-  useCodeEditorRepl(editorRef, models, { theme })
+  useCodeEditorDTS(models)
+  useCodeEditorRepl(models, { theme })
 
   return (
-    <>
-      <div className={cn(className, 'relative flex min-w-24 flex-col [grid-area:editor]')}>
-        <CodeEditorHeader editorRef={editorRef} />
-        <div
-          ref={containerRef}
-          className={cn('min-h-0 flex-1', styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
-        />
-        <ErrorsNotification />
-      </div>
-    </>
+    <div
+      ref={containerRef}
+      className={cn('min-h-0 flex-1', styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
+    />
   )
 }
 

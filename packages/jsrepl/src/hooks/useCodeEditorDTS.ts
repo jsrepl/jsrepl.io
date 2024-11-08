@@ -38,7 +38,6 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOption
 monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOptions)
 
 export default function useCodeEditorDTS(
-  editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>
 ) {
   const modelPackages = useMemo(() => new Map<string, { abortController: AbortController }>(), [])

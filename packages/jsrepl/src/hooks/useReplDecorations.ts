@@ -1,6 +1,7 @@
-import { RefObject, useCallback, useContext, useEffect, useRef } from 'react'
+import { useCallback, useContext, useEffect, useRef } from 'react'
 import { ReplPayload } from '@jsrepl/shared-types'
 import * as monaco from 'monaco-editor'
+import { MonacoEditorContext } from '@/context/monaco-editor-context'
 import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
 import { ReplPayloadsContext } from '@/context/repl-payloads-context'
 import { ReplStateContext } from '@/context/repl-state-context'
@@ -8,12 +9,11 @@ import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { createDecorations } from '@/lib/repl-payload/decorations'
 import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
 
-export default function useReplDecorations(
-  editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>
-) {
+export default function useReplDecorations() {
   const { replState } = useContext(ReplStateContext)!
   const { historyMode } = useContext(ReplHistoryModeContext)!
   const { payloads } = useContext(ReplPayloadsContext)!
+  const { editorRef } = useContext(MonacoEditorContext)!
 
   const decorationsDisposable = useRef<() => void>()
   const provideHoverRef = useRef<typeof provideHover>()

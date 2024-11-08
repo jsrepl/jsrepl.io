@@ -1,12 +1,4 @@
-import {
-  RefObject,
-  createElement,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { createElement, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { type Theme } from '@jsrepl/shared-types'
 import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
@@ -29,14 +21,14 @@ import { updatePreviewTheme } from '@/lib/repl/update-preview-theme'
 import useReplDecorations from './useReplDecorations'
 
 export default function useCodeEditorRepl(
-  editorRef: RefObject<monaco.editor.IStandaloneCodeEditor | null>,
   models: Map<string, InstanceType<typeof CodeEditorModel>>,
   { theme }: { theme: Theme }
 ) {
   const { userState } = useContext(UserStateContext)!
   const { setReplInfo } = useContext(ReplInfoContext)!
   const { addPayload, refreshPayloads, payloads } = useContext(ReplPayloadsContext)!
-  useReplDecorations(editorRef)
+
+  useReplDecorations()
 
   const previewIframe = useRef<HTMLIFrameElement>()
   const themeRef = useRef(theme)

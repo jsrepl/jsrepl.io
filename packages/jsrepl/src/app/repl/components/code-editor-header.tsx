@@ -2,7 +2,6 @@
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { LucideEllipsisVertical, LucideX } from 'lucide-react'
-import type * as monaco from 'monaco-editor'
 import IconPrettier from '~icons/simple-icons/prettier'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { MonacoEditorContext } from '@/context/monaco-editor-context'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
@@ -26,13 +26,10 @@ type ModelSwitcherOption = {
   warningCount: number
 }
 
-export default function CodeEditorHeader({
-  editorRef,
-}: {
-  editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>
-}) {
+export default function CodeEditorHeader() {
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { replInfo } = useContext(ReplInfoContext)!
+  const { editorRef } = useContext(MonacoEditorContext)!
   const headerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

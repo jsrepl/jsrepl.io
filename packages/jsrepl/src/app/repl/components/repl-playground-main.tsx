@@ -4,7 +4,7 @@ import React from 'react'
 import { useEarlyAccessToast } from '@/hooks/useEarlyAccessToast'
 import { useNewVersionToast } from '@/hooks/useNewVersionToast'
 import ActivityBar from './activity-bar'
-import CodeEditor from './code-editor'
+import CodeEditorContainer from './code-editor-container'
 import GridLayout from './grid-layout'
 import LeftSidebar from './left-sidebar'
 import Preview from './preview'
@@ -19,7 +19,7 @@ export default function ReplPlaygroundMain() {
         <GridLayout>
           <ActivityBar />
           <LeftSidebar />
-          <CodeEditor />
+          <CodeEditorContainer />
           <Preview />
         </GridLayout>
       </main>
