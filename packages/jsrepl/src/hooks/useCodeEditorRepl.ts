@@ -151,10 +151,10 @@ export default function useCodeEditorRepl(
       doRepl()
     }
 
-    window.addEventListener('jsrepl-start-repl', onStartReplEvent)
+    window.addEventListener('jsrepl-restart-repl', onStartReplEvent)
 
     return () => {
-      window.removeEventListener('jsrepl-start-repl', onStartReplEvent)
+      window.removeEventListener('jsrepl-restart-repl', onStartReplEvent)
     }
   }, [doRepl])
 

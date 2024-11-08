@@ -17,7 +17,7 @@ import { FilesPanelContext } from './files-panel-context'
 import { NewFileMenuItems } from './new-file-menu-items'
 
 export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) {
-  const { treeViewRef, createFolder, deleteItem, setEditingItem, duplicateItem } =
+  const { treeViewRef, isReadOnly, createFolder, deleteItem, setEditingItem, duplicateItem } =
     useContext(FilesPanelContext)!
 
   return (
@@ -53,14 +53,14 @@ export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) 
           {entry.kind === ReplFS.Kind.Directory && (
             <>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>New File…</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled={isReadOnly}>New File…</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent>
                     <NewFileMenuItems dirPath={path} />
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
               </DropdownMenuSub>
-              <DropdownMenuItem onClick={() => createFolder(path, '')}>
+              <DropdownMenuItem onClick={() => createFolder(path, '')} disabled={isReadOnly}>
                 New Folder…
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -70,6 +70,7 @@ export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) 
             onClick={() =>
               setEditingItem({ path, kind: entry.kind, isNew: false, editingType: 'name' })
             }
+            disabled={isReadOnly}
           >
             Rename…
           </DropdownMenuItem>
@@ -77,12 +78,17 @@ export function Actions({ path, entry }: { path: string; entry: ReplFS.Entry }) 
             onClick={() => {
               setEditingItem({ path, kind: entry.kind, isNew: false, editingType: 'path' })
             }}
+            disabled={isReadOnly}
           >
             Move…
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => duplicateItem(path)}>Duplicate</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => duplicateItem(path)} disabled={isReadOnly}>
+            Duplicate
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => deleteItem(path)}>Delete</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => deleteItem(path)} disabled={isReadOnly}>
+            Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

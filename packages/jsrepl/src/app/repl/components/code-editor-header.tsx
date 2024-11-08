@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { LucideEllipsisVertical, LucideX } from 'lucide-react'
+import { LucideEllipsisVertical, LucideLock, LucideX } from 'lucide-react'
 import IconPrettier from '~icons/simple-icons/prettier'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +14,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { MonacoEditorContext } from '@/context/monaco-editor-context'
 import { ReplInfoContext } from '@/context/repl-info-context'
+import { ReplModelsContext } from '@/context/repl-models-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { cn } from '@/lib/utils'
 import { FileIcon } from './file-icon'
@@ -30,7 +31,13 @@ export default function CodeEditorHeader() {
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { replInfo } = useContext(ReplInfoContext)!
   const { editorRef } = useContext(MonacoEditorContext)!
+  const { readOnlyModels } = useContext(ReplModelsContext)!
+
   const headerRef = useRef<HTMLDivElement>(null)
+
+  const isReadOnly = useMemo(() => {
+    return readOnlyModels.has(replState.activeModel)
+  }, [replState.activeModel, readOnlyModels])
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -141,6 +148,11 @@ export default function CodeEditorHeader() {
                       {modelOption.labelDescription}
                     </span>
                   )}
+                  {readOnlyModels.has(modelOption.value) && (
+                    <span className="opacity-40 group-hover:opacity-80 group-data-[active=true]:opacity-80">
+                      <LucideLock size={14} />
+                    </span>
+                  )}
                 </span>
               </Button>
 
@@ -165,6 +177,7 @@ export default function CodeEditorHeader() {
               variant="ghost"
               size="icon-xs"
               className="text-muted-foreground"
+              disabled={isReadOnly}
               onClick={() => {
                 editorRef.current?.getAction('editor.action.formatDocument')?.run()
               }}

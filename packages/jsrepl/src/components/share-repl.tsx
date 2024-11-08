@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { LucideClipboardCheck, LucideClipboardCopy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { SetReplStoredState } from '@/hooks/useReplStoredState'
+import { ReplStateContext } from '@/context/repl-state-context'
 
-export default function ShareRepl({ setReplState }: { setReplState: SetReplStoredState }) {
+export default function ShareRepl() {
+  const { setReplState } = useContext(ReplStateContext)!
   const searchParams = useSearchParams()
 
   const inputRef = useRef<HTMLInputElement>(null)

@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
+import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
 import { cn } from '@/lib/utils'
 import { PreviewPosition } from '@/types'
@@ -64,8 +64,8 @@ const iframeAllow = [
 export default function ReplPreview({ className }: { className?: string }) {
   const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL
 
-  const { replState, setReplState } = useContext(ReplStateContext)!
   const { userState, setUserState } = useContext(UserStateContext)!
+  const { previewShown, setPreviewShown } = useReplPreviewShown()
   const [size, setSize] = useReplPreviewSize()
   const pos = userState.previewPos
 
@@ -76,7 +76,7 @@ export default function ReplPreview({ className }: { className?: string }) {
         pos === 'aside-right' && 'relative min-w-0 [grid-area:right-sidebar]',
         pos === 'float-bottom-right' && 'absolute bottom-1 right-4 z-10',
         pos === 'float-top-right' && 'absolute right-4 top-10 z-10',
-        !replState.showPreview && 'pointer-events-none !absolute opacity-0'
+        !previewShown && 'pointer-events-none !absolute opacity-0'
       )}
     >
       {/* iframe must not be .sr-only or .hidden, otherwise timers will be throttled */}
@@ -159,7 +159,7 @@ export default function ReplPreview({ className }: { className?: string }) {
                 variant="ghost"
                 size="none"
                 className="text-secondary-foreground/60 h-6 w-6 p-0.5 ring-inset"
-                onClick={() => setReplState((prev) => ({ ...prev, showPreview: false }))}
+                onClick={() => setPreviewShown(false)}
               >
                 <LucideX size={18} />
               </Button>

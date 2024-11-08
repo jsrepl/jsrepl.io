@@ -2,17 +2,14 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
 import { MonacoEditorContext } from '@/context/monaco-editor-context'
-import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
+import { ReplModelsContext } from '@/context/repl-models-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
-import { CodeEditorModel } from '@/lib/code-editor-model'
 import { getFileExtension } from '@/lib/fs-utils'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
-import * as ReplFS from '@/lib/repl-fs'
-import { readOnlyFiles } from '@/lib/repl-fs-meta'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
 import styles from './code-editor.module.css'
@@ -25,37 +22,15 @@ if (process.env.NEXT_PUBLIC_NODE_ENV === 'test' && typeof window !== 'undefined'
 export default function CodeEditor() {
   const { replState, saveReplState } = useContext(ReplStateContext)!
   const { userState } = useContext(UserStateContext)!
-  const { historyMode } = useContext(ReplHistoryModeContext)!
   const { editorRef, setEditor } = useContext(MonacoEditorContext)!
+  const { models, readOnlyModels } = useContext(ReplModelsContext)!
 
   const containerRef = useRef<HTMLDivElement>(null)
   const monacoModelRefs = useRef(new Set<monaco.editor.ITextModel>())
 
   const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
-  const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0], [themeId])
-
-  const models = useMemo(() => {
-    const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
-    console.log('models')
-
-    replState.fs.walk('/', (path, entry) => {
-      if (entry.kind === ReplFS.Kind.File) {
-        const uri = monaco.Uri.parse('file://' + path)
-        const model = new CodeEditorModel(uri, entry)
-        map.set(uri.path, model)
-      }
-    })
-
-    for (const monacoModel of monaco.editor.getModels()) {
-      if (!map.has(monacoModel.uri.path)) {
-        console.log('monacoModel dispose in models', monacoModel.uri.path)
-        monacoModel.dispose()
-      }
-    }
-
-    return map
-  }, [replState.fs])
+  const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0]!, [themeId])
 
   useEffect(() => {
     const _monacoModelRefs = new Set<monaco.editor.ITextModel>()
@@ -111,17 +86,12 @@ export default function CodeEditor() {
   }, [models, saveReplState])
 
   const isReadOnly = useMemo(() => {
-    if (historyMode) {
-      return true
-    }
+    return readOnlyModels.has(replState.activeModel)
+  }, [replState.activeModel, readOnlyModels])
 
-    const path = replState.activeModel
-    if (path && readOnlyFiles.has(path)) {
-      return true
-    }
-
-    return false
-  }, [replState.activeModel, historyMode])
+  const readOnlyMessage = useMemo(() => {
+    return readOnlyModels.get(replState.activeModel)?.message
+  }, [replState.activeModel, readOnlyModels])
 
   const editorInitialOptions = useRef<monaco.editor.IStandaloneEditorConstructionOptions>({
     model: null,
@@ -153,11 +123,21 @@ export default function CodeEditor() {
   }, [models, replState.activeModel, editorRef])
 
   useEffect(() => {
-    editorInitialOptions.current.readOnly = isReadOnly
-    if (isReadOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id)) {
-      editorRef.current?.updateOptions({ readOnly: isReadOnly })
+    const options = {
+      readOnly: isReadOnly,
+      readOnlyMessage: readOnlyMessage ? { value: readOnlyMessage } : undefined,
     }
-  }, [isReadOnly, editorRef])
+
+    Object.assign(editorInitialOptions.current, options)
+
+    if (
+      options.readOnly !== editorRef.current?.getOption(monaco.editor.EditorOptions.readOnly.id) ||
+      options.readOnlyMessage !==
+        editorRef.current?.getOption(monaco.editor.EditorOptions.readOnlyMessage.id)
+    ) {
+      editorRef.current?.updateOptions(options)
+    }
+  }, [isReadOnly, editorRef, readOnlyMessage])
 
   useEffect(() => {
     editorRef.current?.updateOptions({ fontSize: userState.editorFontSize })

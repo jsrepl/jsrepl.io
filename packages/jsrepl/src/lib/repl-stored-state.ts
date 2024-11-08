@@ -97,7 +97,7 @@ function loadSchemaV0(searchParams: ReturnType<typeof useSearchParams>, state: R
   if (Array.isArray(models)) {
     models = models.map((model) => ({
       ...model,
-      path: 'uri' in model ? oldPathMap[model.uri as string] ?? model.uri : model.path,
+      path: 'uri' in model ? oldPathMap[model.uri as string] ?? (model.uri as string) : model.path,
     }))
   } else if (typeof models === 'object' && models !== null && 'tsx' in models) {
     // Old format

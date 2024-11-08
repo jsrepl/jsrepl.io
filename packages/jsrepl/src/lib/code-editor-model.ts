@@ -1,6 +1,5 @@
 import type * as Monaco from 'monaco-editor'
 import * as ReplFS from '@/lib/repl-fs'
-import { readOnlyFiles } from '@/lib/repl-fs-meta'
 import { virtualFilesStorage } from '@/lib/virtual-files-storage'
 import { getFileExtension } from './fs-utils'
 
@@ -23,10 +22,6 @@ export class CodeEditorModel {
   }
 
   setValue(value: string) {
-    if (this.isReadOnly) {
-      return
-    }
-
     const file = this.#file
     if (this.isVirtualFile) {
       virtualFilesStorage.set(this.virtualFilePath!, value)
@@ -45,10 +40,6 @@ export class CodeEditorModel {
 
   get virtualFilePath() {
     return this.isVirtualFile ? this.#file.content : null
-  }
-
-  get isReadOnly() {
-    return readOnlyFiles.has(this.filePath)
   }
 
   get uri() {

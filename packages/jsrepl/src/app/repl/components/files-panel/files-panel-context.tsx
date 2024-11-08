@@ -4,6 +4,7 @@ import { EditingItem } from './edit-item'
 
 export type FilesPanelContextType = {
   treeViewRef: React.RefObject<HTMLDivElement>
+  isReadOnly: boolean
   setExpandedItemIds: Dispatch<SetStateAction<string[]>>
   setEditingItem: Dispatch<SetStateAction<EditingItem | null>>
   setSelectedItemId: Dispatch<SetStateAction<string>>

@@ -2,8 +2,8 @@ import { useCallback, useContext, useEffect, useRef } from 'react'
 import { ReplPayload } from '@jsrepl/shared-types'
 import * as monaco from 'monaco-editor'
 import { MonacoEditorContext } from '@/context/monaco-editor-context'
-import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
 import { ReplPayloadsContext } from '@/context/repl-payloads-context'
+import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { createDecorations } from '@/lib/repl-payload/decorations'
@@ -11,7 +11,7 @@ import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
 
 export default function useReplDecorations() {
   const { replState } = useContext(ReplStateContext)!
-  const { historyMode } = useContext(ReplHistoryModeContext)!
+  const { rewindMode } = useContext(ReplRewindModeContext)!
   const { payloads } = useContext(ReplPayloadsContext)!
   const { editorRef } = useContext(MonacoEditorContext)!
 
@@ -26,14 +26,14 @@ export default function useReplDecorations() {
           map.set(payload.ctx.id, payload)
         }
 
-        if (historyMode?.currentPayloadId === payload.id) {
+        if (rewindMode.active && rewindMode.currentPayloadId === payload.id) {
           break
         }
       }
 
       return Array.from(map.values())
     },
-    [payloads, historyMode?.currentPayloadId]
+    [payloads, rewindMode.currentPayloadId, rewindMode.active]
   )
 
   const updateDecorations = useCallback(() => {
@@ -46,15 +46,20 @@ export default function useReplDecorations() {
     decorationsDisposable.current?.()
 
     const payloads = getDisplayedPayloads((payload) => payload.ctx.filePath === activeModel)
-    const highlightedPayloadIds = historyMode?.currentPayloadId
-      ? [historyMode.currentPayloadId]
-      : []
+    const highlightedPayloadIds =
+      rewindMode.active && rewindMode.currentPayloadId ? [rewindMode.currentPayloadId] : []
 
     decorationsDisposable.current =
       payloads.length > 0
         ? createDecorations(editor, payloads, { highlightedPayloadIds })
         : undefined
-  }, [editorRef, getDisplayedPayloads, historyMode, replState.activeModel])
+  }, [
+    editorRef,
+    getDisplayedPayloads,
+    rewindMode.active,
+    rewindMode.currentPayloadId,
+    replState.activeModel,
+  ])
 
   useEffect(() => {
     updateDecorations()

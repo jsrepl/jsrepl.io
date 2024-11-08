@@ -1,28 +1,28 @@
-import { type Dispatch, type SetStateAction, useCallback } from 'react'
-import { type ReplStoredState } from '@/types'
+import { useCallback, useContext } from 'react'
+import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
+import { ReplStateContext } from '@/context/repl-state-context'
 
-export function useReplPreviewShown({
-  replState,
-  setReplState,
-}: {
-  replState: ReplStoredState
-  setReplState: Dispatch<SetStateAction<ReplStoredState>>
-}): [boolean, (force?: boolean) => void] {
-  const shown = replState.showPreview
+export type UseReplPreviewShown = {
+  previewEnabled: boolean
+  previewShown: boolean
+  setPreviewShown: (value: boolean | ((prevState: boolean) => boolean)) => void
+}
 
-  const toggle = useCallback(
-    (force?: boolean) => {
-      if (typeof force === 'boolean' && shown === force) {
-        return
-      }
+export function useReplPreviewShown(): UseReplPreviewShown {
+  const { replState, setReplState } = useContext(ReplStateContext)!
+  const { rewindMode } = useContext(ReplRewindModeContext)!
 
+  const enabled = !rewindMode.active
+  const shown = enabled && replState.showPreview
+  const setShown = useCallback(
+    (value: boolean | ((prevState: boolean) => boolean)) => {
       setReplState((prev) => ({
         ...prev,
-        showPreview: typeof force === 'boolean' ? force : !shown,
+        showPreview: typeof value === 'function' ? value(prev.showPreview) : value,
       }))
     },
-    [shown, setReplState]
+    [setReplState]
   )
 
-  return [shown, toggle]
+  return { previewEnabled: enabled, previewShown: shown, setPreviewShown: setShown }
 }

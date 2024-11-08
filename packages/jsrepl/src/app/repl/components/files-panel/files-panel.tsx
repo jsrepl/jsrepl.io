@@ -12,6 +12,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { TreeDataItem, TreeView } from '@/components/ui/tree-view'
 import { ReplInfoContext } from '@/context/repl-info-context'
+import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
 import { ReplStateContext } from '@/context/repl-state-context'
 import * as ReplFS from '@/lib/repl-fs'
 import { EditItem, EditingItem } from './edit-item'
@@ -22,15 +23,18 @@ import { fsEntryToTreeDataItem, getAutoExpandedItemIds } from './utils'
 export default function FilesPanel() {
   const { replState, setReplState } = useContext(ReplStateContext)!
   const { replInfo } = useContext(ReplInfoContext)!
+  const { rewindMode } = useContext(ReplRewindModeContext)!
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
   const [selectedItemId, setSelectedItemId] = useState<string>(replState.activeModel)
   const treeDataRef = useRef<TreeDataItem[]>([])
   const treeViewRef = useRef<HTMLDivElement>(null)
 
+  const isReadOnly = rewindMode.active
+
   const treeData: TreeDataItem[] = useMemo(() => {
     const [root] = fsEntryToTreeDataItem('/', replState.fs.root, replInfo)
 
-    if (editingItem) {
+    if (editingItem && !isReadOnly) {
       const dirNames = editingItem.path.split('/').slice(1)
       const itemName = dirNames.pop()!
       const dir = dirNames.reduce<TreeDataItem | undefined>(
@@ -58,7 +62,7 @@ export default function FilesPanel() {
     }
 
     return root.children!
-  }, [replState.fs, replInfo, editingItem])
+  }, [replState.fs, replInfo, editingItem, isReadOnly])
 
   useEffect(() => {
     treeDataRef.current = treeData
@@ -265,6 +269,7 @@ export default function FilesPanel() {
   const filesPanelContextValue: FilesPanelContextType = useMemo(
     () => ({
       treeViewRef,
+      isReadOnly,
       setExpandedItemIds,
       setEditingItem,
       setSelectedItemId,
@@ -273,7 +278,7 @@ export default function FilesPanel() {
       duplicateItem,
       deleteItem,
     }),
-    [createFile, createFolder, deleteItem, duplicateItem]
+    [createFile, createFolder, deleteItem, duplicateItem, isReadOnly]
   )
 
   useEffect(() => {
@@ -305,7 +310,12 @@ export default function FilesPanel() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-muted-foreground"
+                        disabled={isReadOnly}
+                      >
                         <LucideFilePlus size={16} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -336,6 +346,7 @@ export default function FilesPanel() {
                     variant="ghost"
                     size="icon-xs"
                     className="text-muted-foreground"
+                    disabled={isReadOnly}
                     onClick={() => createFolder('')}
                   >
                     <LucideFolderPlus size={16} />

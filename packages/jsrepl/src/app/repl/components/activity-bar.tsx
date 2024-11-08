@@ -1,16 +1,9 @@
 import { useCallback, useContext } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
-import { ResumeIcon } from '@radix-ui/react-icons'
-import {
-  LucideChevronLeft,
-  LucideChevronRight,
-  LucideFiles,
-  LucidePause,
-  LucidePlay,
-} from 'lucide-react'
+import { ReplPayload } from '@jsrepl/shared-types'
+import { LucideFiles, LucidePlay, LucideRewind, LucideRotateCw } from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
-import IconPause from '~icons/mdi/pause.jsx'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import ShareRepl from '@/components/share-repl'
@@ -25,72 +18,35 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { ReplHistoryModeContext } from '@/context/repl-history-mode-context'
 import { ReplPayloadsContext } from '@/context/repl-payloads-context'
-import { ReplStateContext } from '@/context/repl-state-context'
+import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
 import { UserStateContext } from '@/context/user-state-context'
+import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
 
 export default function ActivityBar() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
-  const { replState, setReplState } = useContext(ReplStateContext)!
   const { userState, setUserState } = useContext(UserStateContext)!
-  const { historyMode, setHistoryMode } = useContext(ReplHistoryModeContext)!
+  const { rewindMode, setRewindMode } = useContext(ReplRewindModeContext)!
   const { payloads } = useContext(ReplPayloadsContext)!
+  const { previewEnabled, previewShown, setPreviewShown } = useReplPreviewShown()
 
-  const startRepl = useCallback(() => {
-    window.dispatchEvent(new Event('jsrepl-start-repl'))
-  }, [])
+  const restartRepl = useCallback(() => {
+    setRewindMode((prev) => ({ ...prev, active: false, currentPayloadId: null }))
+    window.dispatchEvent(new Event('jsrepl-restart-repl'))
+  }, [setRewindMode])
 
-  const toggleHistoryMode = useCallback(() => {
-    const lastPayload = payloads[payloads.length - 1]
-    if (!lastPayload) {
-      return
-    }
-
-    setHistoryMode((prev) => ({ ...prev, currentPayloadId: lastPayload.id }))
-  }, [payloads, setHistoryMode])
-
-  const historyModeGoPrev = useCallback(() => {
-    if (!historyMode) {
-      return
-    }
-
-    const currentIndex = payloads.findIndex(
-      (payload) => payload.id === historyMode.currentPayloadId
-    )
-    if (currentIndex === -1) {
-      return
-    }
-
-    const prevPayload = payloads[currentIndex - 1]
-    if (!prevPayload) {
-      return
-    }
-
-    setHistoryMode((prev) => ({ ...prev, currentPayloadId: prevPayload.id }))
-  }, [payloads, setHistoryMode, historyMode])
-
-  const historyModeGoNext = useCallback(() => {
-    if (!historyMode) {
-      return
-    }
-
-    const currentIndex = payloads.findIndex(
-      (payload) => payload.id === historyMode.currentPayloadId
-    )
-    if (currentIndex === -1) {
-      return
-    }
-
-    const nextPayload = payloads[currentIndex + 1]
-    if (!nextPayload) {
-      return
-    }
-
-    setHistoryMode((prev) => ({ ...prev, currentPayloadId: nextPayload.id }))
-  }, [payloads, setHistoryMode, historyMode])
+  const toggleRewindMode = useCallback(() => {
+    setRewindMode((prev) => {
+      if (prev.active) {
+        return { ...prev, active: false, currentPayloadId: null }
+      } else {
+        const lastPayload: ReplPayload | undefined = payloads[payloads.length - 1]
+        return { ...prev, active: true, currentPayloadId: lastPayload ? lastPayload.id : null }
+      }
+    })
+  }, [payloads, setRewindMode])
 
   return (
     <div className="bg-activityBar flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
@@ -135,9 +91,10 @@ export default function ActivityBar() {
             variant="ghost"
             className={cn(
               'text-activityBar-foreground',
-              replState.showPreview && 'bg-accent border-activityBar-foreground/30 border'
+              previewShown && 'bg-accent border-activityBar-foreground/30 border'
             )}
-            onClick={() => setReplState((prev) => ({ ...prev, showPreview: !prev.showPreview }))}
+            disabled={!previewEnabled}
+            onClick={() => setPreviewShown((prev) => !prev)}
           >
             <LucideEye size={20} />
           </Button>
@@ -155,21 +112,22 @@ export default function ActivityBar() {
             size="icon"
             variant="ghost"
             className="text-activityBar-foreground"
-            onClick={startRepl}
+            onClick={restartRepl}
           >
             <div className="relative">
-              <LucidePlay size={20} />
-              {!userState.autostartOnCodeChange && (
-                <IconPause width={10} height={10} className="absolute -bottom-1 -right-0.5" />
+              {userState.autostartOnCodeChange ? (
+                <LucideRotateCw size={18} />
+              ) : (
+                <LucidePlay size={19} />
               )}
             </div>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={8} align="start">
-          Start / Restart REPL
+          {userState.autostartOnCodeChange ? 'Restart REPL' : 'Start REPL'}
           <div className="bg-secondary text-secondary-foreground border-primary -mx-2 -mb-1 mt-1 rounded-b border px-2 py-2">
             <label className="flex items-center gap-1">
-              <span>Autostart on code change</span>
+              <span>Restart on code change</span>
               <input
                 type="checkbox"
                 defaultChecked={userState.autostartOnCodeChange}
@@ -182,32 +140,24 @@ export default function ActivityBar() {
         </TooltipContent>
       </Tooltip>
 
-      <Button
-        size="icon"
-        variant="ghost"
-        className="text-activityBar-foreground"
-        onClick={toggleHistoryMode}
-      >
-        {historyMode ? <ResumeIcon width={18} height={18} /> : <LucidePause size={18} />}
-      </Button>
-
-      <Button
-        size="icon"
-        variant="ghost"
-        className="text-activityBar-foreground"
-        onClick={historyModeGoPrev}
-      >
-        <LucideChevronLeft size={18} />
-      </Button>
-
-      <Button
-        size="icon"
-        variant="ghost"
-        className="text-activityBar-foreground"
-        onClick={historyModeGoNext}
-      >
-        <LucideChevronRight size={18} />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              'text-activityBar-foreground',
+              rewindMode.active && 'bg-accent border-activityBar-foreground/30 border'
+            )}
+            onClick={toggleRewindMode}
+          >
+            <LucideRewind size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          Rewind mode
+        </TooltipContent>
+      </Tooltip>
 
       <div className="flex-1" />
 
@@ -259,7 +209,7 @@ export default function ActivityBar() {
 
         <DropdownMenuContent className="w-96" side="left" align="end">
           <DropdownMenuLabel className="text-foreground/80 text-sm font-normal">
-            <ShareRepl setReplState={setReplState} />
+            <ShareRepl />
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>

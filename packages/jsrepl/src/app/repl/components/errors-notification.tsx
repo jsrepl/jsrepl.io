@@ -62,9 +62,13 @@ function Location({ location }: { location: esbuild.Location }) {
       size="none"
       className="leading-5"
       onClick={() => {
+        const filePath = `/${location.file}`
         setReplState((state) => ({
           ...state,
-          activeModel: `/${location.file}`,
+          activeModel: filePath,
+          openedModels: state.openedModels.includes(filePath)
+            ? state.openedModels
+            : [...state.openedModels, filePath],
         }))
       }}
     >

@@ -83,6 +83,7 @@
   --color: rgb(177, 35, 35);
 }
 
-.jsreplDecorHighlighted {
-  outline: 2px solid green;
+.jsreplDecorHighlighted::after {
+  outline: 2px solid theme('colors.primary.DEFAULT');
+  outline-offset: 1px;
 }

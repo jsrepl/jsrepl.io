@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import debounce from 'debounce'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
