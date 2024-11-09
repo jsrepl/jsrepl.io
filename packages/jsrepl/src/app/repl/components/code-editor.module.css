@@ -47,13 +47,13 @@
 }
 
 .jsreplDecor {
-  --color: #666;
   pointer-events: none;
 
   &::before {
     margin: 0 0 0 1em;
     content: '// → ';
     color: var(--color);
+    opacity: var(--opacity, 0.4);
   }
 
   &::after {
@@ -63,27 +63,38 @@
     text-decoration: none;
     background-color: rgba(0, 0, 0, 0);
     color: var(--color);
+    opacity: var(--opacity, 0.4);
   }
 
   & + .jsreplDecor::before {
     margin-left: 0;
     content: ', ';
-    color: #666;
   }
 }
 
 .jsreplDecor-warning,
 .jsreplDecor-console-warn {
-  --color: rgb(177, 105, 35);
+  &::after {
+    --color: light-dark(rgb(175, 87, 0), rgb(255, 128, 0));
+    --opacity: 0.7;
+    text-decoration: underline wavy var(--color) 0.8px;
+    text-underline-offset: 3px;
+  }
 }
 
 .jsreplDecor-error,
 .jsreplDecor-window-error,
 .jsreplDecor-console-error {
-  --color: rgb(177, 35, 35);
+  &::after {
+    --color: light-dark(rgb(190, 0, 0), rgb(255, 31, 31));
+    --opacity: 0.7;
+    text-decoration: underline wavy var(--color) 0.8px;
+    text-underline-offset: 3px;
+  }
 }
 
 .jsreplDecorHighlighted::after {
+  --opacity: 0.9;
   outline: 2px solid theme('colors.primary.DEFAULT');
   outline-offset: 1px;
 }
