@@ -203,8 +203,8 @@ export function resetFileSystem(files: Record<string, string>): void {
     const parts = splitPath(absoluteNormalizedPath(path))
     let dir = root
 
-    for (let i = 0; i + 1 < parts.length; i++) {
-      const part = parts[i]
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i]!
       let child = dir.children_.get(part)
       if (!child) {
         child = createDirectory()
@@ -215,7 +215,7 @@ export function resetFileSystem(files: Record<string, string>): void {
       dir = child
     }
 
-    const part = parts[parts.length - 1]
+    const part = parts[parts.length - 1]!
     if (dir.children_.has(part)) rejectConflict(part)
     dir.children_.set(part, createFile(encoder.encode(files[path])))
   }
@@ -375,7 +375,7 @@ function absoluteNormalizedPath(path: string): string {
   parts.shift()
   let end = 0
   for (let i = 0; i < parts.length; i++) {
-    const part = parts[i]
+    const part = parts[i]!
     if (part === '..') {
       if (end) end--
     } else if (part !== '.' && part !== '') {
@@ -398,7 +398,7 @@ function getEntryFromPath(path: string): Entry {
   const parts = splitPath(path)
   let dir = root
   for (let i = 0, n = parts.length; i < n; i++) {
-    const child = dir.children_.get(parts[i])
+    const child = dir.children_.get(parts[i]!)
     if (!child) throw ENOENT
     if (child.kind_ === Kind.File) {
       if (i + 1 === n) return child

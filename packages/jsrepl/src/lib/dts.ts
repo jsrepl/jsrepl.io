@@ -165,7 +165,7 @@ export async function getDtsMap(
 
       const result = ts.transform(sourceFile, [transformer])
       try {
-        const transformedSourceFile = result.transformed[0]
+        const transformedSourceFile = result.transformed[0]!
 
         const printer = ts.createPrinter()
         const resultSource = printer.printFile(transformedSourceFile)

@@ -13,6 +13,6 @@ export const cssUnescape = (
   return string.replaceAll(/\\([\dA-Fa-f]{1,6}[\t\n\f\r ]?|[\S\s])/g, (match) => {
     return match.length > 2
       ? String.fromCodePoint(Number.parseInt(match.slice(1).trim(), 16))
-      : match[1]
+      : match[1]!
   })
 }

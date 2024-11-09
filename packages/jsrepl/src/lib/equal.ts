@@ -13,13 +13,17 @@ export function shallowEqual(a: unknown, b: unknown) {
   const aKeysLength = aKeys.length
 
   for (let i = 0; i < aKeysLength; i++) {
-    if (!(aKeys[i] in b)) {
+    const key = aKeys[i]!
+    if (!(key in b)) {
       return false
     }
   }
 
   for (let i = 0; i < aKeysLength; i++) {
-    if ((a as Record<string, unknown>)[aKeys[i]] !== (b as Record<string, unknown>)[aKeys[i]]) {
+    const key = aKeys[i]!
+    const aValue = (a as Record<string, unknown>)[key]
+    const bValue = (b as Record<string, unknown>)[key]
+    if (aValue !== bValue) {
       return false
     }
   }

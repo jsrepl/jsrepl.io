@@ -2,6 +2,7 @@ import { URL, fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => {
+  // eslint-disable-next-line no-console
   console.log('Vite mode', mode)
 
   // Load env file based on `mode` in the current working directory.

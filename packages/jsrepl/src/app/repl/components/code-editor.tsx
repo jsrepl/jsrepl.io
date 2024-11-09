@@ -116,8 +116,6 @@ export default function CodeEditor() {
 
   useEffect(() => {
     const currentTextModel = models.get(replState.activeModel)?.monacoModel ?? null
-
-    console.log('editor setModel', currentTextModel, editorRef)
     editorRef.current?.setModel(currentTextModel)
     editorInitialOptions.current.model = currentTextModel
   }, [models, replState.activeModel, editorRef])
@@ -151,12 +149,10 @@ export default function CodeEditor() {
   }, [theme])
 
   useEffect(() => {
-    console.log('editor create')
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
     setEditor(editor)
 
     return () => {
-      console.log('editor dispose')
       editor.dispose()
       setEditor(null)
     }

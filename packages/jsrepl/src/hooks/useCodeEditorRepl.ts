@@ -199,7 +199,6 @@ export default function useCodeEditorRepl(
       'jsrepl.copyPayloadAsJSON',
       async (accessor, payloadId: string, showNotification: boolean) => {
         const payload = payloads.find((payload) => payload.id === payloadId)
-        console.log('test')
         if (!payload) {
           return
         }

@@ -8,6 +8,7 @@ test('build index.html', async () => {
     throw error
   }
 
+  // eslint-disable-next-line no-console
   console.log(output.toString())
 
   const indexHtml = readFileSync('./dist/index.html', 'utf8')

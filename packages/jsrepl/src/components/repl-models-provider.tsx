@@ -13,7 +13,6 @@ export default function ReplModelsProvider({ children }: { children: React.React
 
   const models = useMemo(() => {
     const map = new Map<string, InstanceType<typeof CodeEditorModel>>()
-    console.log('models')
 
     replState.fs.walk('/', (path, entry) => {
       if (entry.kind === ReplFS.Kind.File) {
@@ -25,7 +24,6 @@ export default function ReplModelsProvider({ children }: { children: React.React
 
     for (const monacoModel of monaco.editor.getModels()) {
       if (!map.has(monacoModel.uri.path)) {
-        console.log('monacoModel dispose in models', monacoModel.uri.path)
         monacoModel.dispose()
       }
     }

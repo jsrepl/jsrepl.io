@@ -48,7 +48,7 @@ export function getEditorContentsWithReplDecors(editor: monaco.editor.ICodeEdito
         const decorId = decor.options.afterContentClassName?.match(/jsrepl-decor-([0-9]+)/)?.[1]
         return decorId ? decorValuesMap[decorId] : null
       })
-      .filter((x) => x !== null)
+      .filter((x) => x != null)
 
     return (
       line +

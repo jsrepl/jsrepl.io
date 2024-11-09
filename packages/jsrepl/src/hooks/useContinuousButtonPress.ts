@@ -14,7 +14,7 @@ export function useContinuousButtonPress(callback: () => void, delay = 1000, int
         callbackRef.current()
       }, interval)
     }, delay)
-  }, [])
+  }, [delay, interval])
 
   const onMouseUp = useCallback(() => {
     clearTimeout(timeoutRef.current)
