@@ -27,8 +27,8 @@ test('simple expressions', async ({ page }) => {
             const f2Val = 2;
             const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();
 
-            foo()
-            ;[window.hhh] = foo();
+            foo();
+            foo(); [window.hhh] = foo();
             window.hadds = foo();
             ({ x: hhh } = foo({x: 1}));
             let h;
@@ -62,8 +62,8 @@ test('simple expressions', async ({ page }) => {
       const f2Val = 2; // → f2Val = 2
       const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo(); // → f1 = 1, f2 = 2, f3 = 3, f4 = 4, f5 = [5, 6]
 
-      foo() // → [1, undefined, {…}, Array(1), 5, 6]
-      ;[window.hhh] = foo(); // → window.hhh = 1
+      foo(); // → [1, undefined, {…}, Array(1), 5, 6]
+      foo(); [window.hhh] = foo(); // → [1, undefined, {…}, Array(1), 5, 6], window.hhh = 1
       window.hadds = foo(); // → window.hadds = [1, undefined, {…}, Array(1), 5, 6]
       ({ x: hhh } = foo({x: 1})); // → hhh = 1
       let h; // → h = undefined

@@ -438,13 +438,13 @@ function getCommonWrapperFields(
     t.objectProperty(
       t.identifier('colStart'),
       path.node?.loc?.start?.column != null
-        ? t.numericLiteral(path.node.loc.start.column)
+        ? t.numericLiteral(path.node.loc.start.column + 1)
         : t.nullLiteral()
     ),
     t.objectProperty(
       t.identifier('colEnd'),
       path.node?.loc?.end?.column != null
-        ? t.numericLiteral(path.node.loc.end.column)
+        ? t.numericLiteral(path.node.loc.end.column + 1)
         : t.nullLiteral()
     ),
   ]

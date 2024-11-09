@@ -36,7 +36,7 @@ function getDecorDef(
 ): monaco.editor.IModelDeltaDecoration | null {
   try {
     const { /* result, */ ctx } = payload
-    const { lineStart, kind /* lineEnd, colStart, colEnd, source */ } = ctx
+    const { lineEnd, kind, lineStart, colStart, colEnd /*, source */ } = ctx
 
     decorationUniqId = (decorationUniqId + 1) % Number.MAX_VALUE
     const uniqClassName = `jsrepl-decor-${decorationUniqId}`
@@ -51,8 +51,7 @@ function getDecorDef(
 
     return {
       // line starts with 1, column starts with 1
-      // FIXME: sometimes when editing decors rendered shifted. Check token?
-      range: new monaco!.Range(lineStart, 1, lineStart, 1),
+      range: new monaco!.Range(lineStart, colStart, lineEnd, colEnd),
       options: {
         isWholeLine: true,
         afterContentClassName: `${codeEditorStyles.jsreplDecor} ${codeEditorStyles[`jsreplDecor-${kind}`] ?? ''} ${uniqClassName} ${isHighlighted ? codeEditorStyles.jsreplDecorHighlighted : ''}`,

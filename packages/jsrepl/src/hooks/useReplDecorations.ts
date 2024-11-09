@@ -84,7 +84,7 @@ export default function useReplDecorations() {
 
       const hoverPayloads: ReplPayload[] = getDisplayedPayloads(
         (payload) =>
-          payload.ctx.filePath === model.uri.path && payload.ctx.lineStart === position.lineNumber
+          payload.ctx.filePath === model.uri.path && payload.ctx.lineEnd === position.lineNumber
       )
 
       if (hoverPayloads.length === 0) {
