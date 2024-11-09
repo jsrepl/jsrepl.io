@@ -1,4 +1,11 @@
 .codeEditor {
+  &.jsreplDecorsOutdated .jsreplDecor {
+    &::before,
+    &::after {
+      --opacity: 0.2;
+    }
+  }
+
   /* Fix text clipping due to Tailwind CSS preflight styles: `* { box-sizing: border-box; }` */
   & :global(.monaco-editor .action-widget) {
     box-sizing: content-box;

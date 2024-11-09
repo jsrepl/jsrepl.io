@@ -8,12 +8,14 @@ import { ReplStateContext } from '@/context/repl-state-context'
 import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { createDecorations } from '@/lib/repl-payload/decorations'
 import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
+import useReplDecorationsOutdated from './useReplDecorationsOutdated'
 
 export default function useReplDecorations() {
   const { replState } = useContext(ReplStateContext)!
   const { rewindMode } = useContext(ReplRewindModeContext)!
   const { payloads } = useContext(ReplPayloadsContext)!
   const { editorRef } = useContext(MonacoEditorContext)!
+  const { setDecorationsOutdated } = useReplDecorationsOutdated()
 
   const decorationsDisposable = useRef<() => void>()
   const provideHoverRef = useRef<typeof provideHover>()
@@ -44,6 +46,7 @@ export default function useReplDecorations() {
     }
 
     decorationsDisposable.current?.()
+    setDecorationsOutdated(false)
 
     const payloads = getDisplayedPayloads((payload) => payload.ctx.filePath === activeModel)
     const highlightedPayloadIds =
@@ -59,6 +62,7 @@ export default function useReplDecorations() {
     rewindMode.active,
     rewindMode.currentPayloadId,
     replState.activeModel,
+    setDecorationsOutdated,
   ])
 
   useEffect(() => {
