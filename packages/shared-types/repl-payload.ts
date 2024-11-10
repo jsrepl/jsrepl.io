@@ -63,6 +63,12 @@ export type ReplPayloadAssignment = ReplPayloadBase & {
   }
 }
 
+export type ReplPayloadReturn = ReplPayloadBase & {
+  ctx: {
+    kind: 'return'
+  }
+}
+
 export type ReplPayloadConsoleLog = ReplPayloadBase & {
   result: unknown[]
   ctx: {
@@ -80,6 +86,7 @@ export type ReplPayload =
   | ReplPayloadExpression
   | ReplPayloadVariable
   | ReplPayloadAssignment
+  | ReplPayloadReturn
   | ReplPayloadConsoleLog
   | ReplPayloadOther
 

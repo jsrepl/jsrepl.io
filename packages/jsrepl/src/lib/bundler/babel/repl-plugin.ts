@@ -1,4 +1,5 @@
 import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
+import { ReplPayload } from '@jsrepl/shared-types'
 import { assert } from '@/lib/assert'
 
 let nextId = -1
@@ -94,7 +95,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
                   ...getCommonWrapperFields.call(this, {
                     t,
                     path,
-                    kind: 'console-' + callee.property.name,
+                    kind: ('console-' + callee.property.name) as ReplPayload['ctx']['kind'],
                   }),
                 ]),
                 ...path.node.arguments,
@@ -305,6 +306,47 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
 
         path.replaceWith(t.expressionStatement(callExpression))
       },
+
+      ReturnStatement(path) {
+        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+          return
+        }
+
+        processedNodes.add(path.node)
+
+        // Handle both empty and non-empty return statements
+        const returnArgument = path.node.argument || t.identifier('undefined')
+        const retVarIdentifier = path.scope.parent.generateUidIdentifier('ret')
+        const retVarDeclaration = t.variableDeclaration('const', [
+          t.variableDeclarator(retVarIdentifier, returnArgument),
+        ])
+
+        const callExpression = t.callExpression(t.identifier('__r'), [
+          t.objectExpression([
+            ...getCommonWrapperFields.call(this, {
+              t,
+              path: path,
+              kind: 'return',
+            }),
+          ]),
+          retVarIdentifier,
+        ])
+
+        // If the return statement is not in a block, wrap it in a block
+        if (!path.parentPath.isBlockStatement()) {
+          path.replaceWith(
+            t.blockStatement([
+              retVarDeclaration,
+              t.expressionStatement(callExpression),
+              t.returnStatement(retVarIdentifier),
+            ])
+          )
+        } else {
+          path.insertBefore(retVarDeclaration)
+          path.insertBefore(t.expressionStatement(callExpression))
+          path.get('argument').replaceWith(retVarIdentifier)
+        }
+      },
     },
   }
 }
@@ -318,7 +360,7 @@ function getCommonWrapperFields(
   }: {
     t: typeof types
     path: NodePath
-    kind: string
+    kind: ReplPayload['ctx']['kind']
   }
 ) {
   const filePath = this.filename!

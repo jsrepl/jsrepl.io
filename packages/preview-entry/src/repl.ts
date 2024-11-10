@@ -19,14 +19,6 @@ function repl(
   const { token, win } = this
 
   switch (ctx.kind) {
-    case 'expression':
-    case 'variable':
-    case 'assignment': {
-      const value = args[0]
-      postMessageRepl(token, win, value, false, ctx)
-      return value
-    }
-
     case 'console-log':
     case 'console-debug':
     case 'console-info':
@@ -36,8 +28,11 @@ function repl(
       return args
     }
 
-    default:
-      throw new Error('JSRepl Error. Unhandled ctx kind: ' + ctx.kind)
+    default: {
+      const value = args[0]
+      postMessageRepl(token, win, value, false, ctx)
+      return value
+    }
   }
 }
 
