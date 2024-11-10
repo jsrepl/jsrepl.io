@@ -38,7 +38,7 @@ function getDecorDef(
     const { /* result, */ ctx } = payload
     const { lineEnd, kind, lineStart, colStart, colEnd /*, source */ } = ctx
 
-    decorationUniqId = (decorationUniqId + 1) % Number.MAX_VALUE
+    decorationUniqId = (decorationUniqId + 1) % Number.MAX_SAFE_INTEGER
     const uniqClassName = `jsrepl-decor-${decorationUniqId}`
 
     const decorStr = renderToDecorString(payload)

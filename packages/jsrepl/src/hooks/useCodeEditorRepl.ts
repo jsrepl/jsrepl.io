@@ -290,6 +290,6 @@ export default function useCodeEditorRepl(
 
 function updateToken() {
   replDataRef.current = {
-    token: (replDataRef.current.token + 1) % Number.MAX_VALUE,
+    token: (replDataRef.current.token + 1) % Number.MAX_SAFE_INTEGER,
   }
 }

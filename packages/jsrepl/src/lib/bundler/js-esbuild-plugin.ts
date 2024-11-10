@@ -1,8 +1,9 @@
-import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
 import * as esbuild from 'esbuild-wasm'
 import { assert } from '@/lib/assert'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { getFileExtension } from '../fs-utils'
+import { preventInfiniteLoopsPlugin } from './babel/prevent-infinite-loops-plugin'
+import { replPlugin } from './babel/repl-plugin'
 import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
@@ -10,15 +11,10 @@ import { babelParseErrorToEsbuildError } from './utils'
 const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 
 const replTransformCache = new Cache()
-let exprKey = 0
 
 export const JsEsbuildPlugin: esbuild.Plugin = {
   name: 'jsrepl-js',
   setup(build) {
-    build.onStart(() => {
-      exprKey = 0
-    })
-
     build.onLoad({ filter: /\.(ts|tsx|js|jsx)$/ }, onLoadCallback)
   },
 }
@@ -32,7 +28,7 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
 
   try {
     const contents = fs.readFileSync(args.path, { encoding: 'utf8' })
-    const transformed = replTransform(contents, args.path)
+    const transformed = transform(contents, args.path)
     const loader = getFileExtension(args.path).slice(1) as esbuild.Loader
 
     return {
@@ -52,14 +48,14 @@ function onLoadCallback(args: esbuild.OnLoadArgs): esbuild.OnLoadResult | undefi
   }
 }
 
-function replTransform(code: string, filePath: string): string {
+function transform(code: string, filePath: string): string {
   const cached = replTransformCache.get(code, filePath)
   if (cached !== undefined) {
     return cached
   }
 
   const jsReplPreset = {
-    plugins: [replPlugin],
+    plugins: [replPlugin, preventInfiniteLoopsPlugin],
   }
 
   const ext = getFileExtension(filePath)
@@ -84,368 +80,4 @@ function replTransform(code: string, filePath: string): string {
   replTransformCache.set(code, filePath, result)
 
   return result
-}
-
-function isNewlyCreatedPath(path: NodePath) {
-  return !path.node.loc
-}
-
-function replPlugin({ types: t }: { types: typeof types }): PluginObj {
-  const processedNodes = new WeakSet()
-
-  function ForInOrOfStatement(
-    this: PluginPass,
-    path: NodePath<types.ForInStatement | types.ForOfStatement>
-  ) {
-    if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
-      return
-    }
-
-    processedNodes.add(path.node)
-    path.skipKey('left')
-
-    const leftPath = path.get('left')
-    if (t.isVariableDeclaration(leftPath.node) && t.isBlockStatement(path.node.body)) {
-      const vars: {
-        path: NodePath<types.Identifier | types.LVal>
-        identifier: types.Identifier
-      }[] = []
-
-      const declarations = leftPath.get('declarations') as NodePath<types.VariableDeclarator>[]
-      declarations.forEach((declaration) => {
-        const declarationId = declaration.get('id')
-        if (t.isIdentifier(declarationId.node)) {
-          vars.push({ path: declarationId, identifier: declarationId.node })
-        } else {
-          declarationId.traverse({
-            AssignmentPattern(path) {
-              path.skipKey('right')
-            },
-            ObjectProperty(path) {
-              path.skipKey('key')
-            },
-            Identifier(path) {
-              vars.push({ path, identifier: path.node })
-            },
-          })
-        }
-      })
-
-      const bodyPath = path.get('body') as NodePath<types.BlockStatement>
-
-      for (const variable of vars.reverse()) {
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
-              path: variable.path,
-              id: ++exprKey,
-              kind: 'assignment',
-            }),
-            t.objectProperty(t.identifier('memberName'), t.stringLiteral(variable.identifier.name)),
-          ]),
-          variable.identifier,
-        ])
-
-        bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
-      }
-    }
-  }
-
-  return {
-    visitor: {
-      CallExpression(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
-          return
-        }
-
-        processedNodes.add(path.node)
-        const callee = path.node.callee
-
-        // console.log(...) -> console.log.apply(console, __r(...))
-        // console.debug(...) -> console.debug.apply(console, __r(...))
-        // console.info(...) -> console.info.apply(console, __r(...))
-        // console.warn(...) -> console.warn.apply(console, __r(...))
-        // console.error(...) -> console.error.apply(console, __r(...))
-        if (
-          t.isMemberExpression(callee) &&
-          t.isIdentifier(callee.object) &&
-          callee.object.name === 'console' &&
-          t.isIdentifier(callee.property) &&
-          ['log', 'debug', 'info', 'warn', 'error'].includes(callee.property.name)
-        ) {
-          path.replaceWith(
-            t.callExpression(t.memberExpression(callee, t.identifier('apply')), [
-              callee.object,
-              t.callExpression(t.identifier('__r'), [
-                t.objectExpression([
-                  ...getCommonWrapperFields.call(this, {
-                    t,
-                    path,
-                    id: ++exprKey,
-                    kind: 'console-' + callee.property.name,
-                  }),
-                ]),
-                ...path.node.arguments,
-              ]),
-            ])
-          )
-        }
-      },
-
-      ForStatement(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
-          return
-        }
-
-        processedNodes.add(path.node)
-        path.skipKey('init')
-        path.skipKey('update')
-
-        const updatePath = path.get('update')
-        if (
-          t.isUpdateExpression(updatePath.node) &&
-          t.isIdentifier(updatePath.node.argument) &&
-          t.isBlockStatement(path.node.body)
-        ) {
-          const vars: {
-            path: NodePath<types.Identifier>
-            identifier: types.Identifier
-          }[] = [
-            {
-              path: updatePath.get('argument') as NodePath<types.Identifier>,
-              identifier: updatePath.node.argument,
-            },
-          ]
-
-          const bodyPath = path.get('body') as NodePath<types.BlockStatement>
-
-          for (const variable of vars.reverse()) {
-            const callExpression = t.callExpression(t.identifier('__r'), [
-              t.objectExpression([
-                ...getCommonWrapperFields.call(this, {
-                  t,
-                  path: variable.path,
-                  id: ++exprKey,
-                  kind: 'assignment',
-                }),
-                t.objectProperty(
-                  t.identifier('memberName'),
-                  t.stringLiteral(variable.identifier.name)
-                ),
-              ]),
-              variable.identifier,
-            ])
-
-            bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
-          }
-        }
-      },
-
-      ForInStatement(path) {
-        ForInOrOfStatement.call(this, path)
-      },
-
-      ForOfStatement(path) {
-        ForInOrOfStatement.call(this, path)
-      },
-
-      // const z = foo()
-      // const [ccc, a = '', { x: cc }, [xbx = 'a'], ...b] = await foo()
-      // const x1 = 1, x2 = 2
-      VariableDeclaration(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
-          return
-        }
-
-        processedNodes.add(path.node)
-
-        const vars: {
-          path: NodePath<types.Identifier | types.LVal>
-          identifier: types.Identifier
-        }[] = []
-
-        const declarations = path.get('declarations')
-        declarations.forEach((declaration) => {
-          const declarationId = declaration.get('id')
-          if (t.isIdentifier(declarationId.node)) {
-            vars.push({ path: declarationId, identifier: declarationId.node })
-          } else {
-            declarationId.traverse({
-              AssignmentPattern(path) {
-                path.skipKey('right')
-              },
-              ObjectProperty(path) {
-                path.skipKey('key')
-              },
-              Identifier(path) {
-                vars.push({ path, identifier: path.node })
-              },
-            })
-          }
-        })
-
-        for (const variable of vars.reverse()) {
-          const callExpression = t.callExpression(t.identifier('__r'), [
-            t.objectExpression([
-              ...getCommonWrapperFields.call(this, {
-                t,
-                path: variable.path,
-                id: ++exprKey,
-                kind: 'variable',
-              }),
-              t.objectProperty(t.identifier('varName'), t.stringLiteral(variable.identifier.name)),
-              t.objectProperty(t.identifier('varKind'), t.stringLiteral(path.node.kind)),
-            ]),
-            variable.identifier,
-          ])
-
-          path.insertAfter(t.expressionStatement(callExpression))
-        }
-      },
-
-      // foo()
-      // await foo()
-      ExpressionStatement(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
-          return
-        }
-
-        processedNodes.add(path.node)
-
-        // skip console.log(...), console.debug(...), etc
-        if (t.isCallExpression(path.node.expression)) {
-          const callee = path.node.expression.callee
-          if (
-            t.isMemberExpression(callee) &&
-            t.isIdentifier(callee.object) &&
-            callee.object.name === 'console'
-          ) {
-            return
-          }
-        }
-
-        // ;[window.hhh] = foo();
-        // ({ x: hhh } = foo({x: 1}));
-        // window.hhh = foo();
-        // let h; [h] = foo()
-        if (t.isAssignmentExpression(path.node.expression)) {
-          const members: {
-            name: string
-            path: NodePath
-            node: types.Identifier | types.MemberExpression
-          }[] = []
-
-          const left = path.get('expression.left') as NodePath<types.Node>
-
-          if (t.isIdentifier(left.node)) {
-            // asd = bar()
-            members.push({ name: left.node.name, path: left, node: left.node })
-          } else if (t.isMemberExpression(left.node)) {
-            // window.hhh = foo();
-            members.push({ name: left.toString(), path: left, node: left.node })
-          } else {
-            // ;[window.hhh] = foo();
-            // ({ x: hhh } = foo({x: 1}));
-            left.traverse({
-              AssignmentPattern(path) {
-                path.skipKey('right')
-              },
-              ObjectProperty(path) {
-                path.skipKey('key')
-              },
-              MemberExpression(path) {
-                members.push({ name: path.toString(), path, node: path.node })
-                path.skip()
-              },
-              Identifier(path) {
-                members.push({ name: path.node.name, path, node: path.node })
-              },
-            })
-          }
-
-          for (const member of members.reverse()) {
-            const callExpression = t.callExpression(t.identifier('__r'), [
-              t.objectExpression([
-                ...getCommonWrapperFields.call(this, {
-                  t,
-                  path: member.path,
-                  id: ++exprKey,
-                  kind: 'assignment',
-                }),
-                t.objectProperty(t.identifier('memberName'), t.stringLiteral(member.name)),
-              ]),
-              member.node,
-            ])
-
-            path.insertAfter(t.expressionStatement(callExpression))
-          }
-
-          return
-        }
-
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
-              path,
-              id: ++exprKey,
-              kind: 'expression',
-            }),
-          ]),
-          path.node.expression,
-        ])
-
-        path.replaceWith(t.expressionStatement(callExpression))
-      },
-    },
-  }
-}
-
-function getCommonWrapperFields(
-  this: PluginPass,
-  {
-    t,
-    path,
-    id,
-    kind,
-  }: {
-    t: typeof types
-    path: NodePath
-    id: number
-    kind: string
-  }
-) {
-  const filePath = this.filename!
-  assert(filePath != null, 'filePath must be defined')
-  assert(filePath.startsWith('/'), 'filePath must start with /')
-
-  return [
-    t.objectProperty(t.identifier('id'), t.numericLiteral(id)),
-    t.objectProperty(t.identifier('kind'), t.stringLiteral(kind)),
-    t.objectProperty(t.identifier('source'), t.stringLiteral(path.getSource())),
-    t.objectProperty(t.identifier('filePath'), t.stringLiteral(filePath)),
-    t.objectProperty(
-      t.identifier('lineStart'),
-      path.node?.loc?.start?.line != null
-        ? t.numericLiteral(path.node.loc.start.line)
-        : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('lineEnd'),
-      path.node?.loc?.end?.line != null ? t.numericLiteral(path.node.loc.end.line) : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('colStart'),
-      path.node?.loc?.start?.column != null
-        ? t.numericLiteral(path.node.loc.start.column + 1)
-        : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('colEnd'),
-      path.node?.loc?.end?.column != null
-        ? t.numericLiteral(path.node.loc.end.column + 1)
-        : t.nullLiteral()
-    ),
-  ]
 }
