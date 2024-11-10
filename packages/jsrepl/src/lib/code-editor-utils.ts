@@ -42,8 +42,10 @@ export function getEditorContentsWithReplDecors(editor: monaco.editor.ICodeEdito
   const lines = contents.split('\n')
 
   const linesWithDecors: string[] = lines.map((line, lineIndex) => {
-    const lineDecors = editor.getLineDecorations(startLineNumber + lineIndex) ?? []
+    const lineNumber = startLineNumber + lineIndex
+    const lineDecors = editor.getLineDecorations(lineNumber) ?? []
     const decorValues: string[] = lineDecors
+      .filter((decor) => decor.range.endLineNumber === lineNumber)
       .map((decor) => {
         const decorId = decor.options.afterContentClassName?.match(/jsrepl-decor-([0-9]+)/)?.[1]
         return decorId ? decorValuesMap[decorId] : null

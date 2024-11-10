@@ -308,3 +308,31 @@ test('stuff', async ({ page }) => {
     `
   )
 })
+
+test('multiline decor', async ({ page }) => {
+  await visitPlayground(page, {
+    openedModels: ['/test.ts'],
+    activeModel: '/test.ts',
+    showPreview: false,
+    fs: new ReplFS.FS({
+      kind: ReplFS.Kind.Directory,
+      children: {
+        'test.ts': {
+          kind: ReplFS.Kind.File,
+          content: dedent`
+            console.log(1, 2,
+            3);
+          `,
+        },
+      },
+    }),
+  })
+
+  await assertMonacoContentsWithDecors(
+    page,
+    dedent`
+      console.log(1, 2,
+      3); // → 1 2 3
+    `
+  )
+})
