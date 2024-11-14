@@ -8,27 +8,13 @@ import {
   MarshalledWeakMap,
   MarshalledWeakRef,
   MarshalledWeakSet,
-  type ReplPayload,
-  type ReplRawPayload,
 } from '@jsrepl/shared-types'
 import { expect, test } from 'vitest'
-import { transformPayload } from './payload'
+import { transformPayloadResult } from './payload'
 import type { PreviewWindow } from './types'
 
-const payloadCommon = {
-  isError: false,
-  ctx: {
-    id: -1,
-    lineStart: 1,
-    lineEnd: 1,
-    colStart: 1,
-    colEnd: 1,
-    source: '',
-    kind: 'expression',
-  },
-} as Omit<ReplRawPayload, 'rawResult'>
-
-const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] = [
+// title, rawResult, expected result from `transformPayloadResult`
+const testCases: [string, unknown, unknown][] = [
   ['undefined', undefined, undefined],
   ['null', null, null],
   ['empty string', '', ''],
@@ -244,12 +230,7 @@ const testCases: [string, ReplRawPayload['rawResult'], ReplPayload['result']][] 
 
 testCases.forEach(([desc, rawResult, expectedResult]) => {
   test(desc, () => {
-    const payload = {
-      ...payloadCommon,
-      rawResult,
-    }
-
-    const transformed = transformPayload(window as PreviewWindow, payload)
-    expect(transformed.result).toEqual(expectedResult)
+    const result = transformPayloadResult(window as PreviewWindow, rawResult)
+    expect(result).toEqual(expectedResult)
   })
 })

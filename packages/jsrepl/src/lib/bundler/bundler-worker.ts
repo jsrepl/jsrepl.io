@@ -1,3 +1,4 @@
+import { ReplMeta } from '@jsrepl/shared-types'
 import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
@@ -53,12 +54,18 @@ async function build(
 
   let result: esbuild.BuildResult<esbuild.BuildOptions> | null = null
   let error: BuildError | null = null
+  const replMeta: ReplMeta = {
+    ctxMap: new Map(),
+  }
 
   try {
     resetFileSystem(input)
     result = await esbuild.build({
       ...options,
-      plugins: [JsEsbuildPlugin, CssEsbuildPlugin({ setTailwindConfig, processCSSWithTailwind })],
+      plugins: [
+        JsEsbuildPlugin({ replMeta }),
+        CssEsbuildPlugin({ setTailwindConfig, processCSSWithTailwind }),
+      ],
     })
   } catch (err) {
     error = err as BuildError
@@ -75,6 +82,7 @@ async function build(
         }
       : null,
     stderrSinceReset,
+    replMeta,
   }
 }
 

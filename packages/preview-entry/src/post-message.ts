@@ -1,5 +1,5 @@
 import {
-  type ReplPayload,
+  ReplPayloadContextMessageData,
   ReplPayloadMessageData,
   ReplStatusMessageData,
 } from '@jsrepl/shared-types'
@@ -9,7 +9,10 @@ const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 
 export function postMessage(
   token: number,
-  data: { type: 'repl'; payload: ReplPayload } | { type: 'ready' } | { type: 'script-complete' }
+  data:
+    | Pick<ReplPayloadMessageData, 'type' | 'payload'>
+    | Pick<ReplPayloadContextMessageData, 'type' | 'ctx'>
+    | Pick<ReplStatusMessageData, 'type'>
 ) {
   const baseProps = {
     source: 'jsreplPreview' as const,
@@ -17,9 +20,11 @@ export function postMessage(
     token,
   }
 
-  let message: ReplPayloadMessageData | ReplStatusMessageData
-  if (data.type === 'repl') {
+  let message: ReplPayloadMessageData | ReplPayloadContextMessageData | ReplStatusMessageData
+  if (data.type === 'repl-payload') {
     message = { ...baseProps, type: data.type, payload: data.payload }
+  } else if (data.type === 'repl-payload-context') {
+    message = { ...baseProps, type: data.type, ctx: data.ctx }
   } else {
     message = { ...baseProps, type: data.type }
   }

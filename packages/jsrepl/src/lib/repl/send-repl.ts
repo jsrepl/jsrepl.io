@@ -1,4 +1,11 @@
-import { type ReplPayload, type Theme, type UpdateReplMessageData } from '@jsrepl/shared-types'
+import {
+  type ReplPayload,
+  ReplPayloadContextKind,
+  ReplPayloadError,
+  ReplPayloadWarning,
+  type Theme,
+  type UpdateReplMessageData,
+} from '@jsrepl/shared-types'
 import type { MonacoTailwindcss, TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import type * as esbuild from 'esbuild-wasm'
@@ -156,12 +163,12 @@ export async function sendRepl({
   ]
 
   for (const error of bundleErrors) {
-    const payload = getPayloadFromEsbuildMessage(error, 'error')
+    const payload = getPayloadFromEsbuildMessage(error, ReplPayloadContextKind.Error)
     addPayload(token, payload)
   }
 
   for (const warning of bundleWarnings) {
-    const payload = getPayloadFromEsbuildMessage(warning, 'warning')
+    const payload = getPayloadFromEsbuildMessage(warning, ReplPayloadContextKind.Warning)
     addPayload(token, payload)
   }
 
@@ -346,14 +353,14 @@ async function processCSSWithTailwind(
 
 function getPayloadFromEsbuildMessage(
   msg: esbuild.Message,
-  kind: 'error' | 'warning'
-): ReplPayload {
+  kind: ReplPayloadContextKind.Error | ReplPayloadContextKind.Warning
+): ReplPayloadError | ReplPayloadWarning {
   let filePath = msg.location?.file ?? ''
   if (filePath && !filePath.startsWith('/')) {
     filePath = '/' + filePath
   }
 
-  const payload: ReplPayload = {
+  const commonPart = {
     id: crypto.randomUUID(),
     isError: true,
     result: msg.text,
@@ -365,8 +372,15 @@ function getPayloadFromEsbuildMessage(
       colEnd: (msg.location?.column ?? 0) + 1,
       source: '',
       filePath,
-      kind,
     },
+  }
+
+  let payload: ReplPayloadError | ReplPayloadWarning
+
+  if (kind === ReplPayloadContextKind.Error) {
+    payload = { ...commonPart, ctx: { ...commonPart.ctx, kind } }
+  } else {
+    payload = { ...commonPart, ctx: { ...commonPart.ctx, kind } }
   }
 
   return payload

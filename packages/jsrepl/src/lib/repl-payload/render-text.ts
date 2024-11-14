@@ -1,4 +1,8 @@
-import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
+import {
+  type ReplPayload,
+  ReplPayloadConsoleLog,
+  ReplPayloadFunctionCall,
+} from '@jsrepl/shared-types'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 export function renderToText(payload: ReplPayload): string {
@@ -15,6 +19,13 @@ export function renderToText(payload: ReplPayload): string {
     const { memberName } = payload.ctx
     const prefix = `${memberName} = `
     const stringified = stringifyResult(payload.result, 'details')
+    return renderStringified(stringified, prefix)
+  }
+
+  if (kind === 'function-call') {
+    const { result } = payload as ReplPayloadFunctionCall
+    const prefix = `arguments = `
+    const stringified = stringifyResult(result, 'details')
     return renderStringified(stringified, prefix)
   }
 

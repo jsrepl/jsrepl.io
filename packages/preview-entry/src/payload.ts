@@ -7,8 +7,6 @@ import {
   MarshalledWeakMap,
   MarshalledWeakRef,
   MarshalledWeakSet,
-  ReplPayload,
-  ReplRawPayload,
 } from '@jsrepl/shared-types'
 import type { PreviewWindow } from './types'
 
@@ -16,69 +14,65 @@ import type { PreviewWindow } from './types'
 // to ensure postMessage will be able to transfer the payload.
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#things_that_dont_work_with_structured_clone
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#supported_types
-export function transformPayload(win: PreviewWindow, rawPayload: ReplRawPayload): ReplPayload {
-  const { rawResult, ...props } = rawPayload
-  const payload = props as unknown as ReplPayload
-  const result = transformResult(win, rawResult, new WeakMap())
-  payload.result = result
-  return payload
-}
-
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects#supported_objects
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#javascript_types
+export function transformPayloadResult(win: PreviewWindow, result: unknown): unknown {
+  return transformResult(win, result, new WeakMap())
+}
+
 function transformResult(
   win: PreviewWindow,
-  rawResult: unknown /* do not mutate `rawResult` */,
+  result: unknown /* do not mutate `result` */,
   refs: WeakMap<object, unknown>
-): ReplPayload['result'] {
-  if (rawResult !== null && typeof rawResult === 'object' && refs.has(rawResult)) {
+): unknown {
+  if (result !== null && typeof result === 'object' && refs.has(result)) {
     // Circular reference
-    return refs.get(rawResult)
+    return refs.get(result)
   }
 
   // ReplPayloadCustomKind.DomNode
-  if (rawResult instanceof win.HTMLElement) {
-    return serializeDomNode(rawResult)
+  if (result instanceof win.HTMLElement) {
+    return serializeDomNode(result)
   }
 
   // ReplPayloadCustomKind.Function
   // It can be a "classic" function, or a class (which is a function actually).
-  if (typeof rawResult === 'function') {
-    return serializeFunction(rawResult)
+  if (typeof result === 'function') {
+    return serializeFunction(result)
   }
 
-  if (typeof rawResult === 'symbol') {
+  if (typeof result === 'symbol') {
     return {
       __meta__: {
         type: MarshalledType.Symbol,
       },
-      serialized: rawResult.toString(),
+      serialized: result.toString(),
     } as MarshalledSymbol
   }
 
-  if (rawResult instanceof win.Date) {
-    return rawResult
+  if (result instanceof win.Date) {
+    return result
   }
 
-  if (rawResult instanceof win.Set) {
+  if (result instanceof win.Set) {
     const set = new Set()
-    refs.set(rawResult, set)
-    for (const item of rawResult) {
+    refs.set(result, set)
+    for (const item of result) {
       set.add(transformResult(win, item, refs))
     }
     return set
   }
 
-  if (rawResult instanceof win.Map) {
+  if (result instanceof win.Map) {
     const map = new Map()
-    refs.set(rawResult, map)
-    for (const [key, value] of rawResult) {
+    refs.set(result, map)
+    for (const [key, value] of result) {
       map.set(transformResult(win, key, refs), transformResult(win, value, refs))
     }
     return map
   }
 
-  if (rawResult instanceof win.WeakSet) {
+  if (result instanceof win.WeakSet) {
     return {
       __meta__: {
         type: MarshalledType.WeakSet,
@@ -86,7 +80,7 @@ function transformResult(
     } as MarshalledWeakSet
   }
 
-  if (rawResult instanceof win.WeakMap) {
+  if (result instanceof win.WeakMap) {
     return {
       __meta__: {
         type: MarshalledType.WeakMap,
@@ -94,7 +88,7 @@ function transformResult(
     } as MarshalledWeakMap
   }
 
-  if (rawResult instanceof win.WeakRef) {
+  if (result instanceof win.WeakRef) {
     return {
       __meta__: {
         type: MarshalledType.WeakRef,
@@ -102,46 +96,64 @@ function transformResult(
     } as MarshalledWeakRef
   }
 
-  if (win.Array.isArray(rawResult)) {
+  if (win.Array.isArray(result)) {
     const arr: unknown[] = []
-    refs.set(rawResult, arr)
-    for (const item of rawResult) {
+    refs.set(result, arr)
+    for (const item of result) {
       arr.push(transformResult(win, item, refs))
     }
     return arr
   }
 
-  if (rawResult instanceof win.Error) {
-    return rawResult
+  if (result instanceof win.Error) {
+    return result
   }
 
-  if (rawResult instanceof win.ArrayBuffer) {
-    return rawResult
+  if (result instanceof win.ArrayBuffer) {
+    return result
   }
 
   // TODO: support more built-in known transferable objects:
   // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects#supported_objects
   // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#javascript_types
 
-  if (typeof rawResult === 'object' && rawResult !== null) {
+  if (typeof result === 'object' && result !== null) {
     const obj = {} as MarshalledObject
-    refs.set(rawResult, obj)
+    refs.set(result, obj)
 
-    getAllPropertyNames(win, rawResult).forEach((propName) => {
-      const value = rawResult[propName as keyof typeof rawResult]
-      const transformedValue = transformResult(win, value, refs)
-      obj[propName] = transformedValue
-    })
+    const skipProps = result instanceof win.Window
+
+    if (!skipProps) {
+      getAllPropertyNames(win, result).forEach((propName) => {
+        let value
+        try {
+          value = result[propName as keyof typeof result]
+        } catch (e) {
+          value = e
+        }
+
+        const transformedValue = transformResult(win, value, refs)
+        obj[propName] = transformedValue
+      })
+    }
+
+    let constructorName: string | undefined
+    try {
+      constructorName = result.constructor?.name
+    } catch {
+      // Ignore error.
+      // For example, it can be Uncaught SecurityError: Failed to read a named property 'constructor' from 'Location': Blocked a frame with origin "http://localhost:5199" from accessing a cross-origin frame.
+    }
 
     obj.__meta__ = {
       type: MarshalledType.Object,
-      constructorName: rawResult.constructor?.name,
+      constructorName,
     }
 
     return obj
   }
 
-  return rawResult
+  return result
 }
 
 function serializeDomNode(el: HTMLElement): MarshalledDomNode {

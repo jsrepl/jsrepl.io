@@ -1,21 +1,25 @@
-import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
+import {
+  type ReplPayload,
+  ReplPayloadConsoleLog,
+  ReplPayloadFunctionCall,
+} from '@jsrepl/shared-types'
 import type * as monaco from 'monaco-editor'
 import { type StringifyResult, stringifyResult } from './stringify'
 
 export function renderToHoverContents(payloads: ReplPayload[]): monaco.IMarkdownString[] {
   return [
-    {
-      value: `**REPL SNAPSHOT** <span style="color:#01;"></span><span 
-          style="color:#777777;" 
-          title="This value was evaluated upon code execution in this line. It may have changed since then."
-        ><span style="color:#02;"></span>$(info)</span>
-      `,
-      supportThemeIcons: true,
-      supportHtml: true,
-      isTrusted: true,
-    },
     ...payloads.flatMap((payload, index) => [
       ...(index === 0 ? [] : [{ value: '<hr>', supportHtml: true }]),
+      {
+        value: `**REPL SNAPSHOT** <span style="color:#01;"></span><span 
+            style="color:#777777;" 
+            title="This value was evaluated upon code execution in this line. It may have changed since then."
+          ><span style="color:#02;"></span>$(info)</span>
+        `,
+        supportThemeIcons: true,
+        supportHtml: true,
+        isTrusted: true,
+      },
       ...renderPayload(payload).map((str) => ({ value: str, supportHtml: true })),
       {
         value: `<span style="color:#03;">
@@ -50,6 +54,17 @@ function renderPayload(payload: ReplPayload): string[] {
     const { memberName } = payload.ctx
     const prefix = `${memberName} = `
     const stringified = stringifyResult(payload.result, 'details')
+    return renderStringified(stringified, prefix)
+  }
+
+  if (kind === 'function-call') {
+    const { result } = payload as ReplPayloadFunctionCall
+    const prefix = `arguments = `
+    const stringified = stringifyResult(result, 'details')
+    stringified.detailsBefore = {
+      value: `Function \`${payload.ctx.name ?? 'anonymous'}\` called with`,
+      lang: null,
+    }
     return renderStringified(stringified, prefix)
   }
 

@@ -73,8 +73,8 @@ test('simple expressions', async ({ page }) => {
       let hhhVar = window.hhh; // → hhhVar = 1
       h // → 9
 
-      function foo(x) {
-        return x ?? [1,, {x: 3}, [4], 5, 6];
+      function foo(x) { // → ƒƒ foo([9]), x = [9]
+        return x ?? [1,, {x: 3}, [4], 5, 6]; // → [9]
       }
     `
   )
@@ -93,7 +93,7 @@ test('react starter', async ({ page }) => {
       const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children), unmount: ƒ ()}
       root.render(<App />); // → undefined
 
-      function App() {
+      function App() { // → ƒƒ App({}, {})
         const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState()
 
         return (
@@ -105,7 +105,7 @@ test('react starter', async ({ page }) => {
               <button onClick={() => setCounter((x) => x + 1)}>+</button>
             </p>
           </>
-        );
+        ); // → {$$typeof: Symbol(react.element), type: Symbol(react.fragment), key: null, ref: null, props: {…}, _o…
       }
     `
   )

@@ -1,3 +1,5 @@
+import { identifierNameFunctionMeta, identifierNameRepl } from '@jsrepl/shared-types'
+
 declare global {
   const __JSREPL_ORIGIN__: string
 }
@@ -7,5 +9,10 @@ export type PreviewEntryWindow = Window &
     hooks: unknown
   }
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-export type PreviewWindow = Window & typeof globalThis & { __r: Function }
+export type PreviewWindow = Window &
+  typeof globalThis & {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    [identifierNameRepl]: Function
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    [identifierNameFunctionMeta]: Function
+  }

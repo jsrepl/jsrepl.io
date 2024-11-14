@@ -1,4 +1,22 @@
-export type ReplPayloadBase = {
+import {
+  IReplPayloadContext,
+  ReplPayloadContextAssignment,
+  ReplPayloadContextConsoleDebug,
+  ReplPayloadContextConsoleError,
+  ReplPayloadContextConsoleInfo,
+  ReplPayloadContextConsoleLog,
+  ReplPayloadContextConsoleWarn,
+  ReplPayloadContextError,
+  ReplPayloadContextExpression,
+  ReplPayloadContextFunctionCall,
+  ReplPayloadContextKind,
+  ReplPayloadContextReturn,
+  ReplPayloadContextVariable,
+  ReplPayloadContextWarning,
+  ReplPayloadContextWindowError,
+} from './repl-payload-context'
+
+interface Base<T = ReplPayloadContextKind> {
   /**
    * Unique identifier for the payload.
    */
@@ -12,74 +30,72 @@ export type ReplPayloadBase = {
    * Structured cloneable, but may not be serializable with JSON.stringify (Date, Set, Map, circular references, etc).
    */
   result: unknown
-  ctx: {
-    /**
-     * Expression identifier.
-     */
-    id: number | string
-    /**
-     * Starts with 1.
-     */
-    lineStart: number
-    /**
-     * Starts with 1.
-     */
-    lineEnd: number
-    /**
-     * Starts with 1.
-     */
-    colStart: number
-    /**
-     * Starts with 1.
-     */
-    colEnd: number
-    source: string
-    /**
-     * Path relative to the root of the project, starting with '/'.
-     * For example: '/index.tsx', '/index.html', '/index.css', '/tailwind.config.ts'
-     */
-    filePath: string
-  }
+  /**
+   * Expression context.
+   */
+  ctx: IReplPayloadContext<T>
 }
 
-export type ReplPayloadExpression = ReplPayloadBase & {
-  ctx: {
-    kind: 'expression'
-  }
+export interface ReplPayloadExpression extends Base {
+  ctx: ReplPayloadContextExpression
 }
 
-export type ReplPayloadVariable = ReplPayloadBase & {
-  ctx: {
-    kind: 'variable'
-    varName: string
-    varKind: string
-  }
+export interface ReplPayloadVariable extends Base {
+  ctx: ReplPayloadContextVariable
 }
 
-export type ReplPayloadAssignment = ReplPayloadBase & {
-  ctx: {
-    kind: 'assignment'
-    memberName: string
-  }
+export interface ReplPayloadAssignment extends Base {
+  ctx: ReplPayloadContextAssignment
 }
 
-export type ReplPayloadReturn = ReplPayloadBase & {
-  ctx: {
-    kind: 'return'
-  }
+export interface ReplPayloadReturn extends Base {
+  ctx: ReplPayloadContextReturn
 }
 
-export type ReplPayloadConsoleLog = ReplPayloadBase & {
+export interface ReplPayloadFunctionCall extends Base {
+  ctx: ReplPayloadContextFunctionCall
+  /**
+   * Array of function call arguments.
+   * For arrow functions this is also available.
+   */
   result: unknown[]
-  ctx: {
-    kind: 'console-log' | 'console-debug' | 'console-info' | 'console-warn' | 'console-error'
-  }
 }
 
-export type ReplPayloadOther = ReplPayloadBase & {
-  ctx: {
-    kind: 'window-error' | 'error' | 'warning'
-  }
+export interface ReplPayloadConsoleLog extends Base {
+  result: unknown[]
+  ctx: ReplPayloadContextConsoleLog
+}
+
+export interface ReplPayloadConsoleDebug extends Base {
+  result: unknown[]
+  ctx: ReplPayloadContextConsoleDebug
+}
+
+export interface ReplPayloadConsoleInfo extends Base {
+  result: unknown[]
+  ctx: ReplPayloadContextConsoleInfo
+}
+
+export interface ReplPayloadConsoleWarn extends Base {
+  result: unknown[]
+  ctx: ReplPayloadContextConsoleWarn
+}
+
+export interface ReplPayloadConsoleError extends Base {
+  result: unknown[]
+  ctx: ReplPayloadContextConsoleError
+}
+
+export interface ReplPayloadWindowError extends Base {
+  ctx: ReplPayloadContextWindowError
+}
+
+export interface ReplPayloadError extends Base {
+  ctx: ReplPayloadContextError
+}
+
+export interface ReplPayloadWarning extends Base {
+  ctx: ReplPayloadContextWarning
 }
 
 export type ReplPayload =
@@ -87,70 +103,14 @@ export type ReplPayload =
   | ReplPayloadVariable
   | ReplPayloadAssignment
   | ReplPayloadReturn
+  | ReplPayloadFunctionCall
   | ReplPayloadConsoleLog
-  | ReplPayloadOther
+  | ReplPayloadConsoleDebug
+  | ReplPayloadConsoleInfo
+  | ReplPayloadConsoleWarn
+  | ReplPayloadConsoleError
+  | ReplPayloadWindowError
+  | ReplPayloadError
+  | ReplPayloadWarning
 
-export type ReplRawPayload = Omit<ReplPayload, 'result'> & { rawResult: unknown }
-
-export enum MarshalledType {
-  DomNode = 'dom-node', // non-cloneable
-  Function = 'function', // non-cloneable
-  Symbol = 'symbol', // non-cloneable
-  WeakSet = 'weak-set', // non-cloneable
-  WeakMap = 'weak-map', // non-cloneable
-  WeakRef = 'weak-ref', // non-cloneable
-  Object = 'object', // prototype chain is not preserved in structured clone
-}
-
-export type MarshalledDomNode = {
-  __meta__: {
-    type: MarshalledType.DomNode
-    tagName: string
-    constructorName: string | undefined
-    attributes: { name: string; value: string }[]
-    hasChildNodes: boolean
-    childElementCount: number
-    textContent: string | null
-  }
-  serialized: string
-}
-
-export type MarshalledFunction = {
-  __meta__: {
-    type: MarshalledType.Function
-    name: string
-  }
-  serialized: string
-}
-
-export type MarshalledSymbol = {
-  __meta__: {
-    type: MarshalledType.Symbol
-  }
-  serialized: string
-}
-
-export type MarshalledWeakSet = {
-  __meta__: {
-    type: MarshalledType.WeakSet
-  }
-}
-
-export type MarshalledWeakMap = {
-  __meta__: {
-    type: MarshalledType.WeakMap
-  }
-}
-
-export type MarshalledWeakRef = {
-  __meta__: {
-    type: MarshalledType.WeakRef
-  }
-}
-
-export type MarshalledObject = Record<string, unknown> & {
-  __meta__: {
-    type: MarshalledType.Object
-    constructorName: string | undefined
-  }
-}
+export type IReplPayload<T = ReplPayloadContextKind> = Base<T>

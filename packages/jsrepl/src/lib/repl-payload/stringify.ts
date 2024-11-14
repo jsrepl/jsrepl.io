@@ -1,4 +1,8 @@
-import { type MarshalledDomNode, type ReplPayload } from '@jsrepl/shared-types'
+import {
+  type MarshalledDomNode,
+  type ReplPayload,
+  identifierNameFunctionMeta,
+} from '@jsrepl/shared-types'
 import { getBabel } from '../get-babel'
 import * as utils from './payload-utils'
 
@@ -279,7 +283,8 @@ function _stringifyResult(
 
     let value: string
     if (target === 'details' && nestingLevel === 0 && !isNative) {
-      value = result.serialized
+      const parsed = parseFunction(result.serialized)
+      value = parsed?.origSource ?? result.serialized
     } else {
       const parsed = isNative ? null : parseFunction(result.serialized)
       const asyncPart = parsed?.isAsync ? 'async ' : ''
@@ -384,8 +389,15 @@ function _stringifyResult(
 // - () => 7
 // - function (asd = adsasd({})) { ... }
 function parseFunction(
-  str: string
-): { name: string; args: string; isAsync: boolean; isArrow: boolean } | null {
+  str: string,
+  _isOriginalSource = false
+): {
+  name: string
+  args: string
+  isAsync: boolean
+  isArrow: boolean
+  origSource: string | null
+} | null {
   const babel = getBabel()[0].value!
 
   // @ts-expect-error Babel standalone: https://babeljs.io/docs/babel-standalone#internal-packages
@@ -400,12 +412,24 @@ function parseFunction(
     return null
   }
 
+  let origSource: string | null = null
+
+  if (!_isOriginalSource) {
+    origSource = getFunctionOriginalSource(ast)
+    if (origSource) {
+      return parseFunction(origSource, true)
+    }
+  } else {
+    origSource = str
+  }
+
   if (ast.type === 'ArrowFunctionExpression') {
     return {
       name: '',
       args: ast.params.map((param) => str.slice(param.start!, param.end!)).join(', '),
       isAsync: ast.async,
       isArrow: true,
+      origSource,
     }
   }
 
@@ -415,6 +439,29 @@ function parseFunction(
       args: ast.params.map((param) => str.slice(param.start!, param.end!)).join(', '),
       isAsync: ast.async,
       isArrow: false,
+      origSource,
+    }
+  }
+
+  return null
+}
+
+function getFunctionOriginalSource(
+  ast: ReturnType<typeof import('@babel/parser').parseExpression>
+): string | null {
+  if (
+    (ast.type === 'ArrowFunctionExpression' || ast.type === 'FunctionExpression') &&
+    ast.body.type === 'BlockStatement'
+  ) {
+    const node = ast.body.body[0]
+    if (
+      node?.type === 'ExpressionStatement' &&
+      node.expression.type === 'CallExpression' &&
+      node.expression.callee.type === 'Identifier' &&
+      node.expression.callee.name === identifierNameFunctionMeta &&
+      node.expression.arguments[0]?.type === 'StringLiteral'
+    ) {
+      return node.expression.arguments[0].value
     }
   }
 

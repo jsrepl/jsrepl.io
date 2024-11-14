@@ -1,11 +1,72 @@
 import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
-import { ReplPayload } from '@jsrepl/shared-types'
+import {
+  ReplPayload,
+  ReplPayloadConsoleLog,
+  ReplPayloadContext,
+  ReplPayloadContextKind,
+  identifierNameFunctionMeta,
+  identifierNameRepl,
+} from '@jsrepl/shared-types'
 import { assert } from '@/lib/assert'
+
+export type ReplPluginMetadata = {
+  replPlugin: {
+    ctxList: ReplPayload['ctx'][]
+  }
+}
 
 let nextId = -1
 
+function isNewlyCreatedPath(path: NodePath) {
+  return !path.node.loc
+}
+
+function getBaseCtx(
+  this: PluginPass,
+  {
+    path,
+    source = path.getSource(),
+    loc = path.node.loc,
+  }: {
+    path: NodePath
+    source?: string
+    loc?: Omit<types.SourceLocation, 'identifierName' | 'filename'> | null
+  }
+): Omit<ReplPayloadContext, 'kind'> {
+  const filePath = this.filename!
+  assert(filePath != null, 'filePath must be defined')
+  assert(filePath.startsWith('/'), 'filePath must start with /')
+
+  nextId = (nextId + 1) % Number.MAX_SAFE_INTEGER
+
+  return {
+    id: nextId,
+    source,
+    filePath,
+    lineStart: loc!.start.line,
+    lineEnd: loc!.end.line,
+    colStart: loc!.start.column + 1,
+    colEnd: loc!.end.column + 1,
+  }
+}
+
 export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
+  const ctxList: ReplPayload['ctx'][] = []
   const processedNodes = new WeakSet()
+
+  function r(
+    ctx: ReplPayload['ctx'],
+    value: types.Expression | types.SpreadElement | types.ArgumentPlaceholder
+  ) {
+    ctxList.push(ctx)
+
+    const callExpression = t.callExpression(t.identifier(identifierNameRepl), [
+      typeof ctx.id === 'number' ? t.numericLiteral(ctx.id) : t.stringLiteral(ctx.id),
+      value,
+    ])
+
+    return callExpression
+  }
 
   function ForInOrOfStatement(
     this: PluginPass,
@@ -48,24 +109,28 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       const bodyPath = path.get('body') as NodePath<types.BlockStatement>
 
       for (const variable of vars.reverse()) {
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
+        const replCallExpression = r(
+          {
+            ...getBaseCtx.call(this, {
               path: variable.path,
-              kind: 'assignment',
             }),
-            t.objectProperty(t.identifier('memberName'), t.stringLiteral(variable.identifier.name)),
-          ]),
-          variable.identifier,
-        ])
+            kind: ReplPayloadContextKind.Assignment,
+            memberName: variable.identifier.name,
+          },
+          variable.identifier
+        )
 
-        bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
+        bodyPath.unshiftContainer('body', t.expressionStatement(replCallExpression))
       }
     }
   }
 
   return {
+    post(file) {
+      const metadata = file.metadata as ReplPluginMetadata
+      metadata.replPlugin = { ctxList }
+    },
+
     visitor: {
       CallExpression(path) {
         if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
@@ -75,11 +140,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         processedNodes.add(path.node)
         const callee = path.node.callee
 
-        // console.log(...) -> console.log.apply(console, __r(...))
-        // console.debug(...) -> console.debug.apply(console, __r(...))
-        // console.info(...) -> console.info.apply(console, __r(...))
-        // console.warn(...) -> console.warn.apply(console, __r(...))
-        // console.error(...) -> console.error.apply(console, __r(...))
+        // console.xxx(...) -> console.xxx.apply(console, [identifierNameRepl](...))
         if (
           t.isMemberExpression(callee) &&
           t.isIdentifier(callee.object) &&
@@ -87,19 +148,22 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           t.isIdentifier(callee.property) &&
           ['log', 'debug', 'info', 'warn', 'error'].includes(callee.property.name)
         ) {
+          const replCallExpression = r(
+            {
+              ...getBaseCtx.call(this, {
+                path,
+              }),
+              kind: ('console-' + callee.property.name) as ReplPayloadConsoleLog['ctx']['kind'],
+            },
+            t.arrayExpression(
+              path.node.arguments.filter((arg) => t.isExpression(arg) || t.isSpreadElement(arg))
+            )
+          )
+
           path.replaceWith(
             t.callExpression(t.memberExpression(callee, t.identifier('apply')), [
               callee.object,
-              t.callExpression(t.identifier('__r'), [
-                t.objectExpression([
-                  ...getCommonWrapperFields.call(this, {
-                    t,
-                    path,
-                    kind: ('console-' + callee.property.name) as ReplPayload['ctx']['kind'],
-                  }),
-                ]),
-                ...path.node.arguments,
-              ]),
+              replCallExpression,
             ])
           )
         }
@@ -133,22 +197,18 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           const bodyPath = path.get('body') as NodePath<types.BlockStatement>
 
           for (const variable of vars.reverse()) {
-            const callExpression = t.callExpression(t.identifier('__r'), [
-              t.objectExpression([
-                ...getCommonWrapperFields.call(this, {
-                  t,
+            const replCallExpression = r(
+              {
+                ...getBaseCtx.call(this, {
                   path: variable.path,
-                  kind: 'assignment',
                 }),
-                t.objectProperty(
-                  t.identifier('memberName'),
-                  t.stringLiteral(variable.identifier.name)
-                ),
-              ]),
-              variable.identifier,
-            ])
+                kind: ReplPayloadContextKind.Assignment,
+                memberName: variable.identifier.name,
+              },
+              variable.identifier
+            )
 
-            bodyPath.unshiftContainer('body', t.expressionStatement(callExpression))
+            bodyPath.unshiftContainer('body', t.expressionStatement(replCallExpression))
           }
         }
       },
@@ -197,20 +257,19 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         })
 
         for (const variable of vars.reverse()) {
-          const callExpression = t.callExpression(t.identifier('__r'), [
-            t.objectExpression([
-              ...getCommonWrapperFields.call(this, {
-                t,
+          const replCallExpression = r(
+            {
+              ...getBaseCtx.call(this, {
                 path: variable.path,
-                kind: 'variable',
               }),
-              t.objectProperty(t.identifier('varName'), t.stringLiteral(variable.identifier.name)),
-              t.objectProperty(t.identifier('varKind'), t.stringLiteral(path.node.kind)),
-            ]),
-            variable.identifier,
-          ])
+              kind: ReplPayloadContextKind.Variable,
+              varName: variable.identifier.name,
+              varKind: path.node.kind,
+            },
+            variable.identifier
+          )
 
-          path.insertAfter(t.expressionStatement(callExpression))
+          path.insertAfter(t.expressionStatement(replCallExpression))
         }
       },
 
@@ -275,36 +334,168 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           }
 
           for (const member of members.reverse()) {
-            const callExpression = t.callExpression(t.identifier('__r'), [
-              t.objectExpression([
-                ...getCommonWrapperFields.call(this, {
-                  t,
+            const replCallExpression = r(
+              {
+                ...getBaseCtx.call(this, {
                   path: member.path,
-                  kind: 'assignment',
                 }),
-                t.objectProperty(t.identifier('memberName'), t.stringLiteral(member.name)),
-              ]),
-              member.node,
-            ])
+                kind: ReplPayloadContextKind.Assignment,
+                memberName: member.name,
+              },
+              member.node
+            )
 
-            path.insertAfter(t.expressionStatement(callExpression))
+            path.insertAfter(t.expressionStatement(replCallExpression))
           }
 
           return
         }
 
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
+        const replCallExpression = r(
+          {
+            ...getBaseCtx.call(this, {
               path,
-              kind: 'expression',
             }),
-          ]),
-          path.node.expression,
-        ])
+            kind: ReplPayloadContextKind.Expression,
+          },
+          path.node.expression
+        )
 
-        path.replaceWith(t.expressionStatement(callExpression))
+        path.replaceWith(t.expressionStatement(replCallExpression))
+      },
+
+      // const foo = function() {} -> FunctionExpression
+      // function foo() {} -> FunctionDeclaration
+      // () => {} -> ArrowFunctionExpression
+      Function(path) {
+        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+          return
+        }
+
+        processedNodes.add(path.node)
+
+        const fnMetaStatement = t.expressionStatement(
+          t.callExpression(t.identifier(identifierNameFunctionMeta), [
+            t.stringLiteral(path.getSource()),
+          ])
+        )
+
+        let fnId =
+          t.isFunctionDeclaration(path.node) || t.isFunctionExpression(path.node)
+            ? path.node.id
+            : null
+
+        // Infer function id from variable id
+        if (
+          !fnId &&
+          path.parentPath.isVariableDeclarator() &&
+          t.isIdentifier(path.parentPath.node.id)
+        ) {
+          fnId = path.parentPath.node.id
+        }
+
+        const params: {
+          name: string
+          path: NodePath
+          node: types.Identifier
+        }[] = []
+
+        const paramsPath = path.get('params')
+        paramsPath.forEach((paramPath) => {
+          const param = paramPath.node
+          if (t.isIdentifier(param)) {
+            params.push({ name: param.name, path: paramPath, node: param })
+          } else if (t.isAssignmentPattern(param) && t.isIdentifier(param.left)) {
+            params.push({ name: param.left.name, path: paramPath, node: param.left })
+          } else if (t.isRestElement(param) && t.isIdentifier(param.argument)) {
+            params.push({ name: param.argument.name, path: paramPath, node: param.argument })
+          } else {
+            paramPath.traverse({
+              AssignmentPattern(path) {
+                path.skipKey('right')
+              },
+              ObjectProperty(path) {
+                path.skipKey('key')
+              },
+              Identifier(path) {
+                params.push({ name: path.node.name, path, node: path.node })
+              },
+            })
+          }
+        })
+
+        let arrowFnArgsIdentifier: types.Identifier | null = null
+        let arrowFnArgsDeclaration: types.VariableDeclaration | null = null
+        if (t.isArrowFunctionExpression(path.node)) {
+          arrowFnArgsIdentifier = path.scope.generateUidIdentifier('args')
+          arrowFnArgsDeclaration =
+            path.node.params.length > 0
+              ? t.variableDeclaration('let', [
+                  t.variableDeclarator(t.arrayPattern(path.node.params), arrowFnArgsIdentifier),
+                ])
+              : null
+
+          path.node.params = [t.restElement(arrowFnArgsIdentifier)]
+        }
+
+        const replCallExpression = r(
+          {
+            ...getBaseCtx.call(this, {
+              path: path,
+              // Stick to fn name location
+              loc:
+                fnId != null
+                  ? fnId.loc!
+                  : ({
+                      start: path.node.loc!.start,
+                      // Not a typo, use start location in case fnId is not defined
+                      end: path.node.loc!.start,
+                    } as Omit<types.SourceLocation, 'identifierName' | 'filename'>),
+              source: `${fnId?.name ?? 'anonymous'}(${paramsPath.map((p) => p.getSource()).join(', ')})`,
+            }),
+            kind: ReplPayloadContextKind.FunctionCall,
+            name: fnId?.name ?? null,
+            isAsync: path.node.async ?? false,
+            isGenerator: path.node.generator ?? false,
+            isArrow: path.isArrowFunctionExpression(),
+          },
+          path.isArrowFunctionExpression()
+            ? arrowFnArgsIdentifier!
+            : t.callExpression(t.memberExpression(t.identifier('Array'), t.identifier('from')), [
+                t.identifier('arguments'),
+              ])
+        )
+
+        const replExprStatement = t.expressionStatement(replCallExpression)
+        const newBodyNodes = [fnMetaStatement, arrowFnArgsDeclaration, replExprStatement].filter(
+          (x) => x !== null
+        )
+
+        for (const param of params) {
+          const replCallExpression = r(
+            {
+              ...getBaseCtx.call(this, {
+                path: param.path,
+              }),
+              kind: ReplPayloadContextKind.Assignment,
+              memberName: param.name,
+            },
+            param.node
+          )
+
+          newBodyNodes.push(t.expressionStatement(replCallExpression))
+        }
+
+        const bodyPath = path.get('body')
+        if (bodyPath.isBlockStatement()) {
+          bodyPath.unshiftContainer('body', newBodyNodes)
+        } else if (bodyPath.isExpression()) {
+          // Handle arrow functions with expression bodies
+          const returnArgument = bodyPath.node
+          bodyPath.replaceWith(
+            t.blockStatement([...newBodyNodes, t.returnStatement(returnArgument)])
+          )
+        }
       },
 
       ReturnStatement(path) {
@@ -321,84 +512,31 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           t.variableDeclarator(retVarIdentifier, returnArgument),
         ])
 
-        const callExpression = t.callExpression(t.identifier('__r'), [
-          t.objectExpression([
-            ...getCommonWrapperFields.call(this, {
-              t,
+        const replCallExpression = r(
+          {
+            ...getBaseCtx.call(this, {
               path: path,
-              kind: 'return',
             }),
-          ]),
-          retVarIdentifier,
-        ])
+            kind: ReplPayloadContextKind.Return,
+          },
+          retVarIdentifier
+        )
 
         // If the return statement is not in a block, wrap it in a block
         if (!path.parentPath.isBlockStatement()) {
           path.replaceWith(
             t.blockStatement([
               retVarDeclaration,
-              t.expressionStatement(callExpression),
+              t.expressionStatement(replCallExpression),
               t.returnStatement(retVarIdentifier),
             ])
           )
         } else {
           path.insertBefore(retVarDeclaration)
-          path.insertBefore(t.expressionStatement(callExpression))
+          path.insertBefore(t.expressionStatement(replCallExpression))
           path.get('argument').replaceWith(retVarIdentifier)
         }
       },
     },
   }
-}
-
-function getCommonWrapperFields(
-  this: PluginPass,
-  {
-    t,
-    path,
-    kind,
-  }: {
-    t: typeof types
-    path: NodePath
-    kind: ReplPayload['ctx']['kind']
-  }
-) {
-  const filePath = this.filename!
-  assert(filePath != null, 'filePath must be defined')
-  assert(filePath.startsWith('/'), 'filePath must start with /')
-
-  nextId = (nextId + 1) % Number.MAX_SAFE_INTEGER
-
-  return [
-    t.objectProperty(t.identifier('id'), t.numericLiteral(nextId)),
-    t.objectProperty(t.identifier('kind'), t.stringLiteral(kind)),
-    t.objectProperty(t.identifier('source'), t.stringLiteral(path.getSource())),
-    t.objectProperty(t.identifier('filePath'), t.stringLiteral(filePath)),
-    t.objectProperty(
-      t.identifier('lineStart'),
-      path.node?.loc?.start?.line != null
-        ? t.numericLiteral(path.node.loc.start.line)
-        : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('lineEnd'),
-      path.node?.loc?.end?.line != null ? t.numericLiteral(path.node.loc.end.line) : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('colStart'),
-      path.node?.loc?.start?.column != null
-        ? t.numericLiteral(path.node.loc.start.column + 1)
-        : t.nullLiteral()
-    ),
-    t.objectProperty(
-      t.identifier('colEnd'),
-      path.node?.loc?.end?.column != null
-        ? t.numericLiteral(path.node.loc.end.column + 1)
-        : t.nullLiteral()
-    ),
-  ]
-}
-
-function isNewlyCreatedPath(path: NodePath) {
-  return !path.node.loc
 }

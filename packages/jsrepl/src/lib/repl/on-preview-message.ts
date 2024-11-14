@@ -1,6 +1,9 @@
 import { type Dispatch, type SetStateAction } from 'react'
 import {
+  IReplPayload,
   type ReplPayload,
+  ReplPayloadContextKind,
+  ReplPayloadContextMessageData,
   ReplPayloadMessageData,
   ReplStatusMessageData,
 } from '@jsrepl/shared-types'
@@ -31,10 +34,32 @@ export function onPreviewMessage(
     setPreviewIframeReadyId(data.previewId)
   }
 
-  if (data.type === 'repl' && data.token === replDataRef.current.token) {
-    const { payload } = data
+  if (
+    data.type === 'repl-payload-context' &&
+    data.token === replDataRef.current.token &&
+    replDataRef.current.bundle
+  ) {
+    replDataRef.current.bundle.replMeta.ctxMap.set(data.ctx.id, data.ctx)
+  }
 
-    if (payload.ctx.kind === 'window-error') {
+  if (
+    data.type === 'repl-payload' &&
+    data.token === replDataRef.current.token &&
+    replDataRef.current.bundle
+  ) {
+    const ctx = replDataRef.current.bundle.replMeta.ctxMap.get(data.payload.ctxId)
+    if (!ctx) {
+      return
+    }
+
+    const payload = {
+      id: data.payload.id,
+      isError: data.payload.isError,
+      result: data.payload.result,
+      ctx,
+    } satisfies IReplPayload as ReplPayload
+
+    if (payload.ctx.kind === ReplPayloadContextKind.WindowError) {
       if (resolveErrorLocation(payload)) {
         addPayload(data.token, payload)
       }
@@ -44,7 +69,9 @@ export function onPreviewMessage(
   }
 
   if (
-    (data.type === 'repl' || data.type === 'script-complete') &&
+    (data.type === 'repl-payload' ||
+      data.type === 'repl-payload-context' ||
+      data.type === 'script-complete') &&
     data.token === replDataRef.current.token
   ) {
     refreshPayloads(data.token)
@@ -53,7 +80,9 @@ export function onPreviewMessage(
 
 function validateEvent(
   event: MessageEvent<unknown>
-): event is MessageEvent<ReplPayloadMessageData | ReplStatusMessageData> {
+): event is MessageEvent<
+  ReplPayloadMessageData | ReplPayloadContextMessageData | ReplStatusMessageData
+> {
   return (
     event.origin === previewUrl &&
     event.data !== null &&

@@ -1,3 +1,6 @@
+export * from './repl-payload-context'
 export * from './repl-payload'
+export * from './repl-meta'
+export * from './marshalled'
 export * from './theme'
 export * from './messaging'

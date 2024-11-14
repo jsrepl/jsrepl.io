@@ -1,4 +1,8 @@
-import { type ReplPayload, ReplPayloadConsoleLog } from '@jsrepl/shared-types'
+import {
+  type ReplPayload,
+  ReplPayloadConsoleLog,
+  ReplPayloadFunctionCall,
+} from '@jsrepl/shared-types'
 import { stringifyResult } from './stringify'
 
 export function renderToDecorString(payload: ReplPayload): string | null {
@@ -21,6 +25,13 @@ function renderPayload(payload: ReplPayload): string | null {
   if (kind === 'assignment') {
     const { memberName } = payload.ctx
     return `${memberName} = ${stringifyResult(payload.result, 'decor').value}`
+  }
+
+  if (kind === 'function-call') {
+    const { name } = payload.ctx
+    const { result } = payload as ReplPayloadFunctionCall
+    const args = result.map((arg) => stringifyResult(arg, 'decor').value).join(', ')
+    return `ƒƒ ${name ?? 'anonymous'}(${args})`
   }
 
   if (

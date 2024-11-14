@@ -10,7 +10,7 @@ import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
-const tailwindConfigCache = new Cache()
+const tailwindConfigCache = new Cache<string>()
 
 let tailwindContent: { content: string; extension: string }[] | null = null
 let tailwindConfigLoadDeferred: PromiseWithResolvers<void> | null = null

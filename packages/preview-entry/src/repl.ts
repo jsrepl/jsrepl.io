@@ -1,39 +1,28 @@
-import { ReplPayload } from '@jsrepl/shared-types'
-import { transformPayload } from './payload'
+import {
+  ReplPayloadContext,
+  ReplPayloadContextId,
+  ReplPayloadContextKind,
+  ReplPayloadContextWindowError,
+  identifierNameFunctionMeta,
+  identifierNameRepl,
+} from '@jsrepl/shared-types'
+import { transformPayloadResult } from './payload'
 import { postMessage } from './post-message'
 import type { PreviewWindow } from './types'
 
 export function setupRepl(win: PreviewWindow, token: number) {
-  win.__r = repl.bind({ token, win })
+  win[identifierNameRepl] = repl.bind({ token, win })
+  win[identifierNameFunctionMeta] = () => {}
 
   win.addEventListener('error', (event) => {
     onWindowError(event, token)
   })
 }
 
-function repl(
-  this: { token: number; win: PreviewWindow },
-  ctx: ReplPayload['ctx'],
-  ...args: unknown[]
-) {
+function repl(this: { token: number; win: PreviewWindow }, ctxId: string | number, value: unknown) {
   const { token, win } = this
-
-  switch (ctx.kind) {
-    case 'console-log':
-    case 'console-debug':
-    case 'console-info':
-    case 'console-warn':
-    case 'console-error': {
-      postMessageRepl(token, win, args, false, ctx)
-      return args
-    }
-
-    default: {
-      const value = args[0]
-      postMessageRepl(token, win, value, false, ctx)
-      return value
-    }
-  }
+  postMessageRepl(token, win, value, false, ctxId)
+  return value
 }
 
 function postMessageRepl(
@@ -41,16 +30,23 @@ function postMessageRepl(
   win: PreviewWindow,
   result: unknown,
   isError: boolean,
-  ctx: ReplPayload['ctx']
+  ctxId: ReplPayloadContextId
 ) {
   postMessage(token, {
-    type: 'repl',
-    payload: transformPayload(win, {
+    type: 'repl-payload',
+    payload: {
       id: crypto.randomUUID(),
       isError,
-      rawResult: result,
-      ctx,
-    }),
+      result: transformPayloadResult(win, result),
+      ctxId,
+    },
+  })
+}
+
+function postMessageReplContext(token: number, ctx: ReplPayloadContext) {
+  postMessage(token, {
+    type: 'repl-payload-context',
+    ctx,
   })
 }
 
@@ -68,7 +64,7 @@ function onWindowError(event: ErrorEvent, token: number) {
     filePath = '/index.html'
   }
 
-  postMessageRepl(token, win, error, true, {
+  const ctx: ReplPayloadContextWindowError = {
     id: `window-error-${event.filename}-${event.lineno}:${event.colno}`,
     // Normally lineno and colno start with 1.
     // There are edge cases where they might appear as zero, which usually indicates that the browser couldn't
@@ -83,6 +79,9 @@ function onWindowError(event: ErrorEvent, token: number) {
     source: '',
     // Will be resolved to the original filePath taking into account the sourcemap.
     filePath,
-    kind: 'window-error',
-  })
+    kind: ReplPayloadContextKind.WindowError,
+  }
+
+  postMessageReplContext(token, ctx)
+  postMessageRepl(token, win, error, true, ctx.id)
 }
