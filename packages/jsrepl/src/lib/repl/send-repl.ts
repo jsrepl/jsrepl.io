@@ -364,6 +364,7 @@ function getPayloadFromEsbuildMessage(
     id: crypto.randomUUID(),
     isError: true,
     result: msg.text,
+    timestamp: Date.now(),
     ctx: {
       id: `bundle-${kind}-${msg.id}-${msg.location?.file}-${msg.location?.line}:${msg.location?.column}`,
       lineStart: msg.location?.line ?? 1,
