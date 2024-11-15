@@ -345,7 +345,9 @@ function _stringifyResult(
         value =
           meta.constructorName && meta.constructorName !== 'Object'
             ? `${meta.constructorName}`
-            : `{…}`
+            : Object.keys(props).length > 0
+              ? `{…}`
+              : '{}'
       }
     } else {
       const propsStr = propEntries()
