@@ -22,6 +22,10 @@ interface Base<T = ReplPayloadContextKind> {
    */
   id: ReplPayloadContextId
   /**
+   * Display expression identifier.
+   */
+  displayId?: ReplPayloadContextId
+  /**
    * Starts with 1.
    */
   lineStart: number

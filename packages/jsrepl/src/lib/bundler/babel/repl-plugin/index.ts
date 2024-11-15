@@ -5,7 +5,7 @@ import {
   ReplPayloadContextKind,
   identifierNameFunctionMeta,
 } from '@jsrepl/shared-types'
-import { getBaseCtx, initReplCallExpression } from './repl-utils'
+import { getBaseCtx, getNextId, initReplCallExpression } from './repl-utils'
 import { initSkip } from './skip-utils'
 
 export type ReplPluginMetadata = {
@@ -479,6 +479,19 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           return
         }
 
+        const parentFunctionPath = path.findParent((p) =>
+          p.isFunction()
+        ) as NodePath<types.Function> | null
+        if (!parentFunctionPath) {
+          return
+        }
+
+        let returnCtxDisplayId = parentFunctionPath.getData('return-ctx-id') as number | null
+        if (!returnCtxDisplayId) {
+          returnCtxDisplayId = getNextId()
+          parentFunctionPath.setData('return-ctx-id', returnCtxDisplayId)
+        }
+
         // Handle both empty and non-empty return statements
         const returnArgument = path.node.argument || t.identifier('undefined')
         const retVarIdentifier = path.scope.parent.generateUidIdentifier('ret')
@@ -490,6 +503,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           {
             ...getBaseCtx.call(this, {
               path: path,
+              displayId: returnCtxDisplayId,
             }),
             kind: ReplPayloadContextKind.Return,
           },

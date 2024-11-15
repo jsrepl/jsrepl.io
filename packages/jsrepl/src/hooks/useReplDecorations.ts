@@ -25,7 +25,7 @@ export default function useReplDecorations() {
       const map = new Map<number | string, ReplPayload>()
       for (const payload of payloads) {
         if (predicate(payload)) {
-          map.set(payload.ctx.id, payload)
+          map.set(payload.ctx.displayId ?? payload.ctx.id, payload)
         }
 
         if (rewindMode.active && rewindMode.currentPayloadId === payload.id) {

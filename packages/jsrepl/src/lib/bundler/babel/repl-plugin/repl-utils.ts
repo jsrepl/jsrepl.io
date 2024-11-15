@@ -14,11 +14,13 @@ export function getBaseCtx(
   {
     path,
     id = getNextId(),
+    displayId,
     source = path.getSource(),
     loc = getLocation(path),
   }: {
     path: NodePath
     id?: number
+    displayId?: number | string
     source?: string
     loc?: Omit<types.SourceLocation, 'identifierName' | 'filename'> | null
   }
@@ -30,6 +32,7 @@ export function getBaseCtx(
 
   return {
     id,
+    displayId,
     source,
     filePath,
     lineStart: loc!.start.line,
