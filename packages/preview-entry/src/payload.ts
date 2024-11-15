@@ -2,6 +2,7 @@ import {
   MarshalledDomNode,
   MarshalledFunction,
   MarshalledObject,
+  MarshalledPromise,
   MarshalledSymbol,
   MarshalledType,
   MarshalledWeakMap,
@@ -111,6 +112,14 @@ function transformResult(
 
   if (result instanceof win.ArrayBuffer) {
     return result
+  }
+
+  if (result instanceof win.Promise) {
+    return {
+      __meta__: {
+        type: MarshalledType.Promise,
+      },
+    } as MarshalledPromise
   }
 
   // TODO: support more built-in known transferable objects:

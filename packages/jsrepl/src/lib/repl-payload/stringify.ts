@@ -319,6 +319,18 @@ function _stringifyResult(
     return { value: 'WeakRef()', type: 'weakref', lang: 'js' }
   }
 
+  if (utils.isMarshalledPromise(result)) {
+    const value =
+      target === 'decor'
+        ? 'Promise'
+        : `Promise {
+${t('', 1)}then() { [native code] },
+${t('', 1)}catch() { [native code] },
+${t('', 1)}finally() { [native code] }
+${t('', 0)}}`
+    return { value, type: 'promise', lang: 'js' }
+  }
+
   if (utils.isMarshalledObject(result)) {
     const releaseRef = putRef(result)
     const { __meta__: meta, ...props } = result

@@ -40,6 +40,13 @@ function replacer(this: unknown, key: string, value: unknown): unknown {
       case utils.isMarshalledWeakRef(value):
         return undefined
 
+      case utils.isMarshalledPromise(value):
+        return {
+          then: 'function then() { [native code] }',
+          catch: 'function catch() { [native code] }',
+          finally: 'function finally() { [native code] }',
+        }
+
       case utils.isMarshalledObject(value): {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { __meta__, ...props } = value

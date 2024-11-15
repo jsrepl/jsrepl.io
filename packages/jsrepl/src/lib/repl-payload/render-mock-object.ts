@@ -38,10 +38,17 @@ function revive(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         let fn: Function
         try {
+          // Serialized function may contain `[native code]`.
           fn = new Function(`return ${value.serialized}`)()
         } catch {}
 
-        fn ??= new Function(`return function ${value.__meta__.name}() {}`)()
+        try {
+          // Some reserved keywords are not allowed in function names,
+          // for example `catch`, `finally`, `do`, etc.
+          fn ??= new Function(`return function ${value.__meta__.name}() {}`)()
+        } catch {}
+
+        fn ??= new Function(`return function() {}`)()
 
         return fn
       }
@@ -59,6 +66,9 @@ function revive(
 
       case utils.isMarshalledWeakRef(value):
         return new WeakRef({})
+
+      case utils.isMarshalledPromise(value):
+        return new Promise(() => {})
 
       case utils.isMarshalledObject(value): {
         const { __meta__: meta, ...props } = value

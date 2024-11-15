@@ -6,6 +6,7 @@ export enum MarshalledType {
   WeakMap = 'weak-map', // non-cloneable
   WeakRef = 'weak-ref', // non-cloneable
   Object = 'object', // prototype chain is not preserved in structured clone
+  Promise = 'promise', // non-cloneable. Handled differently from MarshalledObject.
 }
 
 export type MarshalledDomNode = {
@@ -58,5 +59,11 @@ export type MarshalledObject = Record<string, unknown> & {
   __meta__: {
     type: MarshalledType.Object
     constructorName: string | undefined
+  }
+}
+
+export type MarshalledPromise = {
+  __meta__: {
+    type: MarshalledType.Promise
   }
 }

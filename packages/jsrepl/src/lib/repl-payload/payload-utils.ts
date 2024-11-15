@@ -2,6 +2,7 @@ import {
   MarshalledDomNode,
   MarshalledFunction,
   MarshalledObject,
+  MarshalledPromise,
   MarshalledSymbol,
   MarshalledType,
   MarshalledWeakMap,
@@ -35,6 +36,10 @@ export function isMarshalledWeakRef(result: object): result is MarshalledWeakRef
 
 export function isMarshalledObject(result: object): result is MarshalledObject {
   return getMarshalledType(result) === MarshalledType.Object
+}
+
+export function isMarshalledPromise(result: object): result is MarshalledPromise {
+  return getMarshalledType(result) === MarshalledType.Promise
 }
 
 export function getMarshalledType(result: object): MarshalledType | null {
