@@ -21,9 +21,10 @@ export type StringifyResultTarget = 'decor' | 'details'
 
 export function stringifyResult(
   result: ReplPayload['result'],
-  target: StringifyResultTarget
+  target: StringifyResultTarget,
+  startNestingLevel: number = 0
 ): StringifyResult {
-  return _stringifyResult(result, target, 0, {
+  return _stringifyResult(result, target, startNestingLevel, {
     map: new WeakMap(),
     nextIndex: 1,
   })

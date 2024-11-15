@@ -68,6 +68,17 @@ function renderPayload(payload: ReplPayload): string[] {
     return renderStringified(stringified, prefix)
   }
 
+  if (kind === 'return') {
+    const stringified = stringifyResult(payload.result, 'details')
+    const prefix = `return `
+    stringified.detailsBefore = {
+      // TODO: fn name
+      value: `Function returned:`,
+      lang: null,
+    }
+    return renderStringified(stringified, prefix)
+  }
+
   if (
     kind === 'console-log' ||
     kind === 'console-debug' ||

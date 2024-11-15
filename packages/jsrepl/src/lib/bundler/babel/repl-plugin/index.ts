@@ -2,12 +2,11 @@ import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
 import {
   ReplPayload,
   ReplPayloadConsoleLog,
-  ReplPayloadContext,
   ReplPayloadContextKind,
   identifierNameFunctionMeta,
-  identifierNameRepl,
 } from '@jsrepl/shared-types'
-import { assert } from '@/lib/assert'
+import { getBaseCtx, initReplCallExpression } from './repl-utils'
+import { initSkip } from './skip-utils'
 
 export type ReplPluginMetadata = {
   replPlugin: {
@@ -15,68 +14,18 @@ export type ReplPluginMetadata = {
   }
 }
 
-let nextId = -1
-
-function isNewlyCreatedPath(path: NodePath) {
-  return !path.node.loc
-}
-
-function getBaseCtx(
-  this: PluginPass,
-  {
-    path,
-    source = path.getSource(),
-    loc = path.node.loc,
-  }: {
-    path: NodePath
-    source?: string
-    loc?: Omit<types.SourceLocation, 'identifierName' | 'filename'> | null
-  }
-): Omit<ReplPayloadContext, 'kind'> {
-  const filePath = this.filename!
-  assert(filePath != null, 'filePath must be defined')
-  assert(filePath.startsWith('/'), 'filePath must start with /')
-
-  nextId = (nextId + 1) % Number.MAX_SAFE_INTEGER
-
-  return {
-    id: nextId,
-    source,
-    filePath,
-    lineStart: loc!.start.line,
-    lineEnd: loc!.end.line,
-    colStart: loc!.start.column + 1,
-    colEnd: loc!.end.column + 1,
-  }
-}
-
 export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
-  const ctxList: ReplPayload['ctx'][] = []
-  const processedNodes = new WeakSet()
-
-  function r(
-    ctx: ReplPayload['ctx'],
-    value: types.Expression | types.SpreadElement | types.ArgumentPlaceholder
-  ) {
-    ctxList.push(ctx)
-
-    const callExpression = t.callExpression(t.identifier(identifierNameRepl), [
-      typeof ctx.id === 'number' ? t.numericLiteral(ctx.id) : t.stringLiteral(ctx.id),
-      value,
-    ])
-
-    return callExpression
-  }
+  const { skip, shouldSkip } = initSkip()
+  const { r, ctxList } = initReplCallExpression({ types: t })
 
   function ForInOrOfStatement(
     this: PluginPass,
     path: NodePath<types.ForInStatement | types.ForOfStatement>
   ) {
-    if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+    if (shouldSkip(path)) {
       return
     }
 
-    processedNodes.add(path.node)
     path.skipKey('left')
 
     const leftPath = path.get('left')
@@ -120,7 +69,9 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           variable.identifier
         )
 
-        bodyPath.unshiftContainer('body', t.expressionStatement(replCallExpression))
+        const replExprStatement = t.expressionStatement(replCallExpression)
+        bodyPath.unshiftContainer('body', replExprStatement)
+        skip([replExprStatement, replCallExpression])
       }
     }
   }
@@ -133,11 +84,13 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
 
     visitor: {
       CallExpression(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('CallExpression', path.toString())
+
+        if (shouldSkip(path)) {
+          console.log('skipped', path.toString())
           return
         }
 
-        processedNodes.add(path.node)
         const callee = path.node.callee
 
         // console.xxx(...) -> console.xxx.apply(console, [identifierNameRepl](...))
@@ -160,21 +113,23 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
             )
           )
 
-          path.replaceWith(
-            t.callExpression(t.memberExpression(callee, t.identifier('apply')), [
-              callee.object,
-              replCallExpression,
-            ])
-          )
+          const newExpr = t.callExpression(t.memberExpression(callee, t.identifier('apply')), [
+            callee.object,
+            replCallExpression,
+          ])
+
+          path.replaceWith(newExpr)
+          skip([newExpr, replCallExpression])
         }
       },
 
       ForStatement(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('ForStatement', path.toString())
+
+        if (shouldSkip(path)) {
           return
         }
 
-        processedNodes.add(path.node)
         path.skipKey('init')
         path.skipKey('update')
 
@@ -208,16 +163,20 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
               variable.identifier
             )
 
-            bodyPath.unshiftContainer('body', t.expressionStatement(replCallExpression))
+            const replExprStatement = t.expressionStatement(replCallExpression)
+            bodyPath.unshiftContainer('body', replExprStatement)
+            skip([replExprStatement, replCallExpression])
           }
         }
       },
 
       ForInStatement(path) {
+        console.log('ForInStatement', path.toString())
         ForInOrOfStatement.call(this, path)
       },
 
       ForOfStatement(path) {
+        console.log('ForOfStatement', path.toString())
         ForInOrOfStatement.call(this, path)
       },
 
@@ -225,11 +184,12 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       // const [ccc, a = '', { x: cc }, [xbx = 'a'], ...b] = await foo()
       // const x1 = 1, x2 = 2
       VariableDeclaration(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('VariableDeclaration', path.toString())
+
+        if (shouldSkip(path)) {
+          console.log('skipped', path.toString())
           return
         }
-
-        processedNodes.add(path.node)
 
         const vars: {
           path: NodePath<types.Identifier | types.LVal>
@@ -269,20 +229,23 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
             variable.identifier
           )
 
-          path.insertAfter(t.expressionStatement(replCallExpression))
+          const replExprStatement = t.expressionStatement(replCallExpression)
+          path.insertAfter(replExprStatement)
+          skip([replExprStatement, replCallExpression])
         }
       },
 
       // foo()
       // await foo()
       ExpressionStatement(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('ExpressionStatement', path.toString())
+
+        if (shouldSkip(path)) {
+          console.log('skipped', path.toString())
           return
         }
 
-        processedNodes.add(path.node)
-
-        // skip console.log(...), console.debug(...), etc
+        // skip console.xxx(...) - handled in CallExpression
         if (t.isCallExpression(path.node.expression)) {
           const callee = path.node.expression.callee
           if (
@@ -345,7 +308,9 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
               member.node
             )
 
-            path.insertAfter(t.expressionStatement(replCallExpression))
+            const replExprStatement = t.expressionStatement(replCallExpression)
+            path.insertAfter(replExprStatement)
+            skip([replExprStatement, replCallExpression])
           }
 
           return
@@ -361,24 +326,27 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           path.node.expression
         )
 
-        path.replaceWith(t.expressionStatement(replCallExpression))
+        const replExprStatement = t.expressionStatement(replCallExpression)
+        path.replaceWith(replExprStatement)
+        skip([replExprStatement, replCallExpression])
       },
 
       // const foo = function() {} -> FunctionExpression
       // function foo() {} -> FunctionDeclaration
       // () => {} -> ArrowFunctionExpression
       Function(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('Function', path.toString())
+
+        if (shouldSkip(path)) {
           return
         }
-
-        processedNodes.add(path.node)
 
         const fnMetaStatement = t.expressionStatement(
           t.callExpression(t.identifier(identifierNameFunctionMeta), [
             t.stringLiteral(path.getSource()),
           ])
         )
+        skip([fnMetaStatement, fnMetaStatement.expression])
 
         let fnId =
           t.isFunctionDeclaration(path.node) || t.isFunctionExpression(path.node)
@@ -436,6 +404,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
               : null
 
           path.node.params = [t.restElement(arrowFnArgsIdentifier)]
+          skip([arrowFnArgsDeclaration, arrowFnArgsIdentifier].filter((x) => x !== null))
         }
 
         const replCallExpression = r(
@@ -467,6 +436,8 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         )
 
         const replExprStatement = t.expressionStatement(replCallExpression)
+        skip([replExprStatement, replCallExpression])
+
         const newBodyNodes = [fnMetaStatement, arrowFnArgsDeclaration, replExprStatement].filter(
           (x) => x !== null
         )
@@ -483,7 +454,9 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
             param.node
           )
 
-          newBodyNodes.push(t.expressionStatement(replCallExpression))
+          const replExprStatement = t.expressionStatement(replCallExpression)
+          newBodyNodes.push(replExprStatement)
+          skip([replExprStatement, replCallExpression])
         }
 
         const bodyPath = path.get('body')
@@ -499,11 +472,12 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       },
 
       ReturnStatement(path) {
-        if (isNewlyCreatedPath(path) || processedNodes.has(path.node)) {
+        console.log('ReturnStatement', path.toString())
+
+        if (shouldSkip(path)) {
+          console.log('skipped', path.toString())
           return
         }
-
-        processedNodes.add(path.node)
 
         // Handle both empty and non-empty return statements
         const returnArgument = path.node.argument || t.identifier('undefined')
@@ -522,19 +496,27 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
           retVarIdentifier
         )
 
+        const replExprStatement = t.expressionStatement(replCallExpression)
+
         // If the return statement is not in a block, wrap it in a block
         if (!path.parentPath.isBlockStatement()) {
+          const returnStatement = t.returnStatement(retVarIdentifier)
           path.replaceWith(
-            t.blockStatement([
-              retVarDeclaration,
-              t.expressionStatement(replCallExpression),
-              t.returnStatement(retVarIdentifier),
-            ])
+            t.blockStatement([retVarDeclaration, replExprStatement, returnStatement])
           )
+
+          skip([
+            retVarDeclaration,
+            replExprStatement,
+            replExprStatement.expression,
+            returnStatement,
+          ])
         } else {
           path.insertBefore(retVarDeclaration)
-          path.insertBefore(t.expressionStatement(replCallExpression))
+          path.insertBefore(replExprStatement)
           path.get('argument').replaceWith(retVarIdentifier)
+
+          skip([retVarDeclaration, replExprStatement, replExprStatement.expression])
         }
       },
     },

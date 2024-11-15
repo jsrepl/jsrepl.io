@@ -30,8 +30,12 @@ function renderPayload(payload: ReplPayload): string | null {
   if (kind === 'function-call') {
     const { name } = payload.ctx
     const { result } = payload as ReplPayloadFunctionCall
-    const args = result.map((arg) => stringifyResult(arg, 'decor').value).join(', ')
+    const args = result.map((arg) => stringifyResult(arg, 'decor', 1).value).join(', ')
     return `ƒƒ ${name ?? 'anonymous'}(${args})`
+  }
+
+  if (kind === 'return') {
+    return `ƒƒ => ${stringifyResult(payload.result, 'decor').value}`
   }
 
   if (
