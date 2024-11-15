@@ -51,7 +51,7 @@ function getDecorDef(
 
     return {
       // line starts with 1, column starts with 1
-      range: new monaco!.Range(lineStart, colStart, lineEnd, colEnd),
+      range: new monaco!.Range(lineStart, colStart, lineEnd, Math.max(colEnd - 1, colStart)),
       options: {
         isWholeLine: true,
         afterContentClassName: `${codeEditorStyles.jsreplDecor} ${codeEditorStyles[`jsreplDecor-${kind}`] ?? ''} ${uniqClassName} ${isHighlighted ? codeEditorStyles.jsreplDecorHighlighted : ''}`,
