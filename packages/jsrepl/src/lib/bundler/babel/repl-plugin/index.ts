@@ -84,10 +84,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
 
     visitor: {
       CallExpression(path) {
-        console.log('CallExpression', path.toString())
-
         if (shouldSkip(path)) {
-          console.log('skipped', path.toString())
           return
         }
 
@@ -124,8 +121,6 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       },
 
       ForStatement(path) {
-        console.log('ForStatement', path.toString())
-
         if (shouldSkip(path)) {
           return
         }
@@ -171,12 +166,10 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       },
 
       ForInStatement(path) {
-        console.log('ForInStatement', path.toString())
         ForInOrOfStatement.call(this, path)
       },
 
       ForOfStatement(path) {
-        console.log('ForOfStatement', path.toString())
         ForInOrOfStatement.call(this, path)
       },
 
@@ -184,10 +177,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       // const [ccc, a = '', { x: cc }, [xbx = 'a'], ...b] = await foo()
       // const x1 = 1, x2 = 2
       VariableDeclaration(path) {
-        console.log('VariableDeclaration', path.toString())
-
         if (shouldSkip(path)) {
-          console.log('skipped', path.toString())
           return
         }
 
@@ -238,10 +228,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       // foo()
       // await foo()
       ExpressionStatement(path) {
-        console.log('ExpressionStatement', path.toString())
-
         if (shouldSkip(path)) {
-          console.log('skipped', path.toString())
           return
         }
 
@@ -335,8 +322,6 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       // function foo() {} -> FunctionDeclaration
       // () => {} -> ArrowFunctionExpression
       Function(path) {
-        console.log('Function', path.toString())
-
         if (shouldSkip(path)) {
           return
         }
@@ -472,10 +457,7 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
       },
 
       ReturnStatement(path) {
-        console.log('ReturnStatement', path.toString())
-
         if (shouldSkip(path)) {
-          console.log('skipped', path.toString())
           return
         }
 
