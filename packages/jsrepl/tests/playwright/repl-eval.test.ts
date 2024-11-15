@@ -73,8 +73,8 @@ test('simple expressions', async ({ page }) => {
       let hhhVar = window.hhh; // → hhhVar = 1
       h // → 9
 
-      function foo(x) { // → ƒƒ foo([9]), x = [9]
-        return x ?? [1,, {x: 3}, [4], 5, 6]; // → [9]
+      function foo(x) { // → ƒƒ foo(Array(1)), x = [9]
+        return x ?? [1,, {x: 3}, [4], 5, 6]; // → ƒƒ => [9]
       }
     `
   )
@@ -105,7 +105,7 @@ test('react starter', async ({ page }) => {
               <button onClick={() => setCounter((x) => x + 1)}>+</button>
             </p>
           </>
-        ); // → {$$typeof: Symbol(react.element), type: Symbol(react.fragment), key: null, ref: null, props: {…}, _o…
+        ); // → ƒƒ => {$$typeof: Symbol(react.element), type: Symbol(react.fragment), key: null, ref: null, props: {…
       }
     `
   )
@@ -265,14 +265,14 @@ test('stuff', async ({ page }) => {
       console.log(clock.constructor.name, a, 'asd', a, a); // → "HTMLTimeElement" {a: 1, b: 2, c: {…}, e: time#clock.text-5xl.font-bold} "asd" {a: 1, b: 2, c: {…}, …
 
       const obj = {} // → obj = {}
-      const arr = [obj] // → arr = [{…}]
+      const arr = [obj] // → arr = [{}]
       arr.push(obj) // → 2
       arr.push([obj]) // → 3
       arr.push(arr) // → 4
       arr.push([]) // → 5
-      console.log(arr) // → [ref *1] [{…}, {…}, Array(1), [Circular *1], Array(0)]
-      arr // → [ref *1] [{…}, {…}, Array(1), [Circular *1], Array(0)]
-      console.log(arr) // → [ref *1] [{…}, {…}, Array(1), [Circular *1], Array(0)]
+      console.log(arr) // → [ref *1] [{}, {}, Array(1), [Circular *1], Array(0)]
+      arr // → [ref *1] [{}, {}, Array(1), [Circular *1], Array(0)]
+      console.log(arr) // → [ref *1] [{}, {}, Array(1), [Circular *1], Array(0)]
 
       ;123 // → 123
 
