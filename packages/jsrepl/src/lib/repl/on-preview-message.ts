@@ -56,6 +56,7 @@ export function onPreviewMessage(
       id: data.payload.id,
       isError: data.payload.isError,
       result: data.payload.result,
+      timestamp: data.payload.timestamp,
       ctx,
     } satisfies IReplPayload as ReplPayload
 

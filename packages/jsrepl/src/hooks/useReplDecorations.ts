@@ -20,6 +20,24 @@ export default function useReplDecorations() {
   const decorationsDisposable = useRef<() => void>()
   const provideHoverRef = useRef<typeof provideHover>()
 
+  const getVisiblePayloads = useCallback(
+    (predicate: (payload: ReplPayload) => boolean) => {
+      const arr: ReplPayload[] = []
+      for (const payload of payloads) {
+        if (predicate(payload)) {
+          arr.push(payload)
+        }
+
+        if (rewindMode.active && rewindMode.currentPayloadId === payload.id) {
+          break
+        }
+      }
+
+      return arr
+    },
+    [payloads, rewindMode.active, rewindMode.currentPayloadId]
+  )
+
   const getDisplayedPayloads = useCallback(
     (predicate: (payload: ReplPayload) => boolean) => {
       const map = new Map<number | string, ReplPayload>()
@@ -91,9 +109,15 @@ export default function useReplDecorations() {
         return
       }
 
-      return { contents: renderToHoverContents(hoverPayloads) }
+      const visiblePayloads = getVisiblePayloads(
+        (payload) => payload.ctx.filePath === model.uri.path
+      )
+
+      return {
+        contents: renderToHoverContents(hoverPayloads, visiblePayloads),
+      }
     },
-    [getDisplayedPayloads]
+    [getDisplayedPayloads, getVisiblePayloads]
   )
 
   useEffect(() => {

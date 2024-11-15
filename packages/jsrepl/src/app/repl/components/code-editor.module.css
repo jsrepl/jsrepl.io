@@ -43,6 +43,13 @@
       background-color: var(--vscode-editorHoverWidget-statusBarBackground);
       font-size: 0.875em;
     }
+
+    & span[style='color:#04;'] {
+      margin-left: 48px;
+      font-family: monospace;
+      font-size: 0.875em;
+      opacity: 0.5;
+    }
   }
 
   & :global(.monaco-editor .monaco-hover hr) {

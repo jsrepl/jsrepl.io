@@ -31,6 +31,10 @@ interface Base<T = ReplPayloadContextKind> {
    */
   result: unknown
   /**
+   * Timestamp of the payload.
+   */
+  timestamp: number
+  /**
    * Expression context.
    */
   ctx: IReplPayloadContext<T>

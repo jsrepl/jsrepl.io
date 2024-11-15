@@ -38,6 +38,7 @@ function postMessageRepl(
       id: crypto.randomUUID(),
       isError,
       result: transformPayloadResult(win, result),
+      timestamp: Date.now(),
       ctxId,
     },
   })

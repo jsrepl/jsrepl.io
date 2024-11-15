@@ -4,35 +4,44 @@ import {
   ReplPayloadFunctionCall,
 } from '@jsrepl/shared-types'
 import type * as monaco from 'monaco-editor'
+import { formatTimestamp } from './payload-utils'
 import { type StringifyResult, stringifyResult } from './stringify'
 
-export function renderToHoverContents(payloads: ReplPayload[]): monaco.IMarkdownString[] {
+export function renderToHoverContents(
+  hoverPayloads: ReplPayload[],
+  visiblePayloads: ReplPayload[]
+): monaco.IMarkdownString[] {
   return [
-    ...payloads.flatMap((payload, index) => [
-      ...(index === 0 ? [] : [{ value: '<hr>', supportHtml: true }]),
-      {
-        value: `**REPL SNAPSHOT** <span style="color:#01;"></span><span 
+    ...hoverPayloads.flatMap((payload, index) => {
+      const ctxPayloadsCount = visiblePayloads.filter((p) => p.ctx.id === payload.ctx.id).length
+
+      return [
+        ...(index === 0 ? [] : [{ value: '<hr>', supportHtml: true }]),
+        {
+          value: `**REPL SNAPSHOT** <span style="color:#01;"></span><span 
             style="color:#777777;" 
             title="This value was evaluated upon code execution in this line. It may have changed since then."
-          ><span style="color:#02;"></span>$(info)</span>
+          ><span style="color:#02;"></span>$(info)</span><span style="color:#04;">${formatTimestamp(payload.timestamp)}</span>
         `,
-        supportThemeIcons: true,
-        supportHtml: true,
-        isTrusted: true,
-      },
-      ...renderPayload(payload).map((str) => ({ value: str, supportHtml: true })),
-      {
-        value: `<span style="color:#03;">
+          supportThemeIcons: true,
+          supportHtml: true,
+          isTrusted: true,
+        },
+        ...renderPayload(payload).map((str) => ({ value: str, supportHtml: true })),
+        {
+          value: `<span style="color:#03;">
           <a href="${getCommandHref('jsrepl.dumpPayloadAsMockObjectToConsole', payload.id, true)}" title="Write snapshot value into global variable and output it to Browser Console">Dump object</a>
           <a href="${getCommandHref('jsrepl.copyPayloadAsText', payload.id, true)}" title="Copy snapshot as text">Copy text</a>
           <a href="${getCommandHref('jsrepl.copyPayloadAsJSON', payload.id, true)}" title="Copy snapshot value as JSON">Copy json</a>
+          <a href="${getCommandHref('jsrepl.dumpPayloadHistoryToConsole', payload.ctx.id, true)}" title="The expression was evaluated ${ctxPayloadsCount} ${ctxPayloadsCount === 1 ? 'time' : 'times'}. This is the latest snapshot. See full history.">x${ctxPayloadsCount}</a>
           &nbsp;&nbsp;
         </span>`,
-        supportThemeIcons: true,
-        supportHtml: true,
-        isTrusted: true,
-      },
-    ]),
+          supportThemeIcons: true,
+          supportHtml: true,
+          isTrusted: true,
+        },
+      ]
+    }),
   ]
 }
 

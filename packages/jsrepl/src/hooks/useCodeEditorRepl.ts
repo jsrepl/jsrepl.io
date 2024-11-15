@@ -1,16 +1,18 @@
 import { createElement, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { type Theme } from '@jsrepl/shared-types'
+import { ReplPayload, type Theme } from '@jsrepl/shared-types'
 import debounce, { DebouncedFunction } from 'debounce'
 import * as monaco from 'monaco-editor'
 import { toast } from 'sonner'
 import ToastDescriptionCopiedToClipboard from '@/components/toast-description-copied-to-clipboard'
 import { ReplInfoContext } from '@/context/repl-info-context'
 import { ReplPayloadsContext } from '@/context/repl-payloads-context'
+import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
 import { UserStateContext } from '@/context/user-state-context'
 import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { consoleLogRepl } from '@/lib/console-utils'
 import { getBabel } from '@/lib/get-babel'
+import { formatTimestamp } from '@/lib/repl-payload/payload-utils'
 import { renderToJSONString } from '@/lib/repl-payload/render-json'
 import { renderToMockObject } from '@/lib/repl-payload/render-mock-object'
 import { renderToText } from '@/lib/repl-payload/render-text'
@@ -27,6 +29,7 @@ export default function useCodeEditorRepl(
   const { userState } = useContext(UserStateContext)!
   const { setReplInfo } = useContext(ReplInfoContext)!
   const { addPayload, refreshPayloads, payloads } = useContext(ReplPayloadsContext)!
+  const { rewindMode } = useContext(ReplRewindModeContext)!
 
   useReplDecorations()
 
@@ -286,6 +289,64 @@ export default function useCodeEditorRepl(
       disposable.dispose()
     }
   }, [payloads])
+
+  useEffect(() => {
+    const disposable = monaco.editor.registerCommand(
+      'jsrepl.dumpPayloadHistoryToConsole',
+      async (accessor, ctxId: string, showNotification: boolean) => {
+        let visiblePayloads: ReplPayload[]
+        if (rewindMode.active && rewindMode.currentPayloadId) {
+          const currentPayloadIndex = payloads.findIndex(
+            (payload) => payload.id === rewindMode.currentPayloadId
+          )
+          visiblePayloads =
+            currentPayloadIndex !== -1 ? payloads.slice(0, currentPayloadIndex + 1) : payloads
+        } else {
+          visiblePayloads = payloads
+        }
+
+        const ctxPayloads = visiblePayloads.filter((payload) => payload.ctx.id === ctxId)
+
+        let arr: { timestamp: string; value: unknown }[]
+        try {
+          arr = ctxPayloads.map((payload) => ({
+            timestamp: formatTimestamp(payload.timestamp),
+            value: renderToMockObject(payload),
+          }))
+        } catch (e) {
+          toast.error('Failed to dump snapshot history', {
+            description: e instanceof Error ? e.message : undefined,
+            duration: 2000,
+          })
+
+          return
+        }
+
+        // eslint-disable-next-line no-console
+        console.group(
+          'REPL SNAPSHOT HISTORY:',
+          ctxPayloads[0]?.ctx.source,
+          `(${ctxPayloads.length})`
+        )
+        arr.forEach(({ timestamp, value }, index) => {
+          // eslint-disable-next-line no-console
+          console.log(`${(index + 1).toString().padStart(3)}. [${timestamp}]`, value)
+        })
+        // eslint-disable-next-line no-console
+        console.groupEnd()
+
+        if (showNotification) {
+          toast.success('Snapshot history dumped to console', {
+            duration: 2000,
+          })
+        }
+      }
+    )
+
+    return () => {
+      disposable.dispose()
+    }
+  }, [payloads, rewindMode.active, rewindMode.currentPayloadId])
 }
 
 function updateToken() {
