@@ -17,20 +17,25 @@ export async function getDtsMap(
     indexDtsUrl = indexDtsUrlCache.get(packageName)!
   } else {
     try {
-      const packageResponse = await fetch(`https://esm.sh/${packageName}`, { signal })
+      const packageResponse = await fetch(`https://esm.sh/${packageName}`, {
+        signal: anySignal([signal, AbortSignal.timeout(10000)]),
+      })
       indexDtsUrl = packageResponse.ok ? packageResponse.headers.get('x-typescript-types') : null
       indexDtsUrlCache.set(packageName, indexDtsUrl)
     } catch (e) {
-      console.error(e)
+      const isAbortedError = e instanceof Error && e.name === 'AbortError'
+      if (!isAbortedError) {
+        console.error(e)
 
-      const msg = `Unable to fetch package "${packageName}" from https://esm.sh. Probably you have network issues or https://esm.sh is not available.`
-      const description = `The following features are affected and won't work: imports from external packages; TypeScript Intellisense for external packages;`
+        const msg = `Unable to fetch package "${packageName}" from https://esm.sh. Probably you have network issues or https://esm.sh is not available.`
+        const description = `The following features might be affected: imports from external packages; TypeScript Intellisense for external packages;`
 
-      console.error(`${msg}\n${description}`)
-      toast.error(msg, {
-        description,
-        duration: Infinity,
-      })
+        console.error(`${msg}\n${description}`)
+        toast.error(msg, {
+          description,
+          duration: Infinity,
+        })
+      }
 
       return dtsMap
     }
@@ -242,4 +247,23 @@ function pathDirname(path: string) {
   }
 
   return path.slice(0, end)
+}
+
+// Alternative to AbortSignal.any() until it's widely supported.
+// Taken from https://github.com/whatwg/fetch/issues/905.
+function anySignal(signals: Iterable<AbortSignal>): AbortSignal {
+  const controller = new AbortController()
+
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason)
+      break
+    }
+
+    signal.addEventListener('abort', () => controller.abort(signal.reason), {
+      signal: controller.signal,
+    })
+  }
+
+  return controller.signal
 }
