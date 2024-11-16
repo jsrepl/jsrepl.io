@@ -1,17 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
   LucideArrowDown,
   LucideArrowRight,
   LucideHeart,
+  LucideMessageCircleQuestion,
   LucidePackage,
   LucidePiggyBank,
   LucideSquareFunction,
 } from 'lucide-react'
-import Typed from 'typed.js'
 import IconEmail from '~icons/mdi/email-outline.jsx'
 import IconGithub from '~icons/mdi/github.jsx'
 import IconEsbuild from '~icons/simple-icons/esbuild.jsx'
@@ -22,6 +22,7 @@ import { toQueryParams } from '@/lib/repl-stored-state'
 import { demoRepls } from '@/lib/repl-stored-state-library'
 import { ReplStoredState } from '@/types'
 import Demo from './components/demo'
+import { FaqItem } from './components/faq-item'
 import FeatureBox from './components/feature-box'
 
 function getReplLink(state: ReplStoredState) {
@@ -32,29 +33,6 @@ function getReplLink(state: ReplStoredState) {
 
 export default function Home() {
   const [starterDialogOpen, setStarterDialogOpen] = useState(false)
-  const typedRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    let loopIndex = 0
-
-    const typed = new Typed(typedRef.current, {
-      strings: ['TypeScript, HTML, CSS', 'React JSX / TSX', 'Tailwind CSS'],
-      typeSpeed: 10,
-      backDelay: 2000,
-      smartBackspace: false,
-      loop: true,
-      // HACK: fix initial text flickering when loop is restarted
-      onBegin: (self) => {
-        if (loopIndex++ > 0) {
-          self.strPos = 0
-        }
-      },
-    })
-
-    return () => {
-      typed.destroy()
-    }
-  }, [])
 
   return (
     <>
@@ -65,7 +43,7 @@ export default function Home() {
           </span>
 
           <h1 className="text-primary whitespace-nowrap text-5xl font-bold leading-snug max-md:text-4xl [&>.typed-cursor]:inline-block [&>.typed-cursor]:-translate-y-0.5 [&>.typed-cursor]:font-normal">
-            <span ref={typedRef}>JavaScript, HTML, CSS</span>
+            <span className="text-[3.2rem]">JavaScript</span>
             <br />
             <span className="text-stone-200">REPL & Playground</span>
           </h1>
@@ -435,7 +413,7 @@ export default function Home() {
 
       <div className="container my-20 space-y-16 text-center font-medium text-gray-300">
         <div>
-          <h2 className="text-primary text-2xl font-semibold">It is all free and open source</h2>
+          <h2 className="text-primary text-2xl font-semibold">This is all free and open source</h2>
           <p>No login / registration required.</p>
         </div>
         <div>
@@ -572,7 +550,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoRepls.jsx)}
+          replLink={getReplLink(demoRepls.react)}
           title="React & JSX/TSX"
           text={
             <>
@@ -587,26 +565,6 @@ export default function Home() {
               {...videoProps}
               src="/assets/landing-demo-reactjsx.mp4"
               poster="/assets/landing-demo-reactjsx.png"
-            />
-          )}
-        />
-
-        <Demo
-          replLink={getReplLink(demoRepls.prettier)}
-          title="Prettier"
-          text={
-            <>
-              <p>
-                Format your code with Prettier by pressing <kbd>⌘+S</kbd>.<br />
-                There&apos;s nothing more to say.
-              </p>
-            </>
-          }
-          media={({ videoProps }) => (
-            <video
-              {...videoProps}
-              src="/assets/landing-demo-prettier.mp4"
-              poster="/assets/landing-demo-prettier.png"
             />
           )}
         />
@@ -641,9 +599,66 @@ export default function Home() {
         />
       </div>
 
+      <div className="container mt-32 text-white/85 max-md:mt-20">
+        <h2 className="mb-8 text-center text-2xl font-semibold">
+          FAQ{' '}
+          <LucideMessageCircleQuestion
+            className="mx-1 inline-block -translate-y-0.5 text-blue-400"
+            size={28}
+          />
+        </h2>
+        <div className="mx-auto w-full max-w-prose space-y-8">
+          <FaqItem title="What">
+            <p>
+              JSREPL is a simple, easy-to-use, yet modern playground for JavaScript and TypeScript
+              code. It allows you to write, run, and share code snippets.
+            </p>
+            <p>
+              Although it allows you to use HTML, CSS, TailwindCSS, NPM packages, ESM modules, and
+              React JSX/TSX, the main feature is the Live Feedback, which lets you see the results
+              of JavaScript expressions in real time.
+            </p>
+          </FaqItem>
+          <FaqItem title="Why">
+            <p>
+              The essence of JSREPL is to offer a playground that allows you to test your frontend
+              code snippets quickly and without distractions, such as the need to set up a (complex)
+              development environment.
+            </p>
+            <p>
+              It&apos;s not a replacement for StackBlitz or your IDE. The main goal and key metric
+              is how simple and fast you can play with something, say copy-paste a code snippet from
+              MDN, StackOverflow, GitHub Issues, ChatGPT, or whatever, and check the result.
+            </p>
+            <p>
+              You don&apos;t need to log in or register. You don&apos;t need to install npm packages
+              you want to play with. The results of JavaScript expressions displayed in real time
+              allow you to go without <code>console.log</code>ing all the things. And you still have
+              all the power to keep browser devtools open and use <code>debugger</code> statements
+              to debug your code.
+            </p>
+          </FaqItem>
+          <FaqItem title="How">
+            <p>
+              First of all, (obviously), it is not a replacement for browser devtools & debugger.
+              <br />
+              JSREPL does not interpret your code by itself. Your code is executed in the real
+              browser environment within an iframe. The magic happens behind the AST transformations
+              at build time and logging stuff in runtime.
+            </p>
+            <p>
+              The playground powered by client-side JavaScript and WebAssembly, and literally works
+              right in your browser.
+            </p>
+          </FaqItem>
+        </div>
+      </div>
+
       <div className="container mt-32 text-gray-300 max-md:mt-20">
         <h2 className="mb-8 text-center text-2xl font-semibold text-white/85">
-          Made with <LucideHeart className="mx-1 inline-block text-red-500" size={28} /> by
+          Made with{' '}
+          <LucideHeart fill="currentColor" className="mx-1 inline-block text-red-500" size={28} />{' '}
+          by
         </h2>
 
         <div className="mx-auto flex w-full max-w-96 flex-col items-center gap-4 rounded-xl bg-zinc-800 p-6 text-center text-white/85">
@@ -736,10 +751,11 @@ export default function Home() {
             https://buymeacoffee.com/nag5000
           </Link>
           <br />
-          to support the development and cover some of the costs of the domain.
+          to support the development and help cover some of the costs of the domain and running the
+          service.
           <br />
           <br />
-          JSREPL is a side project, and I do it in my free time.
+          JSREPL is a side project, and I work on it in my free time.
           <br />
           It is free for everyone, and will remain free.
           <br />

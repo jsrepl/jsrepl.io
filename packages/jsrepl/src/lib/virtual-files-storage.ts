@@ -101,11 +101,11 @@ please let me know by opening an issue on GitHub: https://github.com/jsrepl/jsre
 I would really appreciate your feedback and suggestions. 
 
 If you like the project, consider giving it a ⭐️ on GitHub https://github.com/jsrepl/jsrepl.io
-or make a small donation 💖 to support the development and cover some of the costs
+or make a small donation 💖 to support the development and help cover some of the costs
 of the domain and running the service:
 https://github.com/sponsors/nag5000 or https://buymeacoffee.com/nag5000.
 
-With 🧡, Alexey.
+With 🧡, Aleksei.
 `
 
 export const virtualFilesStorage = new Map<string, string>([

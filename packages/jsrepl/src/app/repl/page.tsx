@@ -26,7 +26,7 @@ export function generateMetadata({ searchParams }: Props): Metadata {
     return { title }
   } catch (e) {
     console.error('generateMetadata error', e)
-    return { title: 'JSREPL' }
+    return { title: 'JavaScript REPL & Playground' }
   }
 }
 

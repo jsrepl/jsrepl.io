@@ -13,7 +13,7 @@ export function getReplTitle(replStoredState: ReplStoredState): string {
     // ignore
   }
 
-  return title || 'JSREPL'
+  return title || 'JavaScript REPL & Playground'
 }
 
 function transformTitle(title: string) {

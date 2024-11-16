@@ -368,16 +368,27 @@ export const demoRepls = {
       children: {
         'index.ts': {
           content: dedent`
-            setInterval(() => {
-              const now = new Date();
-              now.toTimeString();
-            }, 100);
+            const now = new Date();
+            now.toTimeString();
 
-            const p = new Promise((res) => {
-              setTimeout(() => res('JSREPL'), 2000);
+            setTimeout(() => {
+              console.log('a');
+            }, 0);
+
+            Promise.resolve().then(() => {
+              console.log('b');
             });
 
-            const site = await p;
+            function foo(a: number) {
+              try {
+                return a;
+              } finally {
+                return a * 2;
+              }
+            }
+
+            foo(1);
+            foo(2);
           `,
           kind: ReplFS.Kind.File,
         },
@@ -399,9 +410,17 @@ export const demoRepls = {
         'index.ts': {
           content: dedent`
             import { format } from 'date-fns';
+            import confetti from 'canvas-confetti';
 
             const now = new Date();
             format(now, 'dd-MM-yyyy');
+
+            confetti({
+              particleCount: 400,
+              origin: {
+                y: 1
+              }
+            });
           `,
           kind: ReplFS.Kind.File,
         },
@@ -428,6 +447,27 @@ export const demoRepls = {
             el.addEventListener('change', () => {
               document.body.style.backgroundColor = el.value;
             });
+
+            const options = {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0,
+            };
+
+            function success(pos) {
+              const crd = pos.coords;
+
+              console.log("Your current position is:");
+              console.log(\`Latitude : \${crd.latitude}\`);
+              console.log(\`Longitude: \${crd.longitude}\`);
+              console.log(\`More or less \${crd.accuracy} meters.\`);
+            }
+
+            function error(err) {
+              console.warn(\`ERROR(\${err.code}): \${err.message}\`);
+            }
+
+            navigator.geolocation.getCurrentPosition(success, error, options);
           `,
           kind: ReplFS.Kind.File,
         },
@@ -435,10 +475,10 @@ export const demoRepls = {
           content: dedent`
             <select>
               <option selected disabled>Select color...</option>
-              <option value="red">Red</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="yellow">Yellow</option>
+              <option value="indianred">Indian Red</option>
+              <option value="cornflowerblue">Cornflower Blue</option>
+              <option value="lime">Lime</option>
+              <option value="gold">Gold</option>
             </select>
 
             <script type="module" src="/index.ts"></script>
@@ -502,7 +542,10 @@ export const demoRepls = {
         'index.html': {
           content: dedent`
             <link rel="stylesheet" href="/index.css" />
-            <div class="text-2xl underline underline-offset-4">Hello, world!</div>
+
+            <div class="p-4 prose dark:prose-invert">
+              <h1 class="text-4xl italic">Hello, world!</h1>
+            </div>
           `,
           kind: ReplFS.Kind.File,
         },
@@ -513,13 +556,25 @@ export const demoRepls = {
             @tailwind utilities;
 
             body {
-              @apply dark:text-lime-500;
+              @apply text-stone-800 dark:text-stone-100;
             }
           `,
           kind: ReplFS.Kind.File,
         },
         'tailwind.config.ts': {
-          content: defaultTailwindConfigTs,
+          content: dedent`
+            import type { Config } from 'tailwindcss';
+            import typography from '@tailwindcss/typography';
+
+            export default {
+              content: ['**/*'],
+              corePlugins: {
+                preflight: true,
+              },
+              plugins: [typography],
+              darkMode: 'class',
+            } satisfies Config;
+          `,
           kind: ReplFS.Kind.File,
         },
         'DOCS.md': {
@@ -530,7 +585,7 @@ export const demoRepls = {
     }),
   },
 
-  jsx: {
+  react: {
     activeModel: '/index.tsx',
     openedModels: ['/index.tsx', '/index.html', '/index.css'],
     showPreview: true,
@@ -541,12 +596,32 @@ export const demoRepls = {
           content: dedent`
             import './index.css'
             import { createRoot } from 'react-dom/client?dev';
+            import { useState, useCallback } from 'react?dev';
 
             const root = createRoot(document.getElementById('root'));
             root.render(<App />);
 
             function App() {
-              return <h1 className="italic">Hello, world!</h1>;
+              const [counter, setCounter] = useState(0);
+
+              const decrement = useCallback(() => {
+                setCounter((x) => x - 1)
+              }, [])
+
+              const increment = useCallback(() => {
+                setCounter((x) => x + 1)
+              }, [])
+
+              return (
+                <>
+                  <h1 className="m-0 italic">Hello, world!</h1>
+                  <p className="space-x-2">
+                    <button onClick={decrement}>-</button>
+                    <span>Counter: {counter}</span>
+                    <button onClick={increment}>+</button>
+                  </p>
+                </>
+              );
             }
           `,
           kind: ReplFS.Kind.File,
@@ -564,39 +639,6 @@ export const demoRepls = {
             @tailwind base;
             @tailwind components;
             @tailwind utilities;
-          `,
-          kind: ReplFS.Kind.File,
-        },
-        'DOCS.md': {
-          content: defaultDocsMdFileContent,
-          kind: ReplFS.Kind.File,
-        },
-      },
-    }),
-  },
-
-  prettier: {
-    activeModel: '/index.ts',
-    openedModels: ['/index.ts'],
-    showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.ts': {
-          content: dedent`
-            const arr = [
-              1, 2, 3, 
-              4, 5]
-
-            function getRandom (arr: number[]){
-            return 4
-            }
-
-            if(getRandom(arr) === 4) {
-                console.log('How lucky!')
-            } 
-
-            // Press ⌘+S to format the code with Prettier.
           `,
           kind: ReplFS.Kind.File,
         },

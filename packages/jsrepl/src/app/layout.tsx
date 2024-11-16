@@ -5,8 +5,18 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'JSREPL',
-  description: 'JavaScript REPL & Playground',
+  title: 'JavaScript REPL & Playground',
+  description: 'Quickly test and share your code snippets. Ideal for learning and prototyping.',
+  openGraph: {
+    type: 'website',
+    images: {
+      url: '/assets/landing-hero.png',
+      type: 'image/png',
+      width: 1200,
+      height: 917,
+    },
+  },
+  keywords: ['JavaScript', 'TypeScript', 'REPL', 'Playground'],
 }
 
 export default function RootLayout({
