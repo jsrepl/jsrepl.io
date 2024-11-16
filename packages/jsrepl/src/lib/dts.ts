@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import type * as TS from 'typescript'
 
 const indexDtsUrlCache = new Map<string, string | null>()
@@ -19,7 +20,18 @@ export async function getDtsMap(
       const packageResponse = await fetch(`https://esm.sh/${packageName}`, { signal })
       indexDtsUrl = packageResponse.ok ? packageResponse.headers.get('x-typescript-types') : null
       indexDtsUrlCache.set(packageName, indexDtsUrl)
-    } catch {
+    } catch (e) {
+      console.error(e)
+
+      const msg = `Unable to fetch package "${packageName}" from https://esm.sh. Probably you have network issues or https://esm.sh is not available.`
+      const description = `The following features are affected and won't work: imports from external packages; TypeScript Intellisense for external packages;`
+
+      console.error(`${msg}\n${description}`)
+      toast.error(msg, {
+        description,
+        duration: Infinity,
+      })
+
       return dtsMap
     }
   }
