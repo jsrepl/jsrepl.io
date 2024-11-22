@@ -7,6 +7,7 @@ import { ReplStateContext } from '@/context/repl-state-context'
 import { UserStateContext } from '@/context/user-state-context'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
+import useMonacopilot from '@/hooks/useMonacopilot'
 import { getFileExtension } from '@/lib/fs-utils'
 import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { PrettierFormattingProvider } from '@/lib/prettier-formatting-provider'
@@ -160,6 +161,7 @@ export default function CodeEditor() {
 
   useCodeEditorDTS(models)
   useCodeEditorRepl(models, { theme })
+  useMonacopilot()
 
   return (
     <div

@@ -47,6 +47,9 @@ importers:
       '@nag5000/monaco-tailwindcss':
         specifier: 0.6.1-fork.0
         version: 0.6.1-fork.0(monaco-editor@0.50.0)
+      '@nag5000/monacopilot':
+        specifier: 0.15.0-fork.0
+        version: 0.15.0-fork.0
       '@next/mdx':
         specifier: ^14.2.13
         version: 14.2.13(@mdx-js/loader@3.0.1(webpack@5.94.0(esbuild@0.23.1)))(@mdx-js/react@3.0.1(@types/react@18.3.8)(react@18.3.1))
@@ -1548,6 +1551,9 @@ packages:
     resolution: {integrity: sha512-qMRe/SZ7Kt4Gsyu3dIe2onoQLw49zoV8YkraMZNSB/eBp6Rd2VyFWCjtB1nrPF9DhcX7aV3L+GcWR9FSHAmijw==}
     peerDependencies:
       monaco-editor: '>=0.36'
+
+  '@nag5000/monacopilot@0.15.0-fork.0':
+    resolution: {integrity: sha512-JsBIUSSgSC75yKjazZFfyASBBk8FN79bIZIvvs7DS6CxtmePJVHHcQk/ItR9muCTbXopfXWSPBUjl6vTMzAxeg==}
 
   '@nag5000/next-themes@0.3.0-fork.0':
     resolution: {integrity: sha512-yt6OYKj46F4tKpcgQqPXoKtUggXmLwKfRe795wX5LKDpb5vTFO6TqJ2S+olZzM3YDxL1TyRkICXb28lJCD0X3w==}
@@ -8093,6 +8099,8 @@ snapshots:
       monaco-worker-manager: 2.0.1(monaco-editor@0.50.0)
       vscode-languageserver-textdocument: 1.0.12
       vscode-languageserver-types: 3.17.5
+
+  '@nag5000/monacopilot@0.15.0-fork.0': {}
 
   '@nag5000/next-themes@0.3.0-fork.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:

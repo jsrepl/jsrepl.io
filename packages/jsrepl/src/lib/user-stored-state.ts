@@ -44,5 +44,13 @@ function getDefaultState(): UserStoredState {
     leftSidebarWidth: 240,
     autostartOnCodeChange: true,
     editorFontSize: 14,
+    copilot: {
+      apiKey: '',
+      provider: 'anthropic',
+      model: 'claude-3-5-haiku',
+      maxContextLines: 60,
+      useRelatedFiles: true,
+      enableCaching: true,
+    },
   }
 }

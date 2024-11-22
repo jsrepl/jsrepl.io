@@ -29,6 +29,14 @@ export type UserStoredState = {
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
   editorFontSize: number
+  copilot: {
+    apiKey: string
+    provider: string
+    model: string
+    maxContextLines: number
+    useRelatedFiles: boolean
+    enableCaching: boolean
+  }
 }
 
 export enum PreviewPosition {
