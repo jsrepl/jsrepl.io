@@ -1,4 +1,6 @@
+import { CopilotModel, CopilotOptions, CopilotProvider } from '@nag5000/monacopilot'
 import type * as esbuild from 'esbuild-wasm'
+import type * as monaco from 'monaco-editor'
 import type * as ReplFS from '@/lib/repl-fs'
 
 export type ReplStoredState = {
@@ -28,16 +30,26 @@ export type UserStoredState = {
   showLeftSidebar: boolean
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
-  editorFontSize: number
+  editor: {
+    fontSize: number
+    renderLineHighlight: RenderLineHighlight
+    lineNumbers: LineNumbers
+  }
   copilot: {
     apiKey: string
-    provider: string
-    model: string
+    provider: CopilotProvider
+    model: CopilotModel
     maxContextLines: number
     useRelatedFiles: boolean
     enableCaching: boolean
   }
 }
+
+export type RenderLineHighlight = Exclude<
+  monaco.editor.IStandaloneEditorConstructionOptions['renderLineHighlight'],
+  undefined
+>
+export type LineNumbers = Exclude<monaco.editor.LineNumbersType, (lineNumber: number) => string>
 
 export enum PreviewPosition {
   FloatBottomRight = 'float-bottom-right',

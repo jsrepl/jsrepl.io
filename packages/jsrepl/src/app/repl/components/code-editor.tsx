@@ -99,7 +99,7 @@ export default function CodeEditor() {
     automaticLayout: true,
     padding: { top: 16, bottom: 16 },
     // TODO: make it configurable
-    fontSize: userState.editorFontSize,
+    fontSize: userState.editor.fontSize,
     minimap: { enabled: false },
     readOnly: isReadOnly,
     theme: theme.id,
@@ -111,7 +111,8 @@ export default function CodeEditor() {
       strings: true,
     },
     tabSize: 2,
-    renderLineHighlight: 'none',
+    renderLineHighlight: userState.editor.renderLineHighlight,
+    lineNumbers: userState.editor.lineNumbers,
     scrollBeyondLastLine: false,
   })
 
@@ -139,8 +140,20 @@ export default function CodeEditor() {
   }, [isReadOnly, editorRef, readOnlyMessage])
 
   useEffect(() => {
-    editorRef.current?.updateOptions({ fontSize: userState.editorFontSize })
-  }, [userState.editorFontSize, editorRef])
+    editorRef.current?.updateOptions({ fontSize: userState.editor.fontSize })
+  }, [userState.editor.fontSize, editorRef])
+
+  useEffect(() => {
+    editorRef.current?.updateOptions({
+      renderLineHighlight: userState.editor.renderLineHighlight,
+    })
+  }, [userState.editor.renderLineHighlight, editorRef])
+
+  useEffect(() => {
+    editorRef.current?.updateOptions({
+      lineNumbers: userState.editor.lineNumbers,
+    })
+  }, [userState.editor.lineNumbers, editorRef])
 
   useEffect(() => {
     loadMonacoTheme(theme).then(() => {

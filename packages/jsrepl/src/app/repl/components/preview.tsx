@@ -16,14 +16,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { UserStateContext } from '@/context/user-state-context'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplPreviewSize } from '@/hooks/useReplPreviewSize'
+import { previewPositionOptions } from '@/lib/user-stored-state'
 import { cn } from '@/lib/utils'
 import { PreviewPosition } from '@/types'
-
-const previewPositionOptions = [
-  { value: PreviewPosition.FloatTopRight, label: 'Floating: top right' },
-  { value: PreviewPosition.FloatBottomRight, label: 'Floating: bottom right' },
-  { value: PreviewPosition.AsideRight, label: 'Dock to right' },
-]
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy#directives
 const iframeAllow = [

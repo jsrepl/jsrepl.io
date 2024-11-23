@@ -50,7 +50,12 @@ export default function useMonacopilot() {
   }, [copilotOptions])
 
   const copilot = useMemo(() => {
-    return isEnabled ? new Copilot(apiKey, copilotOptions) : null
+    try {
+      return isEnabled ? new Copilot(apiKey, copilotOptions) : null
+    } catch (error) {
+      console.error('Monacopilot error:', error)
+      return null
+    }
   }, [apiKey, copilotOptions, isEnabled])
 
   const requestHandler = useCallback<RequestHandler>(
