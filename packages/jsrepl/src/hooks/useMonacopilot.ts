@@ -136,7 +136,7 @@ export default function useMonacopilot() {
         { language: 'json', exclusive: true },
         { language: 'markdown', exclusive: true },
       ],
-      trigger: 'onIdle',
+      trigger: 'onTyping',
       enableCaching: userState.copilot.enableCaching,
       maxContextLines: userState.copilot.maxContextLines,
       requestHandler,
