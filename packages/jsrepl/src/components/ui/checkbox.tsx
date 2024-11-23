@@ -29,7 +29,7 @@ const checkboxVariants = cva(
         secondary: ['border-muted', 'bg-input', 'data-[state=checked]:text-secondary-foreground'],
       },
       size: {
-        default: ['h-4', 'w-4', 'rounded-sm'],
+        default: ['h-[1.125rem]', 'w-[1.125rem]', 'rounded-sm'],
       },
     },
     defaultVariants: {

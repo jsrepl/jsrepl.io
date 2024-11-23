@@ -303,7 +303,7 @@ export default function FilesPanel() {
     <>
       <FilesPanelContext.Provider value={filesPanelContextValue}>
         <ScrollArea className="group/files-panel flex-1 [&>[data-radix-scroll-area-viewport]]:scroll-pb-4 [&>[data-radix-scroll-area-viewport]]:scroll-pt-10">
-          <div className="h-repl-header sticky top-0 z-[1] flex items-center gap-2 pl-4 pr-1 text-sm leading-6">
+          <div className="h-repl-header bg-secondary sticky top-0 z-[1] flex items-center gap-2 pl-4 pr-1 text-sm leading-6">
             <span className="text-muted-foreground flex-1 font-semibold">Files</span>
             <div className="invisible flex group-focus-within/files-panel:visible group-hover/files-panel:visible has-[[aria-expanded=true]]/files-panel:visible">
               <DropdownMenu>

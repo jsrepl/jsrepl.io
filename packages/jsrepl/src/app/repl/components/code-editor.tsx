@@ -98,7 +98,6 @@ export default function CodeEditor() {
     model: null,
     automaticLayout: true,
     padding: { top: 16, bottom: 16 },
-    // TODO: make it configurable
     fontSize: userState.editor.fontSize,
     minimap: { enabled: false },
     readOnly: isReadOnly,
