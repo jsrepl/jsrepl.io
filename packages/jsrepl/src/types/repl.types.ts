@@ -1,4 +1,4 @@
-import { CopilotModel, CopilotOptions, CopilotProvider } from '@nag5000/monacopilot'
+import { CopilotModel, CopilotProvider } from '@nag5000/monacopilot'
 import type * as esbuild from 'esbuild-wasm'
 import type * as monaco from 'monaco-editor'
 import type * as ReplFS from '@/lib/repl-fs'
@@ -40,7 +40,7 @@ export type UserStoredState = {
     provider: CopilotProvider
     model: CopilotModel
     maxContextLines: number
-    useRelatedFiles: boolean
+    enableRelatedFiles: boolean
     enableCaching: boolean
   }
 }

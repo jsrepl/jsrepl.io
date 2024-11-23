@@ -336,31 +336,31 @@ export default function ReplSettingsDialog(props?: DialogProps) {
             <Row
               title="AI Autocomplete: Use Related Files"
               isChanged={
-                userState.copilot.useRelatedFiles !== defaultUserState.copilot.useRelatedFiles
+                userState.copilot.enableRelatedFiles !== defaultUserState.copilot.enableRelatedFiles
               }
               reset={() =>
                 setUserState((userState) => ({
                   ...userState,
                   copilot: {
                     ...defaultUserState.copilot,
-                    useRelatedFiles: defaultUserState.copilot.useRelatedFiles,
+                    enableRelatedFiles: defaultUserState.copilot.enableRelatedFiles,
                   },
                 }))
               }
             >
               <div className="flex items-center">
                 <Checkbox
-                  id="useRelatedFiles"
-                  checked={userState.copilot.useRelatedFiles}
+                  id="enableRelatedFiles"
+                  checked={userState.copilot.enableRelatedFiles}
                   variant="secondary"
                   onCheckedChange={(checked) =>
                     setUserState((userState) => ({
                       ...userState,
-                      copilot: { ...userState.copilot, useRelatedFiles: !!checked },
+                      copilot: { ...userState.copilot, enableRelatedFiles: !!checked },
                     }))
                   }
                 />
-                <label htmlFor="useRelatedFiles" className="pl-2">
+                <label htmlFor="enableRelatedFiles" className="pl-2">
                   Include related files in the completion request
                 </label>
               </div>

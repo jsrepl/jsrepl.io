@@ -97,7 +97,7 @@ export default function useMonacopilot() {
   )
 
   useEffect(() => {
-    if (!userState.copilot.useRelatedFiles) {
+    if (!userState.copilot.enableRelatedFiles) {
       return
     }
 
@@ -114,7 +114,7 @@ export default function useMonacopilot() {
     relatedModelsRef.current = recentModelsRef.current.filter(
       (model) => model.filePath !== replState.activeModel
     )
-  }, [models, replState.activeModel, userState.copilot.useRelatedFiles])
+  }, [models, replState.activeModel, userState.copilot.enableRelatedFiles])
 
   useEffect(() => {
     const editor = editorRef.current
@@ -141,7 +141,7 @@ export default function useMonacopilot() {
       maxContextLines: userState.copilot.maxContextLines,
       requestHandler,
       get relatedFiles() {
-        if (!userState.copilot.useRelatedFiles) {
+        if (!userState.copilot.enableRelatedFiles) {
           return undefined
         }
 
@@ -161,7 +161,7 @@ export default function useMonacopilot() {
     requestHandler,
     userState.copilot.enableCaching,
     userState.copilot.maxContextLines,
-    userState.copilot.useRelatedFiles,
+    userState.copilot.enableRelatedFiles,
   ])
 }
 

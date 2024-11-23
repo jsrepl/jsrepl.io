@@ -88,7 +88,7 @@ export function getDefaultState(): UserStoredState {
       provider: 'anthropic',
       model: 'claude-3-5-haiku',
       maxContextLines: 60,
-      useRelatedFiles: true,
+      enableRelatedFiles: true,
       enableCaching: true,
     },
   }
