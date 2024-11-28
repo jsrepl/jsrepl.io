@@ -25,6 +25,7 @@ import { UserStateContext } from '@/context/user-state-context'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
+import { UserMenu } from './user-menu'
 
 export default function ActivityBar() {
   const { resolvedTheme: themeId, setTheme } = useTheme()
@@ -232,6 +233,8 @@ export default function ActivityBar() {
             Settings...
           </TooltipContent>
         </Tooltip>
+
+        <UserMenu />
 
         <Button size="icon" variant="ghost" className="text-activityBar-foreground" asChild>
           <Link href="https://github.com/jsrepl/jsrepl.io" target="_blank">
