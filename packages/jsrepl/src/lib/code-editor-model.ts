@@ -21,15 +21,6 @@ export class CodeEditorModel {
     return content
   }
 
-  setValue(value: string) {
-    const file = this.#file
-    if (this.isVirtualFile) {
-      virtualFilesStorage.set(this.virtualFilePath!, value)
-    } else {
-      file.content = value
-    }
-  }
-
   get file() {
     return this.#file
   }

@@ -1,8 +1,9 @@
 import React from 'react'
-import { withThemeByDataAttribute } from '@storybook/addon-themes'
-import type { Preview, ReactRenderer } from '@storybook/react'
+import { ThemeProvider } from 'next-themes'
+import type { Preview } from '@storybook/react'
 import '../src/app/globals.css'
-import { Themes } from '../src/lib/themes'
+import { Themes, defaultThemeId } from '../src/lib/themes'
+import ThemeSelector from '../src/stories/ThemeSelector'
 
 const preview: Preview = {
   parameters: {
@@ -15,17 +16,22 @@ const preview: Preview = {
   },
 
   decorators: [
-    withThemeByDataAttribute<ReactRenderer>({
-      themes: Themes.reduce(
-        (acc, theme) => {
-          acc[theme.id] = theme.id
-          return acc
-        },
-        {} as Record<string, string>
-      ),
-      defaultTheme: Themes[0].id,
-      attributeName: 'data-theme',
-    }),
+    (Story) => (
+      <div className="bg-background text-foreground p-9">
+        <ThemeProvider
+          storageKey="theme"
+          enableSystem={false}
+          themes={Themes.map((theme) => theme.id)}
+          defaultTheme={defaultThemeId}
+          enableColorScheme
+          disableTransitionOnChange
+          attribute="data-theme"
+        >
+          <ThemeSelector />
+          <Story />
+        </ThemeProvider>
+      </div>
+    ),
   ],
 }
 

@@ -78,6 +78,9 @@ export function getDefaultState(): UserStoredState {
     version: undefined,
     leftSidebarWidth: 240,
     autostartOnCodeChange: true,
+    workbench: {
+      formatOnSave: true,
+    },
     editor: {
       fontSize: 14,
       renderLineHighlight: 'none',

@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { UserStateContext } from '@/context/user-state-context'
 import { parseVersion } from '@/lib/semver'
+import { useUserStoredState } from './useUserStoredState'
 
 export function useNewVersionToast() {
-  const { userState, setUserState } = useContext(UserStateContext)!
+  const [userState, setUserState] = useUserStoredState()
   const userVersionRef = useRef(userState.version)
   const toastIdRef = useRef<string | number | undefined>(undefined)
 
@@ -42,12 +42,7 @@ export function useNewVersionToast() {
             View the Release Notes
           </a>
         ),
-        cancel: {
-          label: 'Close',
-          onClick: () => {},
-        },
         duration: Infinity,
-        closeButton: false,
       })
     }, 3000)
 

@@ -1,7 +1,7 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { reactStarter } from '@/lib/repl-stored-state-library'
+import { reactStarter } from '@/lib/repl-stored-state/defaults'
 import { assertMonacoContentsWithDecors, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
@@ -9,12 +9,13 @@ test('simple expressions', async ({ page }) => {
     openedModels: ['/test.ts'],
     activeModel: '/test.ts',
     showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'test.ts': {
-          kind: ReplFS.Kind.File,
-          content: dedent`
+    fs: {
+      root: {
+        kind: ReplFS.Kind.Directory,
+        children: {
+          'test.ts': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
             const n = 1;
             const m = n + 2;
 
@@ -42,9 +43,10 @@ test('simple expressions', async ({ page }) => {
               return x ?? [1,, {x: 3}, [4], 5, 6];
             }
           `,
+          },
         },
       },
-    }),
+    },
   })
 
   await assertMonacoContentsWithDecors(
@@ -90,10 +92,10 @@ test('react starter', async ({ page }) => {
       import { createRoot } from 'react-dom/client?dev';
       import { useState } from 'react?dev';
 
-      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children), unmount: ƒ ()}
+      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children, JSCompiler_OptimizeArguments…
       root.render(<App />); // → undefined
 
-      function App() { // → ƒƒ App({}, {})
+      function App() { // → ƒƒ App({}, undefined)
         const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState()
 
         return (
@@ -105,7 +107,7 @@ test('react starter', async ({ page }) => {
               <button onClick={() => setCounter((x) => x + 1)}>+</button>
             </p>
           </>
-        ); // → ƒƒ => {$$typeof: Symbol(react.element), type: Symbol(react.fragment), key: null, ref: null, props: {…
+        ); // → ƒƒ => {$$typeof: Symbol(react.transitional.element), type: Symbol(react.fragment), key: null, ref: n…
       }
     `
   )
@@ -116,22 +118,23 @@ test('stuff', async ({ page }) => {
     openedModels: ['/test.ts'],
     activeModel: '/test.ts',
     showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'index.html': {
-          kind: ReplFS.Kind.File,
-          content: dedent`
+    fs: {
+      root: {
+        kind: ReplFS.Kind.Directory,
+        children: {
+          'index.html': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
             <div class="flex items-center justify-center h-full dark:text-stone-100">
               <time id="clock" class="text-5xl font-bold">xx</time>
             </div>
 
             <script type="module" src="/test.ts"></script>
           `,
-        },
-        'test.ts': {
-          kind: ReplFS.Kind.File,
-          content: dedent`
+          },
+          'test.ts': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
             let now = new Date('2024-11-05T13:27:00.458Z');
             const str = '\\\\\\t'
             54
@@ -215,9 +218,10 @@ test('stuff', async ({ page }) => {
             let obj3 = { map, now }
             console.log(map)
           `,
+          },
         },
       },
-    }),
+    },
   })
 
   await assertMonacoContentsWithDecors(
@@ -314,18 +318,20 @@ test('multiline decor', async ({ page }) => {
     openedModels: ['/test.ts'],
     activeModel: '/test.ts',
     showPreview: false,
-    fs: new ReplFS.FS({
-      kind: ReplFS.Kind.Directory,
-      children: {
-        'test.ts': {
-          kind: ReplFS.Kind.File,
-          content: dedent`
+    fs: {
+      root: {
+        kind: ReplFS.Kind.Directory,
+        children: {
+          'test.ts': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
             console.log(1, 2,
             3);
           `,
+          },
         },
       },
-    }),
+    },
   })
 
   await assertMonacoContentsWithDecors(

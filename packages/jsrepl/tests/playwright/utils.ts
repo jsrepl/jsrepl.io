@@ -1,5 +1,5 @@
 import { type Locator, type Page, expect } from '@playwright/test'
-import { OldReplStoredStateV0, toQueryParams, toQueryParamsV0 } from '@/lib/repl-stored-state'
+import { toQueryParams } from '@/lib/repl-stored-state/adapter-url'
 import type { ReplStoredState } from '@/types'
 
 export async function assertMonacoContentsWithDecors(page: Page, expectedContents: string) {
@@ -45,11 +45,6 @@ async function getMonacoContentsWithDecors(page: Page): Promise<string | null> {
 
 export async function visitPlayground(page: Page, state: ReplStoredState) {
   const qp = toQueryParams(state)
-  await page.goto('/repl?' + new URLSearchParams(qp))
-}
-
-export async function visitPlaygroundV0(page: Page, state: OldReplStoredStateV0) {
-  const qp = toQueryParamsV0(state)
   await page.goto('/repl?' + new URLSearchParams(qp))
 }
 

@@ -1,6 +1,6 @@
 import { type ReplPayload } from '@jsrepl/shared-types'
 import * as monaco from 'monaco-editor'
-import codeEditorStyles from '@/app/repl/components/code-editor.module.css'
+import codeEditorStyles from '@/components/code-editor.module.css'
 import { cssInject } from '@/lib/css-inject'
 import { renderToDecorString } from './render-decor'
 

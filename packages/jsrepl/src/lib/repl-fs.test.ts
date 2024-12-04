@@ -1,80 +1,82 @@
 import { describe, expect, it } from 'vitest'
-import { FS, Kind } from '@/lib/repl-fs'
+import * as ReplFS from '@/lib/repl-fs'
 
 describe('FS', () => {
-  it('should create a new file system', () => {
-    const fs = new FS()
-    expect(fs.root.kind).toBe(Kind.Directory)
+  it('new file system', () => {
+    const fs = ReplFS.emptyFS
+    expect(fs.root.kind).toBe(ReplFS.Kind.Directory)
     expect(Object.keys(fs.root.children).length).toBe(0)
   })
 
   it('should add and retrieve a file', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const filePath = '/test.txt'
     const content = 'Hello, world!'
-    fs.writeFile(filePath, content)
+    ReplFS.writeFile(fs, filePath, content)
 
-    const file = fs.getFile(filePath)
+    const file = ReplFS.getFile(fs, filePath)
     expect(file).not.toBeNull()
-    expect(file?.kind).toBe(Kind.File)
+    expect(file?.kind).toBe(ReplFS.Kind.File)
     expect(file?.content).toBe(content)
   })
 
   it('should add and retrieve a directory', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const dirPath = '/testDir'
-    fs.mkdir(dirPath)
+    ReplFS.mkdir(fs, dirPath)
 
-    const dir = fs.getDirectory(dirPath)
+    const dir = ReplFS.getDirectory(fs, dirPath)
     expect(dir).not.toBeNull()
-    expect(dir?.kind).toBe(Kind.Directory)
+    expect(dir?.kind).toBe(ReplFS.Kind.Directory)
   })
 
   it('should remove a file', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const filePath = '/test.txt'
-    fs.writeFile(filePath, 'Hello, world!')
-    const removed = fs.remove(filePath)
+    ReplFS.writeFile(fs, filePath, 'Hello, world!')
+    const removed = ReplFS.remove(fs, filePath)
 
     expect(removed).toBe(true)
-    expect(fs.getFile(filePath)).toBeNull()
+    expect(ReplFS.getFile(fs, filePath)).toBeNull()
   })
 
   it('should not remove a non-existent file', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const filePath = '/nonexistent.txt'
-    const removed = fs.remove(filePath)
+    const removed = ReplFS.remove(fs, filePath)
 
     expect(removed).toBe(false)
   })
 
   it('should handle nested directories', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const nestedDirPath = '/a/b/c'
-    fs.mkdir(nestedDirPath)
+    ReplFS.mkdir(fs, nestedDirPath)
 
-    const dir = fs.getDirectory(nestedDirPath)
+    const dir = ReplFS.getDirectory(fs, nestedDirPath)
     expect(dir).not.toBeNull()
-    expect(dir?.kind).toBe(Kind.Directory)
+    expect(dir?.kind).toBe(ReplFS.Kind.Directory)
   })
 
   it('mkdirRecursive "" should return root directory', () => {
-    const fs = new FS()
-    const dir = fs.mkdir('')
+    const fs = ReplFS.emptyFS
+    const dir = ReplFS.mkdir(fs, '')
     expect(dir).toBe(fs.root)
   })
 
   it('mkdirRecursive "/" should return root directory', () => {
-    const fs = new FS()
-    const dir = fs.mkdir('/')
+    const fs = ReplFS.emptyFS
+    const dir = ReplFS.mkdir(fs, '/')
     expect(dir).toBe(fs.root)
   })
 
   it('should throw error when writing a file to a directory path', () => {
-    const fs = new FS()
+    const fs = ReplFS.emptyFS
     const dirPath = '/testDir'
-    fs.mkdir(dirPath)
+    ReplFS.mkdir(fs, dirPath)
 
-    expect(() => fs.writeFile(dirPath, 'content')).toThrowError(`Path "${dirPath}" is a directory.`)
+    expect(() => ReplFS.writeFile(fs, dirPath, 'content')).toThrowError(
+      `Path "${dirPath}" is a directory.`
+    )
   })
 })

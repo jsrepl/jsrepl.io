@@ -120,9 +120,9 @@ const ENOTDIR = errorWithCode('ENOTDIR')
 const handles = new Map<number, Handle>()
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-const root: Directory = createDirectory()
 let nextFD = 3
 let nextInode = 1
+const root: Directory = createDirectory()
 export let stderrSinceReset = ''
 
 // The "esbuild-wasm" package overwrites "fs.writeSync" with this value

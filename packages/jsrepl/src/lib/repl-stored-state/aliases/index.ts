@@ -1,0 +1,17 @@
+export enum ReplAliases {
+  react = 'react',
+  tailwindcss = 'tailwindcss',
+  ts = 'ts',
+  tsEmpty = 'ts-empty',
+  js = 'js',
+  jsEmpty = 'js-empty',
+  htmlCssTs = 'html-css-ts',
+  htmlCssJs = 'html-css-js',
+  demo = 'demo',
+  demoLiveFeedback = 'demo-live-feedback',
+  demoNpmPackages = 'demo-npm-packages',
+  demoBrowserEnv = 'demo-browser-env',
+  demoTypescript = 'demo-typescript',
+  demoTailwindcss = 'demo-tailwindcss',
+  demoReact = 'demo-react',
+}

@@ -14,11 +14,11 @@ export default function Error404() {
       <h1 className="mb-4 text-4xl font-bold">404</h1>
 
       <h2 className="mb-6 text-2xl">
-        Woops! You are looking for &quot;
-        <span className="cursor-not-allowed underline decoration-gray-500 decoration-dashed decoration-2 underline-offset-8">
+        Woops! You are looking for{' '}
+        <span className="cursor-not-allowed font-mono underline decoration-gray-500 decoration-dashed decoration-2 underline-offset-8 opacity-80">
           {pathname}
         </span>
-        &quot;, but it doesn&apos;t exist.
+        , but it doesn&apos;t exist.
       </h2>
 
       <div className="mt-12 flex flex-wrap items-center gap-4">

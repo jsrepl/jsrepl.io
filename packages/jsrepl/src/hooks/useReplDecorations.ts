@@ -1,24 +1,24 @@
-import { useCallback, useContext, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { ReplPayload } from '@jsrepl/shared-types'
 import * as monaco from 'monaco-editor'
-import { MonacoEditorContext } from '@/context/monaco-editor-context'
-import { ReplPayloadsContext } from '@/context/repl-payloads-context'
-import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
-import { ReplStateContext } from '@/context/repl-state-context'
 import { getEditorContentsWithReplDecors } from '@/lib/code-editor-utils'
 import { createDecorations } from '@/lib/repl-payload/decorations'
 import { renderToHoverContents } from '@/lib/repl-payload/render-hover'
-import useReplDecorationsOutdated from './useReplDecorationsOutdated'
+import { useMonacoEditor } from './useMonacoEditor'
+import useReplOutdatedDecorations from './useReplOutdatedDecorations'
+import { useReplPayloads } from './useReplPayloads'
+import { useReplRewindMode } from './useReplRewindMode'
+import { useReplStoredState } from './useReplStoredState'
 
 export default function useReplDecorations() {
-  const { replState } = useContext(ReplStateContext)!
-  const { rewindMode } = useContext(ReplRewindModeContext)!
-  const { payloads } = useContext(ReplPayloadsContext)!
-  const { editorRef } = useContext(MonacoEditorContext)!
-  const { setDecorationsOutdated } = useReplDecorationsOutdated()
+  const [replState] = useReplStoredState()
+  const [rewindMode] = useReplRewindMode()
+  const { payloads } = useReplPayloads()
+  const [editorRef] = useMonacoEditor()
+  const { setDecorationsOutdated } = useReplOutdatedDecorations()
 
-  const decorationsDisposable = useRef<() => void>()
-  const provideHoverRef = useRef<typeof provideHover>()
+  const decorationsDisposable = useRef<() => void>(undefined)
+  const provideHoverRef = useRef<typeof provideHover>(undefined)
 
   const getVisiblePayloads = useCallback(
     (predicate: (payload: ReplPayload) => boolean) => {
@@ -57,9 +57,8 @@ export default function useReplDecorations() {
   )
 
   const updateDecorations = useCallback(() => {
-    const editor = editorRef.current
     const activeModel = replState.activeModel
-    if (!editor || !activeModel) {
+    if (!editorRef.current || !activeModel) {
       return
     }
 
@@ -72,7 +71,7 @@ export default function useReplDecorations() {
 
     decorationsDisposable.current =
       payloads.length > 0
-        ? createDecorations(editor, payloads, { highlightedPayloadIds })
+        ? createDecorations(editorRef.current, payloads, { highlightedPayloadIds })
         : undefined
   }, [
     editorRef,
@@ -137,12 +136,11 @@ export default function useReplDecorations() {
   }, [])
 
   useEffect(() => {
-    const editor = editorRef.current
-    if (!editor) {
+    if (!editorRef.current) {
       return
     }
 
-    const disposable = editor.addAction({
+    const disposable = editorRef.current.addAction({
       id: 'jsrepl.copyContentsWithDecors',
       label: 'Copy With REPL Decorations',
       async run(editor) {

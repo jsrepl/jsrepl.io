@@ -2,15 +2,15 @@ import type { PluginObj, types } from '@babel/core'
 import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import type * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
+import { FileCache } from '@/lib/file-cache'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { getFileExtension } from '../fs-utils'
 import { defer } from '../promise-with-resolvers'
-import { defaultTailwindConfigJson } from '../repl-stored-state-library'
-import { Cache } from './cache'
+import { defaultTailwindConfigJson } from '../repl-stored-state/defaults'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
-const tailwindConfigCache = new Cache<string>()
+const tailwindConfigCache = new FileCache<string>()
 
 let tailwindContent: { content: string; extension: string }[] | null = null
 let tailwindConfigLoadDeferred: PromiseWithResolvers<void> | null = null

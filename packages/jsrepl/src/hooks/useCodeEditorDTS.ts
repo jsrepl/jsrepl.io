@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react'
-import debounce from 'debounce'
+import { useCallback, useEffect, useRef } from 'react'
 import * as monaco from 'monaco-editor'
 import type TS from 'typescript'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
 import { getDtsMap } from '@/lib/dts'
-import { getTypescript } from '@/lib/get-typescript'
+import { FileCache } from '@/lib/file-cache'
+import { getTypescript, loadTypescript } from '@/lib/get-typescript'
 import { getNpmPackageFromImportPath } from '@/lib/npm-packages'
 
 const diagnosticsOptions: monaco.languages.typescript.DiagnosticsOptions = {
@@ -40,21 +40,26 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOption
 export default function useCodeEditorDTS(
   models: Map<string, InstanceType<typeof CodeEditorModel>>
 ) {
-  const modelPackages = useMemo(() => new Map<string, { abortController: AbortController }>(), [])
-  const [tsRef, loadTS] = useMemo(() => getTypescript(), [])
-  const cachedImports = useMemo(() => new Map<monaco.editor.ITextModel, Set<string>>(), [])
+  // Key is the package name
+  const modelPackagesRef = useRef(new Map<string, { abortController: AbortController }>())
 
+  const importsCacheRef = useRef(new FileCache<Set<string>>(100, 1))
+
+  // TODO: webworker
   const updateDts = useCallback(() => {
-    const ts = tsRef.value
+    const ts = getTypescript()
     if (!ts) {
       return
     }
+
+    const modelPackages = modelPackagesRef.current
+    const importsCache = importsCacheRef.current
 
     const imports = new Set<string>()
 
     try {
       models.forEach((model) => {
-        let _imports = cachedImports.get(model.monacoModel)
+        let _imports = importsCache.get(model.getValue(), model.filePath)
         if (!_imports) {
           const scriptKind = getTsScriptKind(ts, model)
           if (
@@ -74,7 +79,7 @@ export default function useCodeEditorDTS(
           )
 
           _imports = findImports(ts, sourceFile)
-          cachedImports.set(model.monacoModel, _imports)
+          importsCache.set(model.getValue(), model.filePath, _imports)
         }
 
         _imports.forEach((importPath) => imports.add(importPath))
@@ -95,6 +100,8 @@ export default function useCodeEditorDTS(
         (model) => model.fileExtension === '.jsx' || model.fileExtension === '.tsx'
       )
     ) {
+      // TODO: detect right version to use. Also ?dev maybe.
+      // TODO: user options: ?dev for all packages: prod/dev environment.
       packages.add('react/jsx-runtime')
     }
 
@@ -160,20 +167,12 @@ export default function useCodeEditorDTS(
         paths,
       })
     }
-  }, [tsRef, cachedImports, models, modelPackages])
-
-  const debouncedUpdateDts = useMemo(() => debounce(updateDts, 500), [updateDts])
-
-  useEffect(() => {
-    return () => {
-      debouncedUpdateDts.clear()
-    }
-  }, [debouncedUpdateDts])
+  }, [models])
 
   useEffect(() => {
     let disposed = false
 
-    loadTS().then(() => {
+    loadTypescript().then(() => {
       if (!disposed) {
         updateDts()
       }
@@ -182,25 +181,7 @@ export default function useCodeEditorDTS(
     return () => {
       disposed = true
     }
-  }, [loadTS, updateDts])
-
-  useEffect(() => {
-    const jsModels = Array.from(models.values()).filter((model) => {
-      const languageId = model.monacoModel.getLanguageId()
-      return languageId === 'typescript' || languageId === 'javascript'
-    })
-
-    const disposables = jsModels.map((model) => {
-      return model.monacoModel.onDidChangeContent(() => {
-        cachedImports.delete(model.monacoModel)
-        debouncedUpdateDts()
-      })
-    })
-
-    return () => {
-      disposables.forEach((disposable) => disposable.dispose())
-    }
-  }, [models, debouncedUpdateDts, cachedImports])
+  }, [updateDts])
 }
 
 function findImports(ts: typeof TS, sourceFile: TS.SourceFile) {

@@ -1,4 +1,4 @@
-import { defaultTailwindConfigJson } from './repl-stored-state-library'
+import { defaultTailwindConfigJson } from './repl-stored-state/defaults'
 
 const virtualDocsMdFileContent = `# Welcome to https://jsrepl.io
 

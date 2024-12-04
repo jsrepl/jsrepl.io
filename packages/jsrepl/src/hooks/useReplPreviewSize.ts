@@ -1,11 +1,11 @@
-import { useCallback, useContext, useMemo, useState } from 'react'
-import { UserStateContext } from '@/context/user-state-context'
+import { useCallback, useMemo, useState } from 'react'
+import { useUserStoredState } from '@/hooks/useUserStoredState'
 
 export function useReplPreviewSize(): [
   { width: number; height: number },
   (value: { width: number; height: number }) => void,
 ] {
-  const { userState, setUserState } = useContext(UserStateContext)!
+  const [userState, setUserState] = useUserStoredState()
   const position = userState.previewPos
   const [previewWidth, previewHeight] = userState.previewSize
 

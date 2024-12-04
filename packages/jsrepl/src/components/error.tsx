@@ -10,7 +10,7 @@ export default function ErrorComponent({
   reset,
 }: {
   error: Error & { digest?: string }
-  reset: () => void
+  reset?: () => void
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
@@ -23,9 +23,11 @@ export default function ErrorComponent({
       <h2 className="mb-6 text-2xl">{error.message}</h2>
 
       <div className="mt-12 flex flex-wrap items-center gap-4">
-        <Button size="lg" onClick={() => reset()}>
-          Try again
-        </Button>
+        {reset && (
+          <Button size="lg" onClick={() => reset()}>
+            Try again
+          </Button>
+        )}
 
         <Button asChild size="lg">
           <Link href="/">Go to the home page</Link>

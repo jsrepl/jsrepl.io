@@ -4,6 +4,10 @@ import type * as monaco from 'monaco-editor'
 import type * as ReplFS from '@/lib/repl-fs'
 
 export type ReplStoredState = {
+  readonly id?: string
+  readonly user_id?: string
+  readonly created_at?: string
+  readonly updated_at?: string
   fs: ReplFS.FS
   /**
    * Array of absolute paths to the opened models. Paths start with '/'.
@@ -30,6 +34,9 @@ export type UserStoredState = {
   showLeftSidebar: boolean
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
+  workbench: {
+    formatOnSave: boolean
+  }
   editor: {
     fontSize: number
     renderLineHighlight: RenderLineHighlight

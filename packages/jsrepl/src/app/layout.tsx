@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Analytics from '@/components/analytics'
-import { Toaster } from '@/components/ui/sonner'
+import QueryProvider from '@/components/providers/query-provider'
+import SessionProvider from '@/components/providers/session-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import './globals.css'
 
@@ -28,8 +29,11 @@ export default function RootLayout({
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
       <body>
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster />
+        <SessionProvider>
+          <QueryProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </QueryProvider>
+        </SessionProvider>
         <Analytics />
       </body>
     </html>

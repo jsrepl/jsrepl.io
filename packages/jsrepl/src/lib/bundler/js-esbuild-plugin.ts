@@ -1,18 +1,18 @@
 import { ReplMeta, ReplPayload } from '@jsrepl/shared-types'
 import * as esbuild from 'esbuild-wasm'
 import { assert } from '@/lib/assert'
+import { FileCache } from '@/lib/file-cache'
 import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { getFileExtension } from '../fs-utils'
 import { preventInfiniteLoopsPlugin } from './babel/prevent-infinite-loops-plugin'
 import { ReplPluginMetadata, replPlugin } from './babel/repl-plugin'
-import { Cache } from './cache'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
 const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 
 type TransformResult = { code: string; metadata: ReplPluginMetadata }
-const replTransformCache = new Cache<TransformResult>()
+const replTransformCache = new FileCache<TransformResult>()
 
 export function JsEsbuildPlugin({ replMeta }: { replMeta: ReplMeta }): esbuild.Plugin {
   const ctxList: ReplPayload['ctx'][] = []

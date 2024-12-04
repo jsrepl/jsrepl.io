@@ -2,7 +2,7 @@ import React from 'react'
 import Error404 from '@/components/error404'
 import Footer from '@/components/footer'
 import Header from '@/components/header'
-import ThemeProvider from '@/components/theme-provider'
+import ThemeProvider from '@/components/providers/theme-provider'
 
 export default function NotFound() {
   return (

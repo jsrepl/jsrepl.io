@@ -1,10 +1,9 @@
-import { useContext } from 'react'
 import { useTheme } from 'next-themes'
 import { CopilotModel, CopilotProvider } from '@nag5000/monacopilot'
 import { DialogDescription, DialogProps } from '@radix-ui/react-dialog'
 import { LucideUndo2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { UserStateContext } from '@/context/user-state-context'
+import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { Themes, defaultThemeId } from '@/lib/themes'
 import {
   copilotModelOptionsByProvider,
@@ -24,7 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 const defaultUserState = getDefaultState()
 
 export default function ReplSettingsDialog(props?: DialogProps) {
-  const { userState, setUserState } = useContext(UserStateContext)!
+  const [userState, setUserState] = useUserStoredState()
   const { resolvedTheme: themeId, setTheme } = useTheme()
 
   return (
@@ -54,6 +53,39 @@ export default function ReplSettingsDialog(props?: DialogProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </Row>
+
+            <Row
+              title="Workbench: Format on Save"
+              isChanged={
+                userState.workbench.formatOnSave !== defaultUserState.workbench.formatOnSave
+              }
+              reset={() =>
+                setUserState((userState) => ({
+                  ...userState,
+                  workbench: {
+                    ...defaultUserState.workbench,
+                    formatOnSave: defaultUserState.workbench.formatOnSave,
+                  },
+                }))
+              }
+            >
+              <div className="flex items-center">
+                <Checkbox
+                  id="formatOnSave"
+                  checked={userState.workbench.formatOnSave}
+                  variant="secondary"
+                  onCheckedChange={(checked) =>
+                    setUserState((userState) => ({
+                      ...userState,
+                      workbench: { ...userState.workbench, formatOnSave: !!checked },
+                    }))
+                  }
+                />
+                <label htmlFor="formatOnSave" className="pl-2">
+                  Format code on save
+                </label>
+              </div>
             </Row>
 
             <Row

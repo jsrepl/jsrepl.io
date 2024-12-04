@@ -18,6 +18,7 @@ interface TreeDataItem {
   textClassName?: string
   customContent?: React.ReactNode
   title?: string
+  marker?: React.ElementType
   icon?: React.ElementType
   selectedIcon?: React.ElementType
   openIcon?: React.ElementType
@@ -71,7 +72,7 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(function TreeView(
   )
 
   return (
-    <div className={cn('relative overflow-hidden p-2', className)}>
+    <div className={cn('relative overflow-hidden', className)}>
       <TreeItem
         data={data}
         ref={ref}
@@ -182,6 +183,7 @@ const TreeNode = ({
           title={item.title}
           data-active={selectedItemId === item.id}
         >
+          <TreeMarker item={item} isSelected={selectedItemId === item.id} />
           {item.customContent ? (
             item.customContent
           ) : (
@@ -244,6 +246,7 @@ const TreeLeaf = React.forwardRef<
       data-active={selectedItemId === item.id}
       {...props}
     >
+      <TreeMarker item={item} isSelected={selectedItemId === item.id} />
       {item.customContent ? (
         item.customContent
       ) : (
@@ -289,6 +292,15 @@ const AccordionContent = React.forwardRef<
   </AccordionPrimitive.Content>
 ))
 AccordionContent.displayName = AccordionPrimitive.Content.displayName
+
+const TreeMarker = ({ item, isSelected }: { item: TreeDataItem; isSelected: boolean }) => {
+  const Marker = item.marker
+  return Marker ? (
+    <Marker item={item} isSelected={isSelected} className="mr-2 h-4 w-4 shrink-0" />
+  ) : (
+    <></>
+  )
+}
 
 const TreeIcon = ({
   item,

@@ -75,4 +75,14 @@ function envVars() {
     process.env.NEXT_PUBLIC_PREVIEW_URL =
       'https://' + process.env.VERCEL_BRANCH_URL.replace('jsrepl', 'jsrepl-preview')
   }
+
+  if (!process.env.NEXT_PUBLIC_SITE_URL) {
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      process.env.NEXT_PUBLIC_SITE_URL = 'https://' + process.env.NEXT_PUBLIC_VERCEL_URL
+    } else {
+      throw new Error('NEXT_PUBLIC_SITE_URL is not set')
+    }
+  }
+
+  console.log('SITE URL', process.env.NEXT_PUBLIC_SITE_URL)
 }

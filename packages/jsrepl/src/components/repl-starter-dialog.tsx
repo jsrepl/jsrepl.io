@@ -7,16 +7,16 @@ import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
 import IconReact from '~icons/mdi/react.jsx'
 import IconTailwind from '~icons/mdi/tailwind.jsx'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { toQueryParams } from '@/lib/repl-stored-state'
-import {
-  demoStarter,
-  htmlCssJsStarter,
-  htmlCssTsStarter,
-  jsStarter,
-  reactStarter,
-  tailwindcssStarter,
-  tsStarter,
-} from '@/lib/repl-stored-state-library'
+import { getPageUrl } from '@/lib/repl-stored-state/adapter-default'
+import demoStarter from '@/lib/repl-stored-state/aliases/demo'
+import htmlCssJsStarter from '@/lib/repl-stored-state/aliases/html-css-js'
+import htmlCssTsStarter from '@/lib/repl-stored-state/aliases/html-css-ts'
+import jsStarter from '@/lib/repl-stored-state/aliases/js'
+import jsEmptyStarter from '@/lib/repl-stored-state/aliases/js-empty'
+import reactStarter from '@/lib/repl-stored-state/aliases/react'
+import tailwindcssStarter from '@/lib/repl-stored-state/aliases/tailwindcss'
+import tsStarter from '@/lib/repl-stored-state/aliases/ts'
+import tsEmptyStarter from '@/lib/repl-stored-state/aliases/ts-empty'
 import { ReplStoredState } from '@/types'
 import Logo from './logo'
 import { Button } from './ui/button'
@@ -54,10 +54,22 @@ export default function ReplStarterDialog(props?: DialogProps) {
             replState={tsStarter}
           />
           <StarterButton
+            logo={<IconLanguageTypescript width="32" height="32" color="#3078C6" />}
+            title="Empty TypeScript"
+            description="TypeScript"
+            replState={tsEmptyStarter}
+          />
+          <StarterButton
             logo={<IconLanguageJavascript width="32" height="32" color="#E8D44E" />}
             title="JavaScript"
             description="JavaScript"
             replState={jsStarter}
+          />
+          <StarterButton
+            logo={<IconLanguageJavascript width="32" height="32" color="#E8D44E" />}
+            title="Empty JavaScript"
+            description="JavaScript"
+            replState={jsEmptyStarter}
           />
           <StarterButton
             logo={<IconLanguageHtml width="32" height="32" color="#DC4A25" />}
@@ -88,11 +100,7 @@ function StarterButton({
   description: string
   replState: ReplStoredState
 }) {
-  const replUrl = useMemo(() => {
-    const query = toQueryParams(replState)
-    const searchParams = new URLSearchParams(query)
-    return `/repl?${searchParams.toString()}`
-  }, [replState])
+  const replUrl = useMemo(() => getPageUrl(replState), [replState])
 
   return (
     <Button

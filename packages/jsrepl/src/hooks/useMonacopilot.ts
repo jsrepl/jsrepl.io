@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   CompletionMetadata,
   Copilot,
@@ -7,19 +7,19 @@ import {
   registerCompletion,
 } from '@nag5000/monacopilot'
 import * as monaco from 'monaco-editor'
-import { MonacoEditorContext } from '@/context/monaco-editor-context'
-import { ReplModelsContext } from '@/context/repl-models-context'
-import { ReplStateContext } from '@/context/repl-state-context'
-import { UserStateContext } from '@/context/user-state-context'
 import { CodeEditorModel } from '@/lib/code-editor-model'
+import { useMonacoEditor } from './useMonacoEditor'
+import { useReplModels } from './useReplModels'
+import { useReplStoredState } from './useReplStoredState'
+import { useUserStoredState } from './useUserStoredState'
 
 type RequestHandler = Exclude<RegisterCompletionOptions['requestHandler'], undefined>
 
 export default function useMonacopilot() {
-  const { editorRef } = useContext(MonacoEditorContext)!
-  const { models } = useContext(ReplModelsContext)!
-  const { replState } = useContext(ReplStateContext)!
-  const { userState } = useContext(UserStateContext)!
+  const [editorRef] = useMonacoEditor()
+  const { models } = useReplModels()
+  const [replState] = useReplStoredState()
+  const [userState] = useUserStoredState()
   const recentModelsRef = useRef<CodeEditorModel[]>([])
   const relatedModelsRef = useRef<CodeEditorModel[]>([])
 
@@ -117,8 +117,7 @@ export default function useMonacopilot() {
   }, [models, replState.activeModel, userState.copilot.enableRelatedFiles])
 
   useEffect(() => {
-    const editor = editorRef.current
-    if (!editor) {
+    if (!editorRef.current) {
       return
     }
 
@@ -126,7 +125,7 @@ export default function useMonacopilot() {
       return
     }
 
-    const completion = registerCompletion(monaco, editor, {
+    const completion = registerCompletion(monaco, editorRef.current, {
       endpoint: '',
       language: [
         { language: 'typescript', exclusive: true },

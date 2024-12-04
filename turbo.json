@@ -7,6 +7,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "env": [
         "NODE_ENV",
+        "NEXT_PUBLIC_SITE_URL",
         "NEXT_PUBLIC_PREVIEW_URL",
         "NEXT_PUBLIC_APP_VERSION",
         "JSREPL_ORIGIN",
@@ -15,7 +16,8 @@
         "VERCEL_ENV",
         "VERCEL_BRANCH_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
-        "VERCEL_URL"
+        "VERCEL_URL",
+        "NEXT_PUBLIC_VERCEL_URL"
       ]
     },
     "dev": {
@@ -39,6 +41,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "env": [
         "NODE_ENV",
+        "NEXT_PUBLIC_SITE_URL",
         "NEXT_PUBLIC_PREVIEW_URL",
         "NEXT_PUBLIC_APP_VERSION",
         "JSREPL_ORIGIN",
@@ -47,7 +50,8 @@
         "VERCEL_ENV",
         "VERCEL_BRANCH_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
-        "VERCEL_URL"
+        "VERCEL_URL",
+        "NEXT_PUBLIC_VERCEL_URL"
       ]
     },
     "@jsrepl/preview-entry#test:playwright:web-server:build": {
@@ -55,6 +59,7 @@
       "outputs": ["../jsrepl/public/e.js"],
       "env": [
         "NODE_ENV",
+        "NEXT_PUBLIC_SITE_URL",
         "NEXT_PUBLIC_PREVIEW_URL",
         "NEXT_PUBLIC_APP_VERSION",
         "JSREPL_ORIGIN",
@@ -63,7 +68,8 @@
         "VERCEL_ENV",
         "VERCEL_BRANCH_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
-        "VERCEL_URL"
+        "VERCEL_URL",
+        "NEXT_PUBLIC_VERCEL_URL"
       ]
     },
     "test:playwright:web-server:start": {

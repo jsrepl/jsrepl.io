@@ -27,12 +27,19 @@ export async function getDtsMap(
       if (!isAbortedError) {
         console.error(e)
 
-        const msg = `Unable to fetch package "${packageName}" from https://esm.sh. Probably you have network issues or https://esm.sh is not available.`
-        const description = `The following features might be affected: imports from external packages; TypeScript Intellisense for external packages;`
+        const msg = `Unable to fetch package "${packageName}"`
+        const description = `Probably you have network issues or https://esm.sh is not available. 
+
+The following features might not work: 
+  - imports from external packages; 
+  - TypeScript Intellisense for external packages;`
 
         console.error(`${msg}\n${description}`)
         toast.error(msg, {
           description,
+          style: {
+            whiteSpace: 'pre-wrap',
+          },
           duration: Infinity,
         })
       }

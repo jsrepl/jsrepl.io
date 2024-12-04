@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 
 export function useContinuousButtonPress(callback: () => void, delay = 1000, interval = 100) {
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const callbackRef = useRef<typeof callback>(callback)
 
   useEffect(() => {

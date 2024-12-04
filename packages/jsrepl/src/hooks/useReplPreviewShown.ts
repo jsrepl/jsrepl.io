@@ -1,6 +1,6 @@
-import { useCallback, useContext } from 'react'
-import { ReplRewindModeContext } from '@/context/repl-rewind-mode-context'
-import { ReplStateContext } from '@/context/repl-state-context'
+import { useCallback } from 'react'
+import { useReplRewindMode } from './useReplRewindMode'
+import { useReplStoredState } from './useReplStoredState'
 
 export type UseReplPreviewShown = {
   previewEnabled: boolean
@@ -9,8 +9,8 @@ export type UseReplPreviewShown = {
 }
 
 export function useReplPreviewShown(): UseReplPreviewShown {
-  const { replState, setReplState } = useContext(ReplStateContext)!
-  const { rewindMode } = useContext(ReplRewindModeContext)!
+  const [replState, setReplState] = useReplStoredState()
+  const [rewindMode] = useReplRewindMode()
 
   const enabled = !rewindMode.active
   const shown = enabled && replState.showPreview
