@@ -1,8 +1,8 @@
+import { DebugLog, debugLog } from '@/lib/debug-log'
 import * as ReplFS from '@/lib/repl-fs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
-import { DebugLog, debugLog } from '../debug-log'
-import demoStarter from './aliases/demo'
+import demoStarter from '../aliases/demo'
 
 const SCHEMA_VERSION = '1'
 

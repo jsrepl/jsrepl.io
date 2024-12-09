@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useReplSave } from '@/hooks/useReplSave'
 import { useUser } from '@/hooks/useUser'
-import { getPageUrl } from '@/lib/repl-stored-state/adapter-default'
+import { getPageUrl } from '@/lib/repl-stored-state/adapter-supabase'
 
 export default function ShareRepl() {
   const [savedState, saveReplState, { isNew, isSaving }] = useReplSave()

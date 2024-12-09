@@ -6,6 +6,10 @@ import type * as ReplFS from '@/lib/repl-fs'
 export type ReplStoredState = {
   readonly id?: string
   readonly user_id?: string
+  readonly user?: {
+    readonly avatar_url: string
+    readonly user_name: string
+  }
   readonly created_at?: string
   readonly updated_at?: string
   fs: ReplFS.FS

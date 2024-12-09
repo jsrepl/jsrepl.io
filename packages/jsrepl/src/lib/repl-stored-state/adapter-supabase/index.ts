@@ -1,9 +1,9 @@
+import { SupabaseClient } from '@supabase/supabase-js'
+import { deepEqual } from '@/lib/equal'
 import * as ReplFS from '@/lib/repl-fs'
+import { ResponseError } from '@/lib/response-error'
 import type { Database, ReplStoredState } from '@/types'
-import { deepEqual } from '../equal'
-import { ResponseError } from '../response-error'
-
-const replsEndpoint = `${process.env.NEXT_PUBLIC_SITE_URL}/api/repls`
+import { createRepl, forkRepl, getRepl, updateRepl } from './api'
 
 type UrlProps = {
   openedModels: string[]
@@ -14,24 +14,24 @@ type UrlProps = {
 export async function load(
   id: string,
   searchParams: URLSearchParams,
-  {
-    signal,
-    cache,
-    next,
-  }: { signal?: AbortSignal; cache?: RequestCache; next?: NextFetchRequestConfig } = {}
-): Promise<ReplStoredState> {
-  const response = await fetch(`${replsEndpoint}/${id}`, {
-    signal,
-    cache,
-    next,
-  })
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+): Promise<ReplStoredState | null> {
+  const { data, error, status, statusText } = await getRepl(id, { supabase, signal })
 
-  if (!response.ok) {
-    throw new ResponseError('Error loading repl', response)
+  if (error) {
+    throw new ResponseError(`Error loading repl id=${id}`, {
+      status,
+      statusText,
+      cause: error,
+    })
+  }
+
+  if (!data) {
+    return null
   }
 
   const urlProps = searchParamsToUrlProps(searchParams)
-  const state = fromPayload(await response.json(), urlProps)
+  const state = fromPayload(data, urlProps)
 
   if (state.openedModels.length === 0) {
     const defaultFiles = ['/index.js', '/index.ts', '/index.jsx', '/index.tsx', '/index.html']
@@ -66,52 +66,48 @@ export async function load(
 
 export async function fork(
   state: ReplStoredState,
-  { signal }: { signal: AbortSignal }
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal: AbortSignal }
 ): Promise<ReplStoredState> {
-  const response = await fetch(replsEndpoint + '/fork', {
-    method: 'POST',
-    body: JSON.stringify(toPayload(state)),
-    signal,
-    keepalive: true,
-  })
+  const { data, error, status, statusText } = await forkRepl(state, { supabase, signal })
 
-  if (!response.ok) {
-    throw new ResponseError('Error forking repl', response)
+  if (error) {
+    throw new ResponseError(`Error forking repl id=${state.id}`, {
+      status,
+      statusText,
+      cause: error,
+    })
   }
 
-  const newState = fromPayload(await response.json(), state)
+  const newState = fromPayload(data, state)
   return newState
 }
 
 export async function save(
   state: ReplStoredState,
-  { signal }: { signal?: AbortSignal } = {}
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ): Promise<ReplStoredState> {
-  let response: Response
   if (!state.id) {
-    response = await fetch(replsEndpoint, {
-      method: 'POST',
-      body: JSON.stringify(toPayload(state)),
-      signal,
-      keepalive: true,
-    })
+    const { data, error, status, statusText } = await createRepl(state, { supabase, signal })
 
-    if (!response.ok) {
-      throw new ResponseError('Error saving repl', response)
+    if (error) {
+      throw new ResponseError(`Error saving repl id=${state.id}`, {
+        status,
+        statusText,
+        cause: error,
+      })
     }
 
-    const newState = fromPayload(await response.json(), state)
+    const newState = fromPayload(data, state)
     return newState
   } else {
-    response = await fetch(`${replsEndpoint}/${state.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(toPayload(state)),
-      signal,
-      keepalive: true,
-    })
+    const { error, status, statusText } = await updateRepl(state, { supabase, signal })
 
-    if (!response.ok) {
-      throw new ResponseError('Error saving repl', response)
+    if (error) {
+      throw new ResponseError(`Error saving repl id=${state.id}`, {
+        status,
+        statusText,
+        cause: error,
+      })
     }
 
     return state
@@ -143,19 +139,18 @@ export function checkDirty(state: ReplStoredState, savedState: ReplStoredState) 
 }
 
 function fromPayload(
-  payload: Database['public']['Tables']['repls']['Row'],
+  payload: Database['public']['Tables']['repls']['Row'] | ReplStoredState,
   urlProps: UrlProps
 ): ReplStoredState {
-  const fs = payload.fs ?? ReplFS.emptyFS
   const { openedModels, activeModel, showPreview } = urlProps
-  return { ...payload, fs, openedModels, activeModel, showPreview }
+  return { ...payload, openedModels, activeModel, showPreview }
 }
 
 function toPayload(state: ReplStoredState): Database['public']['Tables']['repls']['Update'] {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { created_at, updated_at, user_id, openedModels, activeModel, showPreview, ...payload } =
-    state
-  return payload
+  return {
+    id: state.id,
+    fs: state.fs,
+  }
 }
 
 function searchParamsToUrlProps(searchParams: URLSearchParams): UrlProps {

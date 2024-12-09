@@ -5,11 +5,12 @@ import { toast } from 'sonner'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useMonacoEditor } from '@/hooks/useMonacoEditor'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
+import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { useWritableModels } from '@/hooks/useWritableModels'
-import { checkDirty, fork, getPageUrl, save } from '@/lib/repl-stored-state/adapter-default'
-import { ResponseError } from '@/lib/response-error'
+import { checkDirty, fork, getPageUrl, save } from '@/lib/repl-stored-state/adapter-supabase'
+import { ResponseError, isAbortError } from '@/lib/response-error'
 import type { ReplStoredState } from '@/types/repl.types'
 
 export type ReplSaveContextType = {
@@ -27,6 +28,7 @@ export const ReplSaveContext = createContext<ReplSaveContextType | null>(null)
 
 export default function ReplSaveProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
+  const supabase = useSupabaseClient()
   const user = useUser()
   const [state, setState] = useReplStoredState()
   const [userStoredState] = useUserStoredState()
@@ -60,6 +62,13 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
   const handleSaveError = useCallback(
     async (error: unknown) => {
+      const isAborted = isAbortError(error instanceof ResponseError ? error.cause : error)
+      if (isAborted) {
+        return
+      }
+
+      console.error(error)
+
       if (error instanceof ResponseError) {
         if (error.status === 401) {
           toast.info('Please sign in to save your changes.', {
@@ -71,9 +80,8 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
             },
           })
         } else {
-          const details = await error.details
-          toast.error('Failed to save', {
-            description: `${error.status} ${error.statusText}: ${details}`,
+          toast.error(error.message, {
+            description: `${error.status} ${error.statusText}: ${error.cause ?? 'Something went wrong :('}`,
           })
         }
       } else {
@@ -87,21 +95,20 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
   const saveWrapper = useCallback(
     async (callback: (args: { signal: AbortSignal }) => Promise<void>) => {
-      let isDropped = false
+      let signal: AbortSignal | null = null
 
       try {
         setIsSaving(true)
-        abortControllerRef.current?.abort('dropped')
+
+        abortControllerRef.current?.abort()
         abortControllerRef.current = new AbortController()
-        const { signal } = abortControllerRef.current
+        signal = abortControllerRef.current.signal
+
         await callback({ signal })
       } catch (error) {
-        isDropped = error === 'dropped'
-        if (!isDropped) {
-          handleSaveError(error)
-        }
+        handleSaveError(error)
       } finally {
-        if (!isDropped) {
+        if (signal === abortControllerRef.current?.signal) {
           setIsSaving(false)
           abortControllerRef.current = null
         }
@@ -147,7 +154,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       let newState: ReplStoredState
       let pageUrl: URL
       if (isNew || user.id === state.user_id) {
-        newState = await save(state, { signal })
+        newState = await save(state, { supabase, signal })
         pageUrl = getPageUrl(newState)
         history.replaceState(null, '', pageUrl)
 
@@ -157,7 +164,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
           })
         }
       } else {
-        newState = await fork(state, { signal })
+        newState = await fork(state, { supabase, signal })
         pageUrl = getPageUrl(newState)
         history.pushState(null, '', pageUrl)
 
@@ -179,6 +186,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       queryClient.setQueryData(queryKey, newState)
     }
   }, [
+    supabase,
     formatOnSave,
     flushPendingChanges,
     user,
@@ -209,7 +217,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
       await flushPendingChanges()
 
-      const newState = await fork(stateRef.current, { signal })
+      const newState = await fork(stateRef.current, { supabase, signal })
       const pageUrl = getPageUrl(newState)
       history.pushState(null, '', pageUrl)
 
@@ -229,7 +237,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       const queryKey = ['repl', { slug: [newState.id] }, pageUrl.searchParams]
       queryClient.setQueryData(queryKey, newState)
     }
-  }, [flushPendingChanges, user, setState, saveWrapper, signInWithGithub, queryClient])
+  }, [flushPendingChanges, user, setState, saveWrapper, signInWithGithub, queryClient, supabase])
 
   useEffect(() => {
     if (!isDirty) {
