@@ -3,6 +3,7 @@ import Analytics from '@/components/analytics'
 import QueryProvider from '@/components/providers/query-provider'
 import SessionProvider from '@/components/providers/session-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { createClient } from '@/lib/supabase/server'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -20,16 +21,21 @@ export const metadata: Metadata = {
   keywords: ['JavaScript', 'TypeScript', 'REPL', 'Playground'],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = await createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   return (
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
       <body>
-        <SessionProvider>
+        <SessionProvider initialSession={session}>
           <QueryProvider>
             <TooltipProvider>{children}</TooltipProvider>
           </QueryProvider>

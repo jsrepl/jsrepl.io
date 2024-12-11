@@ -1,18 +1,30 @@
+import type { Metadata } from 'next'
 import Footer from '@/components/footer'
 import Header from '@/components/header'
 import ThemeProvider from '@/components/providers/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 
-export default function DefaultLayout({
+export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
+
+export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <ThemeProvider forcedTheme="dark-plus">
+    <ThemeProvider>
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <div className="text-foreground/90 container">{children}</div>
+        </main>
         <Footer className="mt-32 max-md:mt-20" />
       </div>
       <Toaster />

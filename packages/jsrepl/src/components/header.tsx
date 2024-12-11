@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { LucideArrowUpRight, LucidePlus } from 'lucide-react'
+import { LucideArrowUpRight, LucideLibrary, LucidePlus } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import { cn } from '@/lib/utils'
@@ -41,6 +41,13 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
           </Link>
 
           <div className="border-border mx-2 h-5 border-l" />
+
+          <Button asChild className="inline-flex items-center text-nowrap" variant="link" size="lg">
+            <Link href="/dashboard">
+              <LucideLibrary size={18} className="mr-1" />
+              Dashboard
+            </Link>
+          </Button>
 
           <Button
             className="inline-flex items-center text-nowrap"

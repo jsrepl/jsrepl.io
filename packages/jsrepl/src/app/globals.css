@@ -3,10 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  [data-theme='light-plus'],
+  [data-theme='github-light'],
+  [data-theme='one-light'] {
     color-scheme: light;
 
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 20 14.3% 4.1%;
 
     --editor-background: 0 0% 100%;
@@ -56,7 +59,7 @@
   [data-theme='dracula'] {
     color-scheme: dark;
 
-    --background: 0 0% 11.76%;
+    --background: 0 0% 10%;
     --foreground: 210 40% 98%;
 
     --editor-background: 0 0% 11.76%;
@@ -94,12 +97,9 @@
     --logo-b: #121212;
   }
 
-  /* [data-theme="light-plus"] {} */
-  /* [data-theme='dark-plus'] {} */
-
   [data-theme='one-light'] {
     --editor-background: 0 0% 98%;
-    --background: 0 0% 98%;
+    --background: 0 0% 96%;
     --secondary: 60 4.8% 93.9%;
     --activity-bar: 0 0% 88%;
     --muted: 0 0% 88%;
@@ -109,7 +109,7 @@
 
   [data-theme='github-dark'] {
     --editor-background: 213 13% 16%;
-    --background: 213 13% 16%;
+    --background: 213 13% 14%;
     --secondary: 213 13% 13%;
     --activity-bar: 213 13% 19.1%;
     --muted: 213 13% 19.1%;
@@ -118,7 +118,7 @@
 
   [data-theme='monokai'] {
     --editor-background: 70 8% 15%;
-    --background: 70 8% 15%;
+    --background: 70 8% 13%;
     --secondary: 70 8% 12%;
     --activity-bar: 70 8% 18.1%;
     --muted: 70 8% 18.1%;
@@ -127,7 +127,7 @@
 
   [data-theme='dracula'] {
     --editor-background: 231 15% 18%;
-    --background: 231 15% 18%;
+    --background: 231 15% 16%;
     --secondary: 231 15% 15%;
     --activity-bar: 231 15% 21.1%;
     --muted: 231 15% 21.1%;

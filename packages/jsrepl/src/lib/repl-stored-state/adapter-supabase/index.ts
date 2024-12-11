@@ -3,12 +3,33 @@ import { deepEqual } from '@/lib/equal'
 import * as ReplFS from '@/lib/repl-fs'
 import { ResponseError } from '@/lib/response-error'
 import type { Database, ReplStoredState } from '@/types'
-import { createRepl, forkRepl, getRepl, updateRepl } from './api'
+import { createRepl, forkRepl, getRepl, getUserRepls, updateRepl } from './api'
 
 type UrlProps = {
   openedModels: string[]
   activeModel: string
   showPreview: boolean
+}
+
+export async function loadAll(
+  userId: string,
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+): Promise<ReplStoredState[]> {
+  const { data, error, status, statusText } = await getUserRepls(userId, { supabase, signal })
+
+  if (error) {
+    throw new ResponseError(`Error loading repls for user id=${userId}`, {
+      status,
+      statusText,
+      cause: error,
+    })
+  }
+
+  const repls = data.map((repl) =>
+    setupInitial(fromPayload(repl, { openedModels: [], activeModel: '', showPreview: false }))
+  )
+
+  return repls
 }
 
 export async function load(
@@ -31,36 +52,7 @@ export async function load(
   }
 
   const urlProps = searchParamsToUrlProps(searchParams)
-  const state = fromPayload(data, urlProps)
-
-  if (state.openedModels.length === 0) {
-    const defaultFiles = ['/index.js', '/index.ts', '/index.jsx', '/index.tsx', '/index.html']
-    for (const file of defaultFiles) {
-      if (ReplFS.exists(state.fs, file)) {
-        state.openedModels = [file]
-        state.activeModel = file
-        break
-      }
-    }
-  }
-
-  if (state.openedModels.length === 0) {
-    ReplFS.walk(state.fs, '/', (path, entry) => {
-      if (entry.kind === ReplFS.Kind.File) {
-        state.openedModels.push(path)
-        state.activeModel = path
-        return false
-      }
-    })
-  }
-
-  if (
-    state.openedModels.length > 0 &&
-    (state.activeModel === '' || !state.openedModels.includes(state.activeModel))
-  ) {
-    state.activeModel = state.openedModels[0]!
-  }
-
+  const state = setupInitial(fromPayload(data, urlProps))
   return state
 }
 
@@ -168,4 +160,36 @@ function searchParamsToUrlProps(searchParams: URLSearchParams): UrlProps {
   })
 
   return { openedModels, activeModel, showPreview }
+}
+
+function setupInitial(state: ReplStoredState) {
+  if (state.openedModels.length === 0) {
+    const defaultFiles = ['/index.js', '/index.ts', '/index.jsx', '/index.tsx', '/index.html']
+    for (const file of defaultFiles) {
+      if (ReplFS.exists(state.fs, file)) {
+        state.openedModels = [file]
+        state.activeModel = file
+        break
+      }
+    }
+  }
+
+  if (state.openedModels.length === 0) {
+    ReplFS.walk(state.fs, '/', (path, entry) => {
+      if (entry.kind === ReplFS.Kind.File) {
+        state.openedModels.push(path)
+        state.activeModel = path
+        return false
+      }
+    })
+  }
+
+  if (
+    state.openedModels.length > 0 &&
+    (state.activeModel === '' || !state.openedModels.includes(state.activeModel))
+  ) {
+    state.activeModel = state.openedModels[0]!
+  }
+
+  return state
 }
