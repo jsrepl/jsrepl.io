@@ -1,5 +1,6 @@
 import { toast } from 'sonner'
 import type * as TS from 'typescript'
+import { getPackageUrl, getProviderUrl, resolvePackageProvider } from './package-provider'
 
 const indexDtsUrlCache = new Map<string, string | null>()
 const dtsSourceCache = new Map<string, string>()
@@ -7,17 +8,21 @@ const dtsSourceCache = new Map<string, string>()
 // TODO: place it in webworker?
 export async function getDtsMap(
   packageName: string,
+  packageDtsProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy',
   ts: typeof import('typescript'),
   { signal }: { signal: AbortSignal }
 ) {
   const dtsMap = new Map<string, string>()
+  const resolvedProvider = resolvePackageProvider(packageDtsProvider)
+  const providerUrl = getProviderUrl(packageDtsProvider)
 
   let indexDtsUrl: string | null
   if (indexDtsUrlCache.has(packageName)) {
     indexDtsUrl = indexDtsUrlCache.get(packageName)!
   } else {
     try {
-      const packageResponse = await fetch(`https://esm.sh/${packageName}`, {
+      const packageUrl = getPackageUrl(packageDtsProvider, packageName)
+      const packageResponse = await fetch(packageUrl, {
         signal: anySignal([signal, AbortSignal.timeout(10000)]),
       })
       indexDtsUrl = packageResponse.ok ? packageResponse.headers.get('x-typescript-types') : null
@@ -27,7 +32,7 @@ export async function getDtsMap(
       if (!isAbortedError) {
         console.error(e)
 
-        const msg = `Unable to fetch package "${packageName}" from https://esm.sh. Probably you have network issues or https://esm.sh is not available.`
+        const msg = `Unable to fetch package "${packageName}" from ${providerUrl}. Probably you have network issues or ${providerUrl} is not available.`
         const description = `The following features might be affected: imports from external packages; TypeScript Intellisense for external packages;`
 
         console.error(`${msg}\n${description}`)
@@ -65,7 +70,11 @@ export async function getDtsMap(
       source = dtsSourceCache.get(url)!
     } else {
       try {
-        const response = await fetch(url, { signal })
+        const urlToFetch =
+          resolvedProvider === 'esm.sh'
+            ? url
+            : url.replace(/^https:\/\/esm.sh\//, providerUrl + '/')
+        const response = await fetch(urlToFetch, { signal })
         if (!response.ok) {
           return
         }

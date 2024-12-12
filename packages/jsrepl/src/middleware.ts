@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     form-action 'self';
     frame-ancestors 'none';
     frame-src ${process.env.NEXT_PUBLIC_PREVIEW_URL};
-    connect-src 'self' https://esm.sh https://api-gateway.umami.dev/api/send https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://api.groq.com;
+    connect-src 'self' https://esm.sh https://esmshproxy.jsrepl.io https://api-gateway.umami.dev/api/send https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://api.groq.com;
     ${process.env.NEXT_PUBLIC_NODE_ENV === 'production' /* https://stackoverflow.com/a/71109928 */ ? 'upgrade-insecure-requests;' : ''}
   `
 

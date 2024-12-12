@@ -30,6 +30,8 @@ export type UserStoredState = {
   showLeftSidebar: boolean
   leftSidebarWidth: number
   autostartOnCodeChange: boolean
+  packageProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
+  packageDtsProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
   editor: {
     fontSize: number
     renderLineHighlight: RenderLineHighlight

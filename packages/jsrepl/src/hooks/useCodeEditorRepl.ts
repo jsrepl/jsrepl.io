@@ -50,6 +50,7 @@ export default function useCodeEditorRepl(
         addPayload,
         previewIframe: previewIframe.current!,
         theme: themeRef.current,
+        packageProvider: userState.packageProvider,
       })
 
       setReplInfo(replInfo)
@@ -65,7 +66,7 @@ export default function useCodeEditorRepl(
         duration: Infinity,
       })
     }
-  }, [addPayload, models, setReplInfo, depsReady, previewIframeReadyId])
+  }, [addPayload, models, setReplInfo, depsReady, previewIframeReadyId, userState.packageProvider])
 
   const onMessage = useCallback(
     (event: MessageEvent) => {
