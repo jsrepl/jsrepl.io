@@ -1,23 +1,31 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.demoReact,
-  activeModel: '/index.tsx',
-  openedModels: ['/index.tsx', '/index.html', '/index.css'],
-  showPreview: true,
+  id: SystemRepls.react,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'React Starter',
+  description: 'Starter REPL: React',
+  active_model: '/index.tsx',
+  opened_models: ['/index.tsx', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
         'index.tsx': {
           content: dedent`
-            import './index.css'
+            import './index.css';
             import { createRoot } from 'react-dom/client?dev';
-            import { useState, useCallback } from 'react?dev';
+            import { useState } from 'react?dev';
 
             const root = createRoot(document.getElementById('root'));
             root.render(<App />);
@@ -25,21 +33,13 @@ export default {
             function App() {
               const [counter, setCounter] = useState(0);
 
-              const decrement = useCallback(() => {
-                setCounter((x) => x - 1)
-              }, [])
-
-              const increment = useCallback(() => {
-                setCounter((x) => x + 1)
-              }, [])
-
               return (
                 <>
-                  <h1 className="m-0 italic">Hello, world!</h1>
-                  <p className="space-x-2">
-                    <button onClick={decrement}>-</button>
+                  <h1 className="italic">Hello, world!</h1>
+                  <p className="space-x-1">
+                    <button onClick={() => setCounter((x) => x - 1)}>-</button>
                     <span>Counter: {counter}</span>
-                    <button onClick={increment}>+</button>
+                    <button onClick={() => setCounter((x) => x + 1)}>+</button>
                   </p>
                 </>
               );
@@ -70,4 +70,4 @@ export default {
       },
     },
   },
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

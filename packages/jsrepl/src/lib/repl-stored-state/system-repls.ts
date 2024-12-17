@@ -1,4 +1,4 @@
-export enum ReplAliases {
+export enum SystemRepls {
   react = 'react',
   tailwindcss = 'tailwindcss',
   ts = 'ts',

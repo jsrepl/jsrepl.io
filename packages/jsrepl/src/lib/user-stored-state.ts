@@ -72,7 +72,7 @@ function merge<T extends object>(target: T, source: T | null): T {
 
 export function getDefaultState(): UserStoredState {
   return {
-    previewPos: PreviewPosition.FloatBottomRight,
+    previewPos: PreviewPosition.AsideRight,
     previewSize: [350, 180],
     showLeftSidebar: true,
     version: undefined,

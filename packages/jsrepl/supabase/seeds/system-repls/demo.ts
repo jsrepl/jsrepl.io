@@ -1,13 +1,23 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent, defaultTailwindConfigTs } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  defaultTailwindConfigTs,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.demo,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.demo,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'Demo',
+  description: 'Demo REPL',
+  active_model: '/index.ts',
+  opened_models: ['/index.ts', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
@@ -80,7 +90,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.ts', '/index.html', '/index.css'],
-  activeModel: '/index.ts',
-  showPreview: true,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

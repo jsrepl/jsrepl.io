@@ -1,32 +1,34 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  defaultTailwindConfigTs,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.htmlCssTs,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.tailwindcss,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'TailwindCSS Starter',
+  description: 'Starter REPL: TailwindCSS',
+  active_model: '/index.html',
+  opened_models: ['/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
-        'index.ts': {
-          content: dedent`
-            import './index.css';
-
-            console.log('Hello, world!');
-          `,
-          kind: ReplFS.Kind.File,
-        },
         'index.html': {
           content: dedent`
             <!doctype html>
             <html lang="en">
               <head>
                 <meta charset="utf-8" />
-                <script type="module" src="/index.ts"></script>
+                <link rel="stylesheet" href="/index.css" />
               </head>
               <body>
                 <span class="text-4xl font-bold dark:text-stone-100">Hello, world!</span>
@@ -43,6 +45,10 @@ export default {
           `,
           kind: ReplFS.Kind.File,
         },
+        'tailwind.config.ts': {
+          content: defaultTailwindConfigTs,
+          kind: ReplFS.Kind.File,
+        },
         'DOCS.md': {
           content: defaultDocsMdFileContent,
           kind: ReplFS.Kind.File,
@@ -50,7 +56,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.ts', '/index.html', '/index.css'],
-  activeModel: '/index.ts',
-  showPreview: true,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

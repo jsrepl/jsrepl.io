@@ -2,16 +2,19 @@ import { CopilotModel, CopilotProvider } from '@nag5000/monacopilot'
 import type * as esbuild from 'esbuild-wasm'
 import type * as monaco from 'monaco-editor'
 import type * as ReplFS from '@/lib/repl-fs'
+import { Database } from './database.types'
 
 export type ReplStoredState = {
-  readonly id?: string
-  readonly user_id?: string
-  readonly user?: {
-    readonly avatar_url: string
-    readonly user_name: string
-  }
-  readonly created_at?: string
-  readonly updated_at?: string
+  readonly id: string
+  readonly user_id: string
+  readonly user: {
+    readonly avatar_url: string | null
+    readonly user_name: string | null
+  } | null
+  readonly created_at: string
+  readonly updated_at: string
+  title: string
+  description: string
   fs: ReplFS.FS
   /**
    * Array of absolute paths to the opened models. Paths start with '/'.
@@ -24,6 +27,12 @@ export type ReplStoredState = {
   activeModel: string
   showPreview: boolean
 }
+
+export type ReplRecordPayload = Database['public']['Tables']['repls']['Row'] & {
+  user: Database['public']['Tables']['public_profiles']['Row'] | null
+}
+
+export type ReplUpdatePayload = Database['public']['Tables']['repls']['Update']
 
 export type UserStoredState = {
   /**

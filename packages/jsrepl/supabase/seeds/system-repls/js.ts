@@ -1,25 +1,34 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.ts,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.js,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'JS Starter',
+  description: 'Starter REPL: JS',
+  active_model: '/index.js',
+  opened_models: ['/index.js'],
+  show_preview: false,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
-        'index.ts': {
+        'index.js': {
           content: dedent`
             import { format } from 'date-fns';
 
             const now = new Date();
             const formatted = formatTime(now);
 
-            function formatTime(date: Date) {
+            function formatTime(date) {
               return format(date, 'HH:mm:ss');
             }
           `,
@@ -32,7 +41,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.ts'],
-  activeModel: '/index.ts',
-  showPreview: false,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

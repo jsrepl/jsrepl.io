@@ -1,4 +1,4 @@
-import type * as ReplFS from '@/lib/repl-fs'
+import * as ReplFS from '@/lib/repl-fs'
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
@@ -25,23 +25,38 @@ export type Database = {
       }
       repls: {
         Row: {
+          active_model: string
           created_at: string
+          description: string
           fs: ReplFS.FS
           id: string
+          opened_models: string[]
+          show_preview: boolean
+          title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          active_model?: string
           created_at?: string
+          description?: string
           fs: ReplFS.FS
           id?: string
+          opened_models?: string[]
+          show_preview?: boolean
+          title?: string
           updated_at?: string
           user_id?: string
         }
         Update: {
+          active_model?: string
           created_at?: string
+          description?: string
           fs?: ReplFS.FS
           id?: string
+          opened_models?: string[]
+          show_preview?: boolean
+          title?: string
           updated_at?: string
           user_id?: string
         }
@@ -55,9 +70,106 @@ export type Database = {
           },
         ]
       }
+      views: {
+        Row: {
+          created_at: string
+          id: number
+          repl_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          repl_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          repl_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'views_repl_id_fkey'
+            columns: ['repl_id']
+            isOneToOne: false
+            referencedRelation: 'recent_user_repls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'views_repl_id_fkey'
+            columns: ['repl_id']
+            isOneToOne: false
+            referencedRelation: 'repls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'views_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'public_profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      recent_user_repls: {
+        Row: {
+          active_model: string
+          created_at: string
+          description: string
+          fs: ReplFS.FS
+          id: string
+          opened_models: string[]
+          show_preview: boolean
+          title: string
+          updated_at: string
+          user_id: string
+          viewed_at: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'repls_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'public_profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      recent_user_views: {
+        Row: {
+          created_at: string
+          id: number
+          repl_id: string
+          user_id: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'views_repl_id_fkey'
+            columns: ['repl_id']
+            isOneToOne: false
+            referencedRelation: 'recent_user_repls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'views_repl_id_fkey'
+            columns: ['repl_id']
+            isOneToOne: false
+            referencedRelation: 'repls'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'views_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'public_profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Functions: {
       nanoid: {

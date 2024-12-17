@@ -1,6 +1,7 @@
 'use client'
 
 // Based on https://github.com/supabase/auth-helpers
+// https://github.com/supabase/auth-helpers/blob/cb7c267c76c0951d6c5b9306979239bd3e7565eb/packages/react/src/components/SessionContext.tsx
 import React, { PropsWithChildren, createContext, useEffect, useMemo, useState } from 'react'
 import { AuthError, Session, SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -51,12 +52,6 @@ export default function SessionProvider({
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState<boolean>(!initialSession)
   const [error, setError] = useState<AuthError>()
-
-  useEffect(() => {
-    if (!session && initialSession) {
-      setSession(initialSession)
-    }
-  }, [session, initialSession])
 
   useEffect(() => {
     let mounted = true

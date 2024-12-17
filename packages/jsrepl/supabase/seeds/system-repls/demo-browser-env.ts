@@ -1,14 +1,22 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.demoBrowserEnv,
-  activeModel: '/index.ts',
-  openedModels: ['/index.ts', '/index.html', '/index.css'],
-  showPreview: true,
+  id: SystemRepls.demoBrowserEnv,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'Demo Browser Environment',
+  description: 'Demo REPL with Geolocation Web API and <select> control',
+  active_model: '/index.ts',
+  opened_models: ['/index.ts', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
@@ -74,4 +82,4 @@ export default {
       },
     },
   },
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

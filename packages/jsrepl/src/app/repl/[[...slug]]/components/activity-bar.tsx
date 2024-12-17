@@ -2,12 +2,19 @@ import { useCallback, useState } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { ReplPayload } from '@jsrepl/shared-types'
-import { LucideFiles, LucidePlay, LucideRewind, LucideRotateCw, LucideSettings } from 'lucide-react'
+import {
+  LucideFiles,
+  LucideLink,
+  LucidePlay,
+  LucideRewind,
+  LucideRotateCw,
+  LucideSettings,
+} from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
 import ReplSettingsDialog from '@/components/repl-settings-dialog'
-import ShareRepl from '@/components/share-repl'
+import ShareReplDropdownItem from '@/components/share-repl-dropdown-item'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -19,15 +26,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { UserAvatar } from '@/components/user-avatar'
+import { UserMenu } from '@/components/user-menu'
 import { useReplPayloads } from '@/hooks/useReplPayloads'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplRewindMode } from '@/hooks/useReplRewindMode'
+import { useUser } from '@/hooks/useUser'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
-import { UserMenu } from './user-menu'
 
 export default function ActivityBar() {
+  const user = useUser()
   const { resolvedTheme: themeId, setTheme } = useTheme()
   const [userState, setUserState] = useUserStoredState()
   const [rewindMode, setRewindMode] = useReplRewindMode()
@@ -56,21 +66,21 @@ export default function ActivityBar() {
       <div className="bg-activityBar flex flex-col gap-2 px-1 pb-2 pt-1 [grid-area:activity-bar]">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button asChild variant="ghost" size="icon">
-              <Link href="/">
+            <Button asChild variant="ghost" size="icon-lg">
+              <Link href={user ? '/dashboard' : '/'}>
                 <Logo width="1.25rem" height="1.25rem" />
               </Link>
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            Go to homepage
+            {user ? 'Go to dashboard' : 'Go to homepage'}
           </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
+              size="icon-lg"
               variant="ghost"
               className={cn(
                 'text-activityBar-foreground',
@@ -80,7 +90,7 @@ export default function ActivityBar() {
                 setUserState((prev) => ({ ...prev, showLeftSidebar: !prev.showLeftSidebar }))
               }
             >
-              <LucideFiles size={20} />
+              <LucideFiles size={22} strokeWidth={1.5} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
@@ -91,7 +101,7 @@ export default function ActivityBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
+              size="icon-lg"
               variant="ghost"
               className={cn(
                 'text-activityBar-foreground',
@@ -100,7 +110,7 @@ export default function ActivityBar() {
               disabled={!previewEnabled}
               onClick={() => setPreviewShown((prev) => !prev)}
             >
-              <LucideEye size={20} />
+              <LucideEye size={22} strokeWidth={1.5} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
@@ -113,16 +123,16 @@ export default function ActivityBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
+              size="icon-lg"
               variant="ghost"
               className="text-activityBar-foreground"
               onClick={restartRepl}
             >
               <div className="relative">
                 {userState.autostartOnCodeChange ? (
-                  <LucideRotateCw size={18} />
+                  <LucideRotateCw size={20} strokeWidth={1.5} />
                 ) : (
-                  <LucidePlay size={19} />
+                  <LucidePlay size={21} strokeWidth={1.5} />
                 )}
               </div>
             </Button>
@@ -147,7 +157,7 @@ export default function ActivityBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
+              size="icon-lg"
               variant="ghost"
               className={cn(
                 'text-activityBar-foreground',
@@ -155,7 +165,7 @@ export default function ActivityBar() {
               )}
               onClick={toggleRewindMode}
             >
-              <LucideRewind size={18} />
+              <LucideRewind size={20} strokeWidth={1.5} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
@@ -169,8 +179,8 @@ export default function ActivityBar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="text-activityBar-foreground">
-                  <LucidePalette size={18} />
+                <Button size="icon-lg" variant="ghost" className="text-activityBar-foreground">
+                  <LucidePalette size={20} strokeWidth={1.5} />
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
@@ -201,8 +211,8 @@ export default function ActivityBar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="text-activityBar-foreground">
-                  <LucideShare2 size={18} />
+                <Button size="icon-lg" variant="ghost" className="text-activityBar-foreground">
+                  <LucideShare2 size={20} strokeWidth={1.5} />
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
@@ -211,22 +221,20 @@ export default function ActivityBar() {
             </TooltipContent>
           </Tooltip>
 
-          <DropdownMenuContent className="w-96" side="left" align="end">
-            <DropdownMenuLabel className="text-foreground/80 text-sm font-normal">
-              <ShareRepl />
-            </DropdownMenuLabel>
+          <DropdownMenuContent className="w-56" side="left" align="end">
+            <ShareReplDropdownItem />
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
+              size="icon-lg"
               variant="ghost"
               className="text-activityBar-foreground"
               onClick={() => setSettingsDialogOpen(true)}
             >
-              <LucideSettings size={19} />
+              <LucideSettings size={21} strokeWidth={1.5} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
@@ -234,13 +242,21 @@ export default function ActivityBar() {
           </TooltipContent>
         </Tooltip>
 
-        <UserMenu />
-
-        <Button size="icon" variant="ghost" className="text-activityBar-foreground" asChild>
+        <Button size="icon-lg" variant="ghost" className="text-activityBar-foreground" asChild>
           <Link href="https://github.com/jsrepl/jsrepl.io" target="_blank">
-            <IconGithub width={17} height={17} />
+            <IconGithub width={19} height={19} />
           </Link>
         </Button>
+
+        <UserMenu
+          signInOptions={{ popup: true }}
+          trigger={
+            <Button size="icon-lg" variant="ghost" className="text-activityBar-foreground">
+              <UserAvatar user={user} size={24} />
+            </Button>
+          }
+          dropdownMenuContentProps={{ side: 'right', align: 'end' }}
+        />
       </div>
 
       <ReplSettingsDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen} />

@@ -1,5 +1,4 @@
-import { PostgrestSingleResponse, SupabaseClient } from '@supabase/supabase-js'
-import { ReplAliases } from '@/lib/repl-stored-state/aliases'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { Database, ReplStoredState } from '@/types'
 
 /**
@@ -9,23 +8,26 @@ export async function getRepl(
   id: string,
   { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ) {
-  if (Object.values(ReplAliases).includes(id as ReplAliases)) {
-    const state = await getAliasRepl(id as ReplAliases)
-    return {
-      data: state,
-      error: null,
-      status: 200,
-      statusText: 'OK',
-      count: 1,
-    } as PostgrestSingleResponse<ReplStoredState>
-  }
-
   return await supabase
     .from('repls')
     .select(`*, user:public_profiles(*)`)
     .eq('id', id)
     .abortSignal(signal as AbortSignal /* undefined is fine here */)
     .maybeSingle()
+}
+
+/**
+ * Get repls by ids
+ */
+export async function getRepls(
+  ids: string[],
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+) {
+  return await supabase
+    .from('repls')
+    .select(`*, user:public_profiles(*)`)
+    .in('id', ids)
+    .abortSignal(signal as AbortSignal /* undefined is fine here */)
 }
 
 /**
@@ -44,6 +46,24 @@ export async function getUserRepls(
 }
 
 /**
+ * Get recently viewed repls for a current user
+ */
+export async function getRecentlyViewedRepls({
+  supabase,
+  signal,
+}: {
+  supabase: SupabaseClient<Database>
+  signal?: AbortSignal
+}) {
+  return await supabase
+    .from('recent_user_repls')
+    .select(`*, user:public_profiles(*)`)
+    .order('viewed_at', { ascending: false })
+    .limit(20)
+    .abortSignal(signal as AbortSignal /* undefined is fine here */)
+}
+
+/**
  * Create a new repl
  */
 export async function createRepl(
@@ -51,7 +71,12 @@ export async function createRepl(
   { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ) {
   const payload = {
+    title: repl.title,
+    description: repl.description,
     fs: repl.fs,
+    opened_models: repl.openedModels,
+    active_model: repl.activeModel,
+    show_preview: repl.showPreview,
   }
 
   return await supabase
@@ -85,7 +110,12 @@ export async function updateRepl(
 
   const payload = {
     id: repl.id,
+    title: repl.title,
+    description: repl.description,
     fs: repl.fs,
+    opened_models: repl.openedModels,
+    active_model: repl.activeModel,
+    show_preview: repl.showPreview,
   }
 
   return await supabase
@@ -107,8 +137,4 @@ export async function deleteRepl(
     .delete()
     .eq('id', id)
     .abortSignal(signal as AbortSignal /* undefined is fine here */)
-}
-
-async function getAliasRepl(alias: ReplAliases): Promise<ReplStoredState> {
-  return import(`@/lib/repl-stored-state/aliases/${alias}`).then((module) => module.default)
 }

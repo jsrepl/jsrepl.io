@@ -1,24 +1,41 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent, defaultTailwindConfigTs } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.tailwindcss,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.htmlCssJs,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'HTML/CSS/JS Starter',
+  description: 'Starter REPL: HTML, CSS, and JS',
+  active_model: '/index.js',
+  opened_models: ['/index.js', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
+        'index.js': {
+          content: dedent`
+            import './index.css';
+
+            console.log('Hello, world!');
+          `,
+          kind: ReplFS.Kind.File,
+        },
         'index.html': {
           content: dedent`
             <!doctype html>
             <html lang="en">
               <head>
                 <meta charset="utf-8" />
-                <link rel="stylesheet" href="/index.css" />
+                <script type="module" src="/index.js"></script>
               </head>
               <body>
                 <span class="text-4xl font-bold dark:text-stone-100">Hello, world!</span>
@@ -35,10 +52,6 @@ export default {
           `,
           kind: ReplFS.Kind.File,
         },
-        'tailwind.config.ts': {
-          content: defaultTailwindConfigTs,
-          kind: ReplFS.Kind.File,
-        },
         'DOCS.md': {
           content: defaultDocsMdFileContent,
           kind: ReplFS.Kind.File,
@@ -46,7 +59,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.html', '/index.css'],
-  activeModel: '/index.html',
-  showPreview: true,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

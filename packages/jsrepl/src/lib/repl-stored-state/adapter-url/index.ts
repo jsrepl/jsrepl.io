@@ -2,13 +2,24 @@ import { DebugLog, debugLog } from '@/lib/debug-log'
 import * as ReplFS from '@/lib/repl-fs'
 import { atou, utoa } from '@/lib/zip'
 import type { ReplStoredState } from '@/types'
-import demoStarter from '../aliases/demo'
 
 const SCHEMA_VERSION = '1'
 
 export function load(searchParams: URLSearchParams): ReplStoredState {
   const versionQP = searchParams.get('v')
-  const state = { ...demoStarter }
+  const state: ReplStoredState = {
+    id: '',
+    created_at: '',
+    updated_at: '',
+    user_id: '',
+    user: null,
+    title: '',
+    description: '',
+    activeModel: '',
+    openedModels: [],
+    showPreview: true,
+    fs: ReplFS.emptyFS,
+  }
 
   if (versionQP === SCHEMA_VERSION) {
     loadSchemaV1(searchParams, state)

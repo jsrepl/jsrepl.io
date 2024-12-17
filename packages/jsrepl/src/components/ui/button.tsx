@@ -12,7 +12,6 @@ const buttonVariants = cva(
     'text-sm',
     'leading-tight',
     'font-medium',
-    'transition-colors',
     'ring-offset-background',
     'focus-visible:outline-none',
     'focus-visible:ring-2',

@@ -18,20 +18,13 @@ import IconEsbuild from '~icons/simple-icons/esbuild.jsx'
 import IconGithubSponsors from '~icons/simple-icons/githubsponsors.jsx'
 import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
-import { getPageUrl } from '@/lib/repl-stored-state/adapter-supabase'
-import demoBrowserEnv from '@/lib/repl-stored-state/aliases/demo-browser-env'
-import demoLiveFeedback from '@/lib/repl-stored-state/aliases/demo-live-feedback'
-import demoNpmPackages from '@/lib/repl-stored-state/aliases/demo-npm-packages'
-import demoReact from '@/lib/repl-stored-state/aliases/demo-react'
-import demoTailwindcss from '@/lib/repl-stored-state/aliases/demo-tailwindcss'
-import demoTypescript from '@/lib/repl-stored-state/aliases/demo-typescript'
-import { ReplStoredState } from '@/types'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
 import Demo from './components/demo'
 import { FaqItem } from './components/faq-item'
 import FeatureBox from './components/feature-box'
 
-function getReplLink(state: ReplStoredState) {
-  return getPageUrl(state).toString()
+function getReplLink(replId: string) {
+  return `/repl/${replId}`
 }
 
 export default function Home() {
@@ -435,7 +428,7 @@ export default function Home() {
 
       <div id="demos" className="container mt-16 flex flex-col gap-16">
         <Demo
-          replLink={getReplLink(demoLiveFeedback)}
+          replLink={getReplLink(SystemRepls.demoLiveFeedback)}
           title="Live feedback"
           text={
             <>
@@ -460,7 +453,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoNpmPackages)}
+          replLink={getReplLink(SystemRepls.demoNpmPackages)}
           title="NPM packages"
           text={
             <>
@@ -484,7 +477,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoBrowserEnv)}
+          replLink={getReplLink(SystemRepls.demoBrowserEnv)}
           title="Browser environment"
           text={
             <>
@@ -505,7 +498,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoTypescript)}
+          replLink={getReplLink(SystemRepls.demoTypescript)}
           title="TypeScript"
           text={
             <>
@@ -521,7 +514,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoTailwindcss)}
+          replLink={getReplLink(SystemRepls.demoTailwindcss)}
           title="Tailwind CSS"
           text={
             <>
@@ -553,7 +546,7 @@ export default function Home() {
         />
 
         <Demo
-          replLink={getReplLink(demoReact)}
+          replLink={getReplLink(SystemRepls.demoReact)}
           title="React & JSX/TSX"
           text={
             <>

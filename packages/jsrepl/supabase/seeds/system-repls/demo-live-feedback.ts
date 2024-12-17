@@ -1,14 +1,22 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.demoLiveFeedback,
-  activeModel: '/index.ts',
-  openedModels: ['/index.ts'],
-  showPreview: false,
+  id: SystemRepls.demoLiveFeedback,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'Demo Live Feedback',
+  description: 'Demo REPL showing the live feedback feature',
+  active_model: '/index.ts',
+  opened_models: ['/index.ts'],
+  show_preview: false,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
@@ -46,4 +54,4 @@ export default {
       },
     },
   },
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

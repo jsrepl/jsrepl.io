@@ -2,16 +2,25 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { deepEqual } from '@/lib/equal'
 import * as ReplFS from '@/lib/repl-fs'
 import { ResponseError } from '@/lib/response-error'
-import type { Database, ReplStoredState } from '@/types'
-import { createRepl, forkRepl, getRepl, getUserRepls, updateRepl } from './api'
+import type { Database, ReplRecordPayload, ReplStoredState, ReplUpdatePayload } from '@/types'
+import {
+  createRepl,
+  deleteRepl,
+  forkRepl,
+  getRecentlyViewedRepls,
+  getRepl,
+  getRepls,
+  getUserRepls,
+  updateRepl,
+} from './api'
 
-type UrlProps = {
-  openedModels: string[]
-  activeModel: string
-  showPreview: boolean
+type ExtraUrlProps = {
+  openedModels?: string[]
+  activeModel?: string
+  showPreview?: boolean
 }
 
-export async function loadAll(
+export async function loadUserRepls(
   userId: string,
   { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ): Promise<ReplStoredState[]> {
@@ -25,11 +34,54 @@ export async function loadAll(
     })
   }
 
-  const repls = data.map((repl) =>
-    setupInitial(fromPayload(repl, { openedModels: [], activeModel: '', showPreview: false }))
-  )
+  return data.map((repl) => reviveState({ state: fromPayload(repl) }))
+}
 
-  return repls
+export async function loadRecentlyViewedRepls({
+  supabase,
+  signal,
+}: {
+  supabase: SupabaseClient<Database>
+  signal?: AbortSignal
+}): Promise<Array<ReplStoredState & { viewed_at: string }>> {
+  const { data, error, status, statusText } = await getRecentlyViewedRepls({
+    supabase,
+    signal,
+  })
+
+  if (error) {
+    throw new ResponseError(`Error loading recently viewed repls`, {
+      status,
+      statusText,
+      cause: error,
+    })
+  }
+
+  return data.map((repl) => ({
+    ...reviveState({ state: fromPayload(repl) }),
+    viewed_at: repl.viewed_at,
+  }))
+}
+
+export async function loadByIds(
+  ids: string[],
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+): Promise<ReplStoredState[]> {
+  if (ids.length === 0) {
+    return []
+  }
+
+  const { data, error, status, statusText } = await getRepls(ids, { supabase, signal })
+
+  if (error) {
+    throw new ResponseError(`Error loading repls by ids=${ids}`, {
+      status,
+      statusText,
+      cause: error,
+    })
+  }
+
+  return data.map((repl) => reviveState({ state: fromPayload(repl) }))
 }
 
 export async function load(
@@ -51,15 +103,21 @@ export async function load(
     return null
   }
 
-  const urlProps = searchParamsToUrlProps(searchParams)
-  const state = setupInitial(fromPayload(data, urlProps))
+  const state = reviveState({ state: fromPayload(data), searchParams })
   return state
 }
 
 export async function fork(
   state: ReplStoredState,
-  { supabase, signal }: { supabase: SupabaseClient<Database>; signal: AbortSignal }
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ): Promise<ReplStoredState> {
+  if (!state.title.endsWith(' (forked)')) {
+    state = {
+      ...state,
+      title: state.title + ' (forked)',
+    }
+  }
+
   const { data, error, status, statusText } = await forkRepl(state, { supabase, signal })
 
   if (error) {
@@ -70,7 +128,7 @@ export async function fork(
     })
   }
 
-  const newState = fromPayload(data, state)
+  const newState = fromPayload(data)
   return newState
 }
 
@@ -89,7 +147,7 @@ export async function save(
       })
     }
 
-    const newState = fromPayload(data, state)
+    const newState = fromPayload(data)
     return newState
   } else {
     const { error, status, statusText } = await updateRepl(state, { supabase, signal })
@@ -106,20 +164,43 @@ export async function save(
   }
 }
 
-export function getPageUrl(state: ReplStoredState) {
-  const { id, openedModels, activeModel, showPreview } = state
+export async function remove(
+  id: string,
+  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+) {
+  const { error, status, statusText } = await deleteRepl(id, { supabase, signal })
+
+  if (error) {
+    throw new ResponseError(`Error deleting repl id=${id}`, {
+      status,
+      statusText,
+      cause: error,
+    })
+  }
+}
+
+export function getPageUrl(state: ReplStoredState, extraUrlProps?: ExtraUrlProps | true) {
+  const { id } = state
   if (!id) {
     return new URL('/repl', process.env.NEXT_PUBLIC_SITE_URL)
   }
 
   const url = new URL(`/repl/${id}`, process.env.NEXT_PUBLIC_SITE_URL)
 
-  openedModels.forEach((path) => {
-    const value = `${path === activeModel ? '*' : ''}${path.slice(1)}`
+  if (extraUrlProps === true) {
+    extraUrlProps = {
+      openedModels: state.openedModels,
+      activeModel: state.activeModel,
+      showPreview: state.showPreview,
+    }
+  }
+
+  extraUrlProps?.openedModels?.forEach((path) => {
+    const value = `${path === extraUrlProps?.activeModel ? '*' : ''}${path.slice(1)}`
     url.searchParams.append('file', value)
   })
 
-  if (showPreview) {
+  if (extraUrlProps?.showPreview) {
     url.searchParams.set('preview', '1')
   }
 
@@ -127,28 +208,62 @@ export function getPageUrl(state: ReplStoredState) {
 }
 
 export function checkDirty(state: ReplStoredState, savedState: ReplStoredState) {
-  return !deepEqual(toPayload(state), toPayload(savedState))
+  const a = toPayload(state)
+  const b = toPayload(savedState)
+  return !deepEqual(a, b)
 }
 
-function fromPayload(
-  payload: Database['public']['Tables']['repls']['Row'] | ReplStoredState,
-  urlProps: UrlProps
-): ReplStoredState {
-  const { openedModels, activeModel, showPreview } = urlProps
-  return { ...payload, openedModels, activeModel, showPreview }
+export function checkEffectivelyDirty(state: ReplStoredState, savedState: ReplStoredState) {
+  const a = toPayload(state)
+  const b = toPayload(savedState)
+
+  delete a.opened_models
+  delete a.active_model
+  delete a.show_preview
+
+  delete b.opened_models
+  delete b.active_model
+  delete b.show_preview
+
+  return !deepEqual(a, b)
 }
 
-function toPayload(state: ReplStoredState): Database['public']['Tables']['repls']['Update'] {
+function fromPayload(payload: ReplRecordPayload): ReplStoredState {
   return {
-    id: state.id,
-    fs: state.fs,
+    id: payload.id,
+    user_id: payload.user_id,
+    user: payload.user
+      ? {
+          avatar_url: payload.user.avatar_url,
+          user_name: payload.user.user_name,
+        }
+      : null,
+    created_at: payload.created_at,
+    updated_at: payload.updated_at,
+    title: payload.title,
+    description: payload.description,
+    fs: payload.fs,
+    openedModels: payload.opened_models,
+    activeModel: payload.active_model,
+    showPreview: payload.show_preview,
   }
 }
 
-function searchParamsToUrlProps(searchParams: URLSearchParams): UrlProps {
-  const openedModels: string[] = []
-  let activeModel = ''
-  const showPreview = searchParams.get('preview') === '1'
+function toPayload(state: ReplStoredState): ReplUpdatePayload {
+  return {
+    id: state.id,
+    title: state.title,
+    description: state.description,
+    fs: state.fs,
+    opened_models: state.openedModels,
+    active_model: state.activeModel,
+    show_preview: state.showPreview,
+  }
+}
+
+function searchParamsToExtraUrlProps(searchParams: URLSearchParams): ExtraUrlProps {
+  let openedModels: string[] | undefined
+  let activeModel: string | undefined
 
   searchParams.getAll('file').forEach((value) => {
     if (value.startsWith('*')) {
@@ -156,13 +271,38 @@ function searchParamsToUrlProps(searchParams: URLSearchParams): UrlProps {
       activeModel = '/' + value
     }
 
+    openedModels ??= []
     openedModels.push('/' + value)
   })
+
+  const showPreviewRaw = searchParams.get('preview')
+  const showPreview: boolean | undefined =
+    showPreviewRaw === '1' ? true : showPreviewRaw === '0' ? false : undefined
 
   return { openedModels, activeModel, showPreview }
 }
 
-function setupInitial(state: ReplStoredState) {
+function reviveState({
+  state,
+  searchParams,
+}: {
+  state: ReplStoredState
+  searchParams?: URLSearchParams
+}) {
+  const extraUrlProps = searchParams ? searchParamsToExtraUrlProps(searchParams) : undefined
+
+  if (extraUrlProps?.openedModels !== undefined) {
+    state.openedModels = extraUrlProps.openedModels
+  }
+
+  if (extraUrlProps?.activeModel !== undefined) {
+    state.activeModel = extraUrlProps.activeModel
+  }
+
+  if (extraUrlProps?.showPreview !== undefined) {
+    state.showPreview = extraUrlProps.showPreview
+  }
+
   if (state.openedModels.length === 0) {
     const defaultFiles = ['/index.js', '/index.ts', '/index.jsx', '/index.tsx', '/index.html']
     for (const file of defaultFiles) {
@@ -189,6 +329,10 @@ function setupInitial(state: ReplStoredState) {
     (state.activeModel === '' || !state.openedModels.includes(state.activeModel))
   ) {
     state.activeModel = state.openedModels[0]!
+  }
+
+  if (!state.title) {
+    state.title = 'Untitled'
   }
 
   return state

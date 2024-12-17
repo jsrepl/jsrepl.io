@@ -14,7 +14,8 @@
     "test:playwright:web-server:start": "NODE_ENV=test next start",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "supabase:types": "pnpx supabase gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > ./src/types/database.types.ts"
+    "supabase:types": "pnpx supabase gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > ./src/types/database.types.ts",
+    "supabase:seed-system-repls": "./supabase/seeds/seed-system-repls.sh"
   },
   "dependencies": {
     "@babel/standalone": "^7.24.10",
@@ -26,6 +27,7 @@
     "@nag5000/monacopilot": "0.15.0-fork.0",
     "@next/mdx": "15.0.3",
     "@radix-ui/react-accordion": "^1.2.1",
+    "@radix-ui/react-alert-dialog": "^1.1.4",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -34,6 +36,7 @@
     "@radix-ui/react-scroll-area": "^1.2.0",
     "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.3",
     "@shikijs/monaco": "^1.11.1",
     "@supabase/ssr": "^0.5.2",
@@ -85,6 +88,7 @@
     "@types/umami": "^2.10.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "eslint-plugin-react-compiler": "19.0.0-beta-6fc168f-20241025",

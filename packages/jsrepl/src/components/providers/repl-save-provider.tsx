@@ -9,7 +9,13 @@ import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { useWritableModels } from '@/hooks/useWritableModels'
-import { checkDirty, fork, getPageUrl, save } from '@/lib/repl-stored-state/adapter-supabase'
+import {
+  checkDirty,
+  checkEffectivelyDirty,
+  fork,
+  getPageUrl,
+  save,
+} from '@/lib/repl-stored-state/adapter-supabase'
 import { ResponseError, isAbortError } from '@/lib/response-error'
 import type { ReplStoredState } from '@/types/repl.types'
 
@@ -19,6 +25,7 @@ export type ReplSaveContextType = {
   forkState: () => Promise<void>
   isNew: boolean
   isDirty: boolean
+  isEffectivelyDirty: boolean
   isSaving: boolean
   allowSave: boolean
   allowFork: boolean
@@ -47,6 +54,12 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const isNew = useMemo<boolean>(() => !state.id, [state.id])
+
+  const isEffectivelyDirty = useMemo<boolean>(
+    () => checkEffectivelyDirty(state, savedState),
+    [state, savedState]
+  )
+
   const isDirty = useMemo<boolean>(() => checkDirty(state, savedState), [state, savedState])
 
   const allowSave = useMemo<boolean>(
@@ -239,8 +252,9 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     }
   }, [flushPendingChanges, user, setState, saveWrapper, signInWithGithub, queryClient, supabase])
 
+  // TODO: handle route leave
   useEffect(() => {
-    if (!isDirty) {
+    if (!isEffectivelyDirty) {
       return
     }
 
@@ -253,11 +267,21 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     return () => {
       window.removeEventListener('beforeunload', handler)
     }
-  }, [isDirty])
+  }, [isEffectivelyDirty])
 
   return (
     <ReplSaveContext.Provider
-      value={{ savedState, saveState, forkState, isNew, isDirty, isSaving, allowSave, allowFork }}
+      value={{
+        savedState,
+        saveState,
+        forkState,
+        isNew,
+        isEffectivelyDirty,
+        isDirty,
+        isSaving,
+        allowSave,
+        allowFork,
+      }}
     >
       {children}
     </ReplSaveContext.Provider>

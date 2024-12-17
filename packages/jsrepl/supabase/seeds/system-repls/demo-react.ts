@@ -1,20 +1,29 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.react,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.demoReact,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'Demo React',
+  description: 'Demo REPL with React, TSX, and TailwindCSS',
+  active_model: '/index.tsx',
+  opened_models: ['/index.tsx', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
         'index.tsx': {
           content: dedent`
-            import './index.css';
+            import './index.css'
             import { createRoot } from 'react-dom/client?dev';
             import { useState } from 'react?dev';
 
@@ -24,13 +33,21 @@ export default {
             function App() {
               const [counter, setCounter] = useState(0);
 
+              const decrement = () => {
+                setCounter((x) => x - 1)
+              }
+
+              const increment = () => {
+                setCounter((x) => x + 1)
+              }
+
               return (
                 <>
-                  <h1 className="italic">Hello, world!</h1>
-                  <p className="space-x-1">
-                    <button onClick={() => setCounter((x) => x - 1)}>-</button>
+                  <h1 className="m-0 italic">Hello, world!</h1>
+                  <p className="space-x-2">
+                    <button onClick={decrement}>-</button>
                     <span>Counter: {counter}</span>
-                    <button onClick={() => setCounter((x) => x + 1)}>+</button>
+                    <button onClick={increment}>+</button>
                   </p>
                 </>
               );
@@ -61,7 +78,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.tsx', '/index.html', '/index.css'],
-  activeModel: '/index.tsx',
-  showPreview: true,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload

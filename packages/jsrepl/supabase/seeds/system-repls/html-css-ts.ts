@@ -1,18 +1,27 @@
-import { ReplAliases } from '.'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { ReplStoredState } from '@/types'
-import { defaultDocsMdFileContent } from '../defaults'
+import {
+  defaultDocsMdFileContent,
+  systemReplsCreatedAt,
+  systemReplsUserId,
+} from '@/lib/repl-stored-state/defaults'
+import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
+import { ReplUpdatePayload } from '@/types'
 
 export default {
-  id: ReplAliases.htmlCssJs,
-  created_at: '2024-12-08T10:48:11.318Z',
-  updated_at: '2024-12-08T10:48:11.318Z',
+  id: SystemRepls.htmlCssTs,
+  created_at: systemReplsCreatedAt,
+  user_id: systemReplsUserId,
+  title: 'HTML/CSS/TS Starter',
+  description: 'Starter REPL: HTML, CSS, and TS',
+  active_model: '/index.ts',
+  opened_models: ['/index.ts', '/index.html', '/index.css'],
+  show_preview: true,
   fs: {
     root: {
       kind: ReplFS.Kind.Directory,
       children: {
-        'index.js': {
+        'index.ts': {
           content: dedent`
             import './index.css';
 
@@ -26,7 +35,7 @@ export default {
             <html lang="en">
               <head>
                 <meta charset="utf-8" />
-                <script type="module" src="/index.js"></script>
+                <script type="module" src="/index.ts"></script>
               </head>
               <body>
                 <span class="text-4xl font-bold dark:text-stone-100">Hello, world!</span>
@@ -50,7 +59,4 @@ export default {
       },
     },
   },
-  openedModels: ['/index.js', '/index.html', '/index.css'],
-  activeModel: '/index.js',
-  showPreview: true,
-} satisfies ReplStoredState
+} satisfies ReplUpdatePayload
