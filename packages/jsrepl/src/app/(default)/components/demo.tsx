@@ -29,8 +29,8 @@ const LandingDemo: React.FC<LandingDemoProps> = ({ replLink, title, text, media 
 
   return (
     <div className="flex items-start gap-x-2 gap-y-4 max-lg:flex-col">
-      <div className="flex flex-shrink-0 flex-col gap-3 text-gray-400 lg:w-1/3 lg:p-6">
-        <h2 className="text-2xl font-semibold text-white/85">{title}</h2>
+      <div className="text-muted-foreground flex flex-shrink-0 flex-col gap-3 lg:w-1/3 lg:p-6">
+        <h2 className="text-foreground/85 text-2xl font-semibold">{title}</h2>
         {text}
         {replLink && (
           <p>

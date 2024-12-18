@@ -6,6 +6,7 @@ import { LucideArrowUpRight, LucideLibrary, LucidePlus } from 'lucide-react'
 import Logo from '@/components/logo'
 import { cn } from '@/lib/utils'
 import ReplStarterDialog from './repl-starter-dialog'
+import ThemeSwitcher from './theme-switcher'
 import { Button } from './ui/button'
 import { UserMenu } from './user-menu'
 
@@ -26,7 +27,7 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
           className="inline-flex items-center gap-2 text-lg font-light leading-10 tracking-wide"
         >
           <Logo width="1.5rem" height="1.5rem" />
-          <span className="tracking-wide text-stone-200">JSREPL</span>
+          <span className="tracking-wide text-stone-800 dark:text-stone-200">JSREPL</span>
         </Link>
 
         <div className="text-secondary-foreground/80 ml-auto flex items-center whitespace-nowrap text-sm font-medium leading-10 [&_a]:px-3 [&_a]:underline-offset-4 hover:[&_a]:underline">
@@ -66,7 +67,9 @@ export default function Header({ className, ...props }: React.HTMLAttributes<HTM
 
           <div className="border-border mx-2 h-5 border-l" />
 
-          <UserMenu className="text-muted-foreground ml-2" />
+          <ThemeSwitcher size="icon-lg" />
+
+          <UserMenu className="text-muted-foreground ml-1" />
         </div>
       </div>
 

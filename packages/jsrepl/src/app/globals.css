@@ -153,7 +153,7 @@
   @keyframes header-sticky-stuck {
     0.01%,
     to {
-      box-shadow: 0 1px 0 0 #090909;
+      box-shadow: 0 1px 0 0 theme(borderColor.border);
     }
   }
 
@@ -163,6 +163,6 @@
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-indigo-400 via-[#c586c0] to-yellow-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-indigo-600 via-[#d268c9] to-orange-400 bg-clip-text text-transparent dark:from-indigo-400 dark:via-[#c586c0] dark:to-yellow-400;
   }
 }

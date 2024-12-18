@@ -6,7 +6,7 @@ import ThemeProvider from '@/components/providers/theme-provider'
 
 export default function NotFound() {
   return (
-    <ThemeProvider forcedTheme="dark-plus">
+    <ThemeProvider>
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">

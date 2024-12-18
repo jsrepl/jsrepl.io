@@ -47,14 +47,14 @@ const FeatureBox: React.FC<FeatureBoxProps> = ({
   }, [])
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-zinc-800 p-6 text-white/85">
+    <div className="text-accent-foreground bg-accent/85 flex flex-col gap-4 rounded-xl p-6">
       <div className="bg-background flex h-12 w-12 items-center justify-center rounded-sm">
         {icon}
       </div>
       <h2 className="font-medium">{title}</h2>
-      <p className="text-sm text-gray-400">{description}</p>
+      <p className="text-muted-foreground text-sm">{description}</p>
       {code && (
-        <pre className="mt-3 text-sm">
+        <pre className="mt-3 text-sm brightness-[0.7] saturate-[3] dark:filter-none">
           <code ref={typedRef}>{code}</code>
         </pre>
       )}

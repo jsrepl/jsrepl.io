@@ -9,7 +9,7 @@ export default function DefaultLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ThemeProvider forcedTheme="dark-plus">
+    <ThemeProvider>
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">{children}</main>

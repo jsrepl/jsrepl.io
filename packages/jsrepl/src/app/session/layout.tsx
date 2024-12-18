@@ -14,7 +14,7 @@ export default function SessionPageLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ThemeProvider forcedTheme="dark-plus">
+    <ThemeProvider>
       <main>{children}</main>
     </ThemeProvider>
   )

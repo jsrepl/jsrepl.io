@@ -34,18 +34,18 @@ export default function Home() {
     <>
       <div className="container flex items-center gap-x-6 gap-y-12 pt-8 max-lg:flex-col-reverse">
         <div className="flex flex-col gap-6 lg:basis-1/2">
-          <span className="flex items-center justify-center self-start rounded-sm bg-gradient-to-br from-lime-600 to-yellow-600 px-3 py-1.5 font-medium leading-none">
+          <span className="flex items-center justify-center self-start rounded-sm bg-gradient-to-br from-lime-600 to-yellow-600 px-3 py-1.5 font-medium leading-none text-white">
             alpha version
           </span>
 
           <h1 className="text-primary whitespace-nowrap text-5xl font-bold leading-snug max-md:text-4xl [&>.typed-cursor]:inline-block [&>.typed-cursor]:-translate-y-0.5 [&>.typed-cursor]:font-normal">
             <span className="text-[3.2rem]">JavaScript</span>
             <br />
-            <span className="text-stone-200">REPL & Playground</span>
+            <span className="text-stone-700 dark:text-stone-200">REPL & Playground</span>
           </h1>
 
           <div>
-            <p className="text-2xl max-md:text-xl dark:text-gray-400">
+            <p className="text-muted-foreground text-2xl max-md:text-xl">
               Quickly test and share your code snippets.
               <br />
               Ideal for learning and prototyping.
@@ -407,7 +407,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="container my-20 space-y-16 text-center font-medium text-gray-300">
+      <div className="text-foreground/80 container my-20 space-y-16 text-center font-medium">
         <div>
           <h2 className="text-primary text-2xl font-semibold">This is all free and open source</h2>
           <p>No login / registration required.</p>
@@ -422,7 +422,7 @@ export default function Home() {
         <p></p>
       </div>
 
-      <div className="container mt-16 text-center font-medium text-gray-300">
+      <div className="text-foreground/80 container mt-16 text-center font-medium">
         See the features in action:
       </div>
 
@@ -595,7 +595,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="container mt-32 text-white/85 max-md:mt-20">
+      <div className="text-foreground/85 container mt-32 max-md:mt-20">
         <h2 className="mb-8 text-center text-2xl font-semibold">
           FAQ{' '}
           <LucideMessageCircleQuestion
@@ -650,14 +650,14 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container mt-32 text-gray-300 max-md:mt-20">
-        <h2 className="mb-8 text-center text-2xl font-semibold text-white/85">
+      <div className="container mt-32 max-md:mt-20">
+        <h2 className="text-foreground/85 mb-8 text-center text-2xl font-semibold">
           Made with{' '}
           <LucideHeart fill="currentColor" className="mx-1 inline-block text-red-500" size={28} />{' '}
           by
         </h2>
 
-        <div className="mx-auto flex w-full max-w-96 flex-col items-center gap-4 rounded-xl bg-zinc-800 p-6 text-center text-white/85">
+        <div className="bg-accent/85 text-accent-foreground mx-auto flex w-full max-w-96 flex-col items-center gap-4 rounded-xl p-6 text-center">
           <img
             src="https://github.com/nag5000.png?size=192"
             alt="Aleksei Nagovitsyn"
@@ -668,7 +668,7 @@ export default function Home() {
 
           <h3 className="text-xl font-medium">Aleksei Nagovitsyn</h3>
 
-          <p className="text-balance text-sm text-gray-400">
+          <p className="text-muted-foreground text-balance text-sm">
             Creator of JSREPL.io &<br />
             Web software engineer @hyperskill
           </p>
@@ -709,15 +709,15 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container mt-32 text-gray-300 max-md:mt-20">
-        <h2 className="mb-8 text-center text-2xl font-semibold text-white/85">
+      <div className="container mt-32 max-md:mt-20">
+        <h2 className="text-foreground/85 mb-8 text-center text-2xl font-semibold">
           Donate{' '}
           <LucidePiggyBank
             className="mx-1 inline-block -translate-y-0.5 text-green-400"
             size={32}
           />
         </h2>
-        <div className="mx-auto w-full max-w-prose rounded-xl bg-zinc-800 p-6 text-center text-white/85 underline-offset-4">
+        <div className="bg-accent/85 text-accent-foreground mx-auto w-full max-w-prose rounded-xl p-6 text-center underline-offset-4">
           If you like the project, consider giving it a ⭐️ on{' '}
           <Link
             href="https://github.com/jsrepl/jsrepl.io"
@@ -759,7 +759,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container mt-32 text-center font-medium text-gray-300 max-md:mt-20">
+      <div className="text-foreground/85 container mt-32 text-center font-medium max-md:mt-20">
         That&apos;s it! Looks interesting? Give it a try! For prototyping, for learning, or just for
         fun.
         <div className="mt-8 flex flex-wrap justify-center gap-2">
