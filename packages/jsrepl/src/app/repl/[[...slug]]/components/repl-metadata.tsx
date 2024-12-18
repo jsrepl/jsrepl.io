@@ -2,7 +2,6 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { loadRepl } from '@/lib/repl-stored-state/load-repl'
-import { getReplTitle } from '@/lib/repl-title'
 
 export default function ReplMetadata() {
   const params = useParams()
@@ -15,7 +14,7 @@ export default function ReplMetadata() {
     staleTime: 60_000,
   })
 
-  const title = replState ? getReplTitle(replState) : 'JavaScript REPL & Playground'
+  const title = replState?.title || 'JavaScript REPL & Playground'
 
   return (
     <>
