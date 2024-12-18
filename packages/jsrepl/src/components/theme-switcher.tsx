@@ -32,7 +32,8 @@ export default function ThemeSwitcher({ iconSize = 16, ...props }: Props) {
 
   return (
     <Button variant="ghost" size="icon" onClick={switchTheme} {...props}>
-      {theme.isDark ? <LucideSun size={iconSize} /> : <LucideMoon size={iconSize} />}
+      <LucideSun className="hidden dark:block" size={iconSize} />
+      <LucideMoon className="dark:hidden" size={iconSize} />
     </Button>
   )
 }
