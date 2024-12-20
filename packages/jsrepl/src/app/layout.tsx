@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Analytics from '@/components/analytics'
 import QueryProvider from '@/components/providers/query-provider'
 import SessionProvider from '@/components/providers/session-provider'
+import ThemeProvider from '@/components/providers/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { createClient } from '@/lib/supabase/server'
 import './globals.css'
@@ -37,7 +39,10 @@ export default async function RootLayout({
       <body>
         <SessionProvider initialSession={session}>
           <QueryProvider>
-            <TooltipProvider>{children}</TooltipProvider>
+            <ThemeProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+              <Toaster />
+            </ThemeProvider>
           </QueryProvider>
         </SessionProvider>
         <Analytics />

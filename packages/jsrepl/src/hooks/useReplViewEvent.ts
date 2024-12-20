@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Database, ReplStoredState } from '@/types'
-import { useReplSave } from './useReplSave'
+import { useReplSavedState } from './useReplSavedState'
 import { useSupabaseClient } from './useSupabaseClient'
 import { useUser } from './useUser'
 
 export function useReplViewEvent() {
-  const [savedState] = useReplSave()
+  const [savedState] = useReplSavedState()
   const supabase = useSupabaseClient<Database>()
   const user = useUser()
   const queryClient = useQueryClient()

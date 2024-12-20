@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useMonacoEditor } from '@/hooks/useMonacoEditor'
+import { replQueryKey } from '@/hooks/useReplParams'
+import { useReplSavedState } from '@/hooks/useReplSavedState'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
@@ -42,7 +44,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   const [editorRef] = useMonacoEditor()
   const { signInWithGithub } = useAuthHelpers()
   const { flushPendingChanges } = useWritableModels()
-  const [savedState, setSavedState] = useState<ReplStoredState>(state)
+  const [savedState, setSavedState] = useReplSavedState()
   const [isSaving, setIsSaving] = useState(false)
 
   const formatOnSave = useMemo(
@@ -159,32 +161,23 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       const state = flushedState ?? stateRef.current
 
       const isNew = !state.id
-      const shouldSave = isNew || user.id !== state.user_id || checkDirty(state, savedState)
-      if (!shouldSave) {
+
+      const saveType = isNew
+        ? 'create'
+        : user.id !== state.user_id
+          ? 'fork'
+          : checkDirty(state, savedState)
+            ? 'update'
+            : null
+
+      if (!saveType) {
         return
       }
 
-      let newState: ReplStoredState
-      let pageUrl: URL
-      if (isNew || user.id === state.user_id) {
-        newState = await save(state, { supabase, signal })
-        pageUrl = getPageUrl(newState)
-        history.replaceState(null, '', pageUrl)
-
-        if (isNew) {
-          toast.success('Saved', {
-            duration: 2000,
-          })
-        }
-      } else {
-        newState = await fork(state, { supabase, signal })
-        pageUrl = getPageUrl(newState)
-        history.pushState(null, '', pageUrl)
-
-        toast.success(state.user_id ? 'Forked' : 'Saved', {
-          duration: 2000,
-        })
-      }
+      const newState =
+        saveType === 'create' || saveType === 'update'
+          ? await save(state, { supabase, signal })
+          : await fork(state, { supabase, signal })
 
       setSavedState(newState)
       setState((prev) => ({
@@ -195,8 +188,22 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
         showPreview: prev.showPreview,
       }))
 
-      const queryKey = ['repl', { slug: [newState.id] }, pageUrl.searchParams]
+      const pageUrl = getPageUrl(newState)
+
+      const queryKey = replQueryKey({ id: newState.id, searchParams: pageUrl.searchParams })
       queryClient.setQueryData(queryKey, newState)
+
+      if (saveType === 'create') {
+        history.replaceState(null, '', pageUrl)
+        toast.success('Saved', {
+          duration: 2000,
+        })
+      } else if (saveType === 'fork') {
+        history.pushState(null, '', pageUrl)
+        toast.success('Forked and saved', {
+          duration: 2000,
+        })
+      }
     }
   }, [
     supabase,
@@ -205,6 +212,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     user,
     editorRef,
     setState,
+    setSavedState,
     saveWrapper,
     signInWithGithub,
     savedState,
@@ -231,12 +239,6 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       await flushPendingChanges()
 
       const newState = await fork(stateRef.current, { supabase, signal })
-      const pageUrl = getPageUrl(newState)
-      history.pushState(null, '', pageUrl)
-
-      toast.success('Forked', {
-        duration: 2000,
-      })
 
       setSavedState(newState)
       setState((prev) => ({
@@ -247,10 +249,27 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
         showPreview: prev.showPreview,
       }))
 
-      const queryKey = ['repl', { slug: [newState.id] }, pageUrl.searchParams]
+      const pageUrl = getPageUrl(newState)
+
+      const queryKey = replQueryKey({ id: newState.id, searchParams: pageUrl.searchParams })
       queryClient.setQueryData(queryKey, newState)
+
+      history.pushState(null, '', pageUrl)
+
+      toast.success('Forked', {
+        duration: 2000,
+      })
     }
-  }, [flushPendingChanges, user, setState, saveWrapper, signInWithGithub, queryClient, supabase])
+  }, [
+    flushPendingChanges,
+    user,
+    setState,
+    setSavedState,
+    saveWrapper,
+    signInWithGithub,
+    queryClient,
+    supabase,
+  ])
 
   // TODO: handle route leave
   useEffect(() => {

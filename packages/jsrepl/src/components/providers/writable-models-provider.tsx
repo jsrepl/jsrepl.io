@@ -3,6 +3,7 @@ import * as monaco from 'monaco-editor'
 import { useReplModels } from '@/hooks/useReplModels'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { DebouncedFunction, debounce } from '@/lib/debounce'
+import { Deferred, deferred } from '@/lib/deferred'
 import * as ReplFS from '@/lib/repl-fs'
 import { ReplStoredState } from '@/types'
 
@@ -14,20 +15,16 @@ export const WritableModelsContext = createContext<WritableModelsContextType | n
 
 export default function WritableModelsProvider({ children }: { children: React.ReactNode }) {
   const [replState, setReplState] = useReplStoredState()
+  const replStateRef = useRef(replState)
   const { models } = useReplModels()
 
   const changedModelsRef = useRef(new Set<monaco.editor.ITextModel>())
   const applyChangesDebouncedRef = useRef<DebouncedFunction<typeof applyChanges>>(undefined)
-  const replStateRenderedDeferRef = useRef<{
-    resolve: (state: ReplStoredState) => void
-    promise: Promise<ReplStoredState>
-  }>({
-    resolve: () => {},
-    promise: Promise.resolve(replState),
-  })
+  const replStateRenderedDeferRef = useRef<Deferred<void> | null>(null)
 
   useEffect(() => {
-    replStateRenderedDeferRef.current.resolve(replState)
+    replStateRenderedDeferRef.current?.resolve()
+    replStateRef.current = replState
   }, [replState])
 
   const applyChanges = useCallback(() => {
@@ -36,9 +33,7 @@ export default function WritableModelsProvider({ children }: { children: React.R
         return prev
       }
 
-      replStateRenderedDeferRef.current.promise = new Promise((resolve) => {
-        replStateRenderedDeferRef.current.resolve = resolve
-      })
+      replStateRenderedDeferRef.current = deferred()
 
       const fs = ReplFS.clone(prev.fs)
       for (const model of changedModelsRef.current) {
@@ -77,13 +72,15 @@ export default function WritableModelsProvider({ children }: { children: React.R
     })
 
     return () => {
+      applyChangesDebouncedRef.current?.clear()
       disposables.forEach((disposable) => disposable.dispose())
     }
   }, [models])
 
   const flushPendingChanges = useCallback(async () => {
     applyChangesDebouncedRef.current?.flush()
-    return await replStateRenderedDeferRef.current.promise
+    await replStateRenderedDeferRef.current?.promise
+    return replStateRef.current
   }, [])
 
   return (

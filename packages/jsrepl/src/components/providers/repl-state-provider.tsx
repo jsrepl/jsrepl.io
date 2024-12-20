@@ -1,9 +1,6 @@
-import React, { Dispatch, SetStateAction, createContext, useState } from 'react'
-import { notFound, useParams, useSearchParams } from 'next/navigation'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { useSupabaseClient } from '@/hooks/useSupabaseClient'
-import { loadRepl } from '@/lib/repl-stored-state/load-repl'
-import { Database, ReplStoredState } from '@/types'
+import { Dispatch, ReactNode, SetStateAction, createContext, useState } from 'react'
+import { useReplSavedState } from '@/hooks/useReplSavedState'
+import { ReplStoredState } from '@/types'
 
 export type ReplStateContextType = {
   state: ReplStoredState
@@ -12,27 +9,9 @@ export type ReplStateContextType = {
 
 export const ReplStateContext = createContext<ReplStateContextType | null>(null)
 
-export default function ReplStateProvider({ children }: { children: React.ReactNode }) {
-  const params = useParams()
-  const searchParams = useSearchParams()
-  const supabase = useSupabaseClient<Database>()
-
-  // TODO: apply searchParams afterwards? it's cheap, we don't need cache for this
-  const { data: initialState, error } = useSuspenseQuery({
-    queryKey: ['repl', params, searchParams],
-    queryFn: ({ signal }) => loadRepl(params, searchParams, { supabase, signal }),
-    staleTime: 60_000,
-  })
-
-  if (error) {
-    throw error
-  }
-
-  if (!initialState) {
-    notFound()
-  }
-
-  const [state, setState] = useState<ReplStoredState>(initialState)
+export default function ReplStateProvider({ children }: { children: ReactNode }) {
+  const [savedState] = useReplSavedState()
+  const [state, setState] = useState<ReplStoredState>(savedState)
 
   return (
     <ReplStateContext.Provider value={{ state, setState }}>{children}</ReplStateContext.Provider>
