@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import * as monaco from 'monaco-editor'
 import styles from '@/components/code-editor.module.css'
-import { useMonacoSaveCommand } from '@/hooks/monaco-commands/useMonacoSaveCommand'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import { useMonacoEditor } from '@/hooks/useMonacoEditor'
@@ -121,7 +120,6 @@ export default function CodeEditor() {
 
   useCodeEditorDTS(models)
   useCodeEditorRepl(models, { theme })
-  useMonacoSaveCommand()
   useMonacopilot()
 
   return (

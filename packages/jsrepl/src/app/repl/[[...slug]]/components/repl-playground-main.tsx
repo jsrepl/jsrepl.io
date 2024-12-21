@@ -1,3 +1,4 @@
+import { useGlobalKeybindingSave } from '@/hooks/useGlobalKeybindingSave'
 import { useReplViewEvent } from '@/hooks/useReplViewEvent'
 import ActivityBar from './activity-bar'
 import CodeEditorContainer from './code-editor-container'
@@ -7,6 +8,7 @@ import Preview from './preview'
 
 export default function ReplPlaygroundMain() {
   useReplViewEvent()
+  useGlobalKeybindingSave()
 
   return (
     <main className="bg-background relative min-h-0 flex-1 select-none">
