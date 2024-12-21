@@ -196,6 +196,10 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       const queryKey = replQueryKey({ id: newState.id, searchParams: pageUrl.searchParams })
       queryClient.setQueryData(queryKey, newState)
 
+      queryClient.setQueryData<ReplStoredState[]>(['user-repls', user.id], (prev) => {
+        return prev ? [newState, ...prev.filter((repl) => repl.id !== newState.id)] : prev
+      })
+
       if (saveType === 'create') {
         history.replaceState(null, '', pageUrl)
         toast.success('Saved', {
@@ -258,6 +262,10 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
       const queryKey = replQueryKey({ id: newState.id, searchParams: pageUrl.searchParams })
       queryClient.setQueryData(queryKey, newState)
+
+      queryClient.setQueryData<ReplStoredState[]>(['user-repls', user.id], (prev) => {
+        return prev ? [newState, ...prev] : prev
+      })
 
       history.pushState(null, '', pageUrl)
 
