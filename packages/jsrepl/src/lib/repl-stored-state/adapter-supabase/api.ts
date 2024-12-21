@@ -122,7 +122,9 @@ export async function updateRepl(
     .from('repls')
     .update(payload)
     .eq('id', repl.id)
+    .select(`*, user:public_profiles(*)`)
     .abortSignal(signal as AbortSignal /* undefined is fine here */)
+    .single()
 }
 
 /**

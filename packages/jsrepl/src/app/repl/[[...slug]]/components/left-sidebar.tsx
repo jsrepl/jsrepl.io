@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import Resizable from '@/components/resizable'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
-import FilesPanel from './files-panel/files-panel'
+import { ProjectPanel } from './project-panel'
 
 export default function LeftSidebar() {
   const [userState, setUserState] = useUserStoredState()
@@ -29,7 +29,7 @@ export default function LeftSidebar() {
             margin={3}
             className="flex !h-full max-w-full flex-col border-r"
           >
-            <FilesPanel />
+            <ProjectPanel />
           </Resizable>
         </div>
       )}

@@ -46,6 +46,7 @@ export type UserStoredState = {
   previewSize: [number, number]
   showLeftSidebar: boolean
   leftSidebarWidth: number
+  projectPanelExpandedSections: string[]
   autostartOnCodeChange: boolean
   workbench: {
     formatOnSave: boolean

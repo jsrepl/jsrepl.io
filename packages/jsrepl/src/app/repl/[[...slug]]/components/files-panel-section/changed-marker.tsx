@@ -17,7 +17,7 @@ export default function ChangedMarker({ item }: { item: TreeDataItem }) {
       height={8}
       viewBox="0 0 10 10"
       className={cn(
-        'mr-2',
+        'mr-2 shrink-0',
         !changeType && 'opacity-0',
         changeType === 'created' && 'fill-green-500 dark:fill-green-600',
         changeType === 'updated' && 'fill-blue-500 dark:fill-blue-600'

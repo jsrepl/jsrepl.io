@@ -150,7 +150,7 @@ export async function save(
     const newState = fromPayload(data)
     return newState
   } else {
-    const { error, status, statusText } = await updateRepl(state, { supabase, signal })
+    const { data, error, status, statusText } = await updateRepl(state, { supabase, signal })
 
     if (error) {
       throw new ResponseError(`Error saving repl id=${state.id}`, {
@@ -160,7 +160,8 @@ export async function save(
       })
     }
 
-    return state
+    const newState = fromPayload(data)
+    return newState
   }
 }
 

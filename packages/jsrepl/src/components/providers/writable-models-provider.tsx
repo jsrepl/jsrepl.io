@@ -72,7 +72,6 @@ export default function WritableModelsProvider({ children }: { children: React.R
     })
 
     return () => {
-      applyChangesDebouncedRef.current?.clear()
       disposables.forEach((disposable) => disposable.dispose())
     }
   }, [models])

@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { FilesPanelContext } from './files-panel-provider'
+import { FilesPanelContext } from './provider'
 
 export function useFilesPanel() {
   const context = useContext(FilesPanelContext)
