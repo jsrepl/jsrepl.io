@@ -1,7 +1,9 @@
 import { createContext } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigationGuard } from 'next-navigation-guard'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { UnsavedChangesDialog } from '@/components/unsaved-changes-dialog'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useMonacoEditor } from '@/hooks/useMonacoEditor'
 import { replQueryKey } from '@/hooks/useReplParams'
@@ -23,8 +25,8 @@ import type { ReplStoredState } from '@/types/repl.types'
 
 export type ReplSaveContextType = {
   savedState: ReplStoredState
-  saveState: () => Promise<void>
-  forkState: () => Promise<void>
+  saveState: () => Promise<boolean>
+  forkState: () => Promise<boolean>
   isNew: boolean
   isDirty: boolean
   isEffectivelyDirty: boolean
@@ -109,7 +111,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   )
 
   const saveWrapper = useCallback(
-    async (callback: (args: { signal: AbortSignal }) => Promise<void>) => {
+    async (callback: (args: { signal: AbortSignal }) => Promise<boolean>) => {
       let signal: AbortSignal | null = null
 
       try {
@@ -119,9 +121,10 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
         abortControllerRef.current = new AbortController()
         signal = abortControllerRef.current.signal
 
-        await callback({ signal })
+        return await callback({ signal })
       } catch (error) {
         handleSaveError(error)
+        return false
       } finally {
         if (signal === abortControllerRef.current?.signal) {
           setIsSaving(false)
@@ -132,8 +135,8 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     [handleSaveError]
   )
 
-  const saveState = useCallback<() => Promise<void>>(async () => {
-    await saveWrapper(saveFn)
+  const saveState = useCallback<() => Promise<boolean>>(async () => {
+    return await saveWrapper(saveFn)
 
     async function saveFn({ signal }: { signal: AbortSignal }) {
       // TODO: format all dirty models somehow.
@@ -151,7 +154,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
             },
           },
         })
-        return
+        return false
       }
 
       const flushedState = await Promise.race([
@@ -171,7 +174,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
             : null
 
       if (!saveType) {
-        return
+        return true
       }
 
       const newState =
@@ -204,6 +207,8 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
           duration: 2000,
         })
       }
+
+      return true
     }
   }, [
     supabase,
@@ -219,8 +224,8 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     queryClient,
   ])
 
-  const forkState = useCallback<() => Promise<void>>(async () => {
-    await saveWrapper(forkFn)
+  const forkState = useCallback<() => Promise<boolean>>(async () => {
+    return await saveWrapper(forkFn)
 
     async function forkFn({ signal }: { signal: AbortSignal }) {
       if (!user) {
@@ -233,7 +238,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
             },
           },
         })
-        return
+        return false
       }
 
       await flushPendingChanges()
@@ -259,6 +264,8 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       toast.success('Forked', {
         duration: 2000,
       })
+
+      return true
     }
   }, [
     flushPendingChanges,
@@ -270,23 +277,6 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     queryClient,
     supabase,
   ])
-
-  // TODO: handle route leave
-  useEffect(() => {
-    if (!isEffectivelyDirty) {
-      return
-    }
-
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-    }
-
-    window.addEventListener('beforeunload', handler)
-
-    return () => {
-      window.removeEventListener('beforeunload', handler)
-    }
-  }, [isEffectivelyDirty])
 
   return (
     <ReplSaveContext.Provider
@@ -303,6 +293,60 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
       }}
     >
       {children}
+      <NavigationGuard isActive={isEffectivelyDirty} saveState={saveState} />
     </ReplSaveContext.Provider>
+  )
+}
+
+function NavigationGuard({
+  isActive,
+  saveState,
+}: {
+  isActive: boolean
+  saveState: () => Promise<boolean>
+}) {
+  const navGuard = useNavigationGuard({ enabled: isActive })
+  const user = useUser()
+  const { signInWithGithub } = useAuthHelpers()
+
+  return (
+    <UnsavedChangesDialog
+      title="You have unsaved changes"
+      description={
+        <>
+          Are you sure you want to leave this page?
+          <br />
+          Changes will be lost.
+        </>
+      }
+      discardAndLeaveButtonText="Discard changes"
+      cancelButtonText="No, stay on page"
+      saveAndLeaveButtonText={user ? 'Save and leave' : 'Sign in to save...'}
+      open={navGuard.active}
+      onOpenChange={(open) => {
+        if (!open) {
+          navGuard.reject()
+        }
+      }}
+      onSaveAndLeave={async () => {
+        if (!user) {
+          signInWithGithub({ popup: true })
+          // Keep the dialog open
+          return false
+        }
+
+        try {
+          const success = await saveState()
+          if (success) {
+            navGuard.accept()
+          } else {
+            navGuard.reject()
+          }
+        } catch {
+          navGuard.reject()
+        }
+      }}
+      onDiscardAndLeave={navGuard.accept}
+    />
   )
 }

@@ -4,13 +4,13 @@ import { ReplStoredState } from '@/types/repl.types'
 
 export function useReplSave(): [
   ReplStoredState,
-  () => Promise<void>,
+  () => Promise<boolean>,
   {
     isNew: boolean
     isDirty: boolean
     isSaving: boolean
     allowSave: boolean
-    forkState: () => Promise<void>
+    forkState: () => Promise<boolean>
     allowFork: boolean
   },
 ] {

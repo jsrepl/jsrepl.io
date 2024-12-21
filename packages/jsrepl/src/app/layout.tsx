@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { NavigationGuardProvider } from 'next-navigation-guard'
 import Analytics from '@/components/analytics'
 import QueryProvider from '@/components/providers/query-provider'
 import SessionProvider from '@/components/providers/session-provider'
@@ -37,15 +38,17 @@ export default async function RootLayout({
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     <html lang="en" suppressHydrationWarning>
       <body>
-        <SessionProvider initialSession={session}>
-          <QueryProvider>
-            <ThemeProvider>
-              <TooltipProvider>{children}</TooltipProvider>
-              <Toaster />
-            </ThemeProvider>
-          </QueryProvider>
-        </SessionProvider>
-        <Analytics />
+        <NavigationGuardProvider>
+          <SessionProvider initialSession={session}>
+            <QueryProvider>
+              <ThemeProvider>
+                <TooltipProvider>{children}</TooltipProvider>
+                <Toaster />
+              </ThemeProvider>
+            </QueryProvider>
+          </SessionProvider>
+          <Analytics />
+        </NavigationGuardProvider>
       </body>
     </html>
   )
