@@ -20,6 +20,10 @@ const inputVariants = cva(
     'focus-visible:ring-1',
     'disabled:cursor-not-allowed',
     'disabled:opacity-50',
+    'invalid:ring-destructive',
+    'invalid:focus-visible:ring-destructive',
+    'invalid:ring-1',
+    'invalid:focus-visible:ring-2',
   ],
   {
     variants: {

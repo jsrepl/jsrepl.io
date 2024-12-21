@@ -1,8 +1,14 @@
 import { useTheme } from 'next-themes'
 import { CopilotModel, CopilotProvider } from '@nag5000/monacopilot'
-import { DialogDescription, DialogProps } from '@radix-ui/react-dialog'
+import { DialogProps } from '@radix-ui/react-dialog'
 import { LucideUndo2 } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { Themes, defaultThemeId } from '@/lib/themes'
 import {

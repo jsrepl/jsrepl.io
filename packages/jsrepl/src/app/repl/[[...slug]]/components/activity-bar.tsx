@@ -2,14 +2,7 @@ import { useCallback, useState } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { ReplPayload } from '@jsrepl/shared-types'
-import {
-  LucideFiles,
-  LucideLink,
-  LucidePlay,
-  LucideRewind,
-  LucideRotateCw,
-  LucideSettings,
-} from 'lucide-react'
+import { LucideFiles, LucidePlay, LucideRewind, LucideRotateCw, LucideSettings } from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'

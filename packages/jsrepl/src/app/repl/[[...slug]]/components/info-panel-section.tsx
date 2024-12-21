@@ -1,16 +1,29 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { LucidePencil } from 'lucide-react'
+import EditReplInfoDialog from '@/components/edit-repl-info-dialog'
 import {
   PanelSection,
   PanelSectionContent,
   PanelSectionHeader,
+  PanelSectionHeaderAction,
+  PanelSectionHeaderActions,
   PanelSectionTrigger,
 } from '@/components/panel-section'
 import { UserAvatar } from '@/components/user-avatar'
+import { useReplRewindMode } from '@/hooks/useReplRewindMode'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
+import { useUser } from '@/hooks/useUser'
 import { formatRelativeTime } from '@/lib/datetime'
 
 export function InfoPanelSection({ id: sectionId }: { id: string }) {
   const [replState] = useReplStoredState()
+  const user = useUser()
+  const [rewindMode] = useReplRewindMode()
+  const [editInfoDialogOpen, setEditInfoDialogOpen] = useState(false)
+
+  const isReadOnly = rewindMode.active
+  const isNew = !replState.id
+  const showEditButton = isNew || (user && user.id === replState.user_id)
 
   const updatedAtRelativeTime = useMemo(() => {
     return replState.updated_at ? formatRelativeTime(new Date(replState.updated_at)) : null
@@ -24,7 +37,19 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
     <PanelSection value={sectionId}>
       <PanelSectionHeader>
         <PanelSectionTrigger>Info</PanelSectionTrigger>
+
+        <PanelSectionHeaderActions>
+          {showEditButton && (
+            <PanelSectionHeaderAction
+              disabled={isReadOnly}
+              onClick={() => setEditInfoDialogOpen(true)}
+            >
+              <LucidePencil size={14} />
+            </PanelSectionHeaderAction>
+          )}
+        </PanelSectionHeaderActions>
       </PanelSectionHeader>
+
       <PanelSectionContent className="text-muted-foreground flex select-text flex-col p-4 pr-2 pt-2 text-xs">
         <h3 className="text-accent-foreground text-[0.8125rem] font-semibold leading-tight">
           {replState.title}
@@ -49,6 +74,8 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
           )}
         </div>
       </PanelSectionContent>
+
+      <EditReplInfoDialog open={editInfoDialogOpen} onOpenChange={setEditInfoDialogOpen} />
     </PanelSection>
   )
 }
