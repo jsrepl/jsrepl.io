@@ -51,7 +51,7 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
       </PanelSectionHeader>
 
       <PanelSectionContent className="text-muted-foreground flex select-text flex-col p-4 pr-2 pt-2 text-xs">
-        <h3 className="text-accent-foreground text-[0.8125rem] font-semibold leading-tight">
+        <h3 className="text-accent-foreground text-[0.8125rem] font-semibold leading-4">
           {replState.title || 'Untitled REPL'}
         </h3>
         {replState.description && <p className="mt-2">{replState.description}</p>}

@@ -31,6 +31,7 @@ export type ReplSaveContextType = {
   isDirty: boolean
   isEffectivelyDirty: boolean
   isSaving: boolean
+  isForking: boolean
   allowSave: boolean
   allowFork: boolean
 }
@@ -48,6 +49,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   const { flushPendingChanges } = useWritableModels()
   const [savedState, setSavedState] = useReplSavedState()
   const [isSaving, setIsSaving] = useState(false)
+  const [isForking, setIsForking] = useState(false)
 
   const formatOnSave = useMemo(
     () => userStoredState.workbench.formatOnSave,
@@ -67,18 +69,18 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   const isDirty = useMemo<boolean>(() => checkDirty(state, savedState), [state, savedState])
 
   const allowSave = useMemo<boolean>(
-    () => !isSaving && (isNew || isDirty),
-    [isSaving, isNew, isDirty]
+    () => !isSaving && !isForking && (isNew || isEffectivelyDirty),
+    [isSaving, isForking, isNew, isEffectivelyDirty]
   )
 
-  const allowFork = useMemo<boolean>(() => !isSaving && !isNew, [isSaving, isNew])
+  const allowFork = useMemo<boolean>(() => !isForking && !isNew, [isForking, isNew])
 
   useEffect(() => {
     stateRef.current = state
   }, [state])
 
-  const handleSaveError = useCallback(
-    async (error: unknown) => {
+  const handleSaveOrForkError = useCallback(
+    async (type: 'save' | 'fork', error: unknown) => {
       const isAborted = isAbortError(error instanceof ResponseError ? error.cause : error)
       if (isAborted) {
         return
@@ -88,21 +90,26 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
       if (error instanceof ResponseError) {
         if (error.status === 401) {
-          toast.info('Please sign in to save your changes.', {
-            action: {
-              label: 'Sign in with Github',
-              onClick: () => {
-                signInWithGithub({ popup: true })
+          toast.info(
+            type === 'save'
+              ? 'Please sign in to save your changes.'
+              : 'Please sign in to fork this REPL.',
+            {
+              action: {
+                label: 'Sign in with Github',
+                onClick: () => {
+                  signInWithGithub({ popup: true })
+                },
               },
-            },
-          })
+            }
+          )
         } else {
           toast.error(error.message, {
             description: `${error.status} ${error.statusText}: ${error.cause ?? 'Something went wrong :('}`,
           })
         }
       } else {
-        toast.error('Failed to save', {
+        toast.error(`Failed to ${type}`, {
           description: error instanceof Error ? error.message : 'Unknown error',
         })
       }
@@ -123,7 +130,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
 
         return await callback({ signal })
       } catch (error) {
-        handleSaveError(error)
+        handleSaveOrForkError('save', error)
         return false
       } finally {
         if (signal === abortControllerRef.current?.signal) {
@@ -132,7 +139,32 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
         }
       }
     },
-    [handleSaveError]
+    [handleSaveOrForkError]
+  )
+
+  const forkWrapper = useCallback(
+    async (callback: (args: { signal: AbortSignal }) => Promise<boolean>) => {
+      let signal: AbortSignal | null = null
+
+      try {
+        setIsForking(true)
+
+        abortControllerRef.current?.abort()
+        abortControllerRef.current = new AbortController()
+        signal = abortControllerRef.current.signal
+
+        return await callback({ signal })
+      } catch (error) {
+        handleSaveOrForkError('fork', error)
+        return false
+      } finally {
+        if (signal === abortControllerRef.current?.signal) {
+          setIsForking(false)
+          abortControllerRef.current = null
+        }
+      }
+    },
+    [handleSaveOrForkError]
   )
 
   const saveState = useCallback<() => Promise<boolean>>(async () => {
@@ -229,7 +261,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   ])
 
   const forkState = useCallback<() => Promise<boolean>>(async () => {
-    return await saveWrapper(forkFn)
+    return await forkWrapper(forkFn)
 
     async function forkFn({ signal }: { signal: AbortSignal }) {
       if (!user) {
@@ -280,7 +312,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
     user,
     setState,
     setSavedState,
-    saveWrapper,
+    forkWrapper,
     signInWithGithub,
     queryClient,
     supabase,
@@ -296,6 +328,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
         isEffectivelyDirty,
         isDirty,
         isSaving,
+        isForking,
         allowSave,
         allowFork,
       }}

@@ -24,11 +24,7 @@ const PanelSection = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
 >(({ className, ...props }, ref) => (
-  <AccordionPrimitive.Item
-    ref={ref}
-    className={cn('group/panel-section border-b last:border-b-0', className)}
-    {...props}
-  />
+  <AccordionPrimitive.Item ref={ref} className={cn('group/panel-section', className)} {...props} />
 ))
 PanelSection.displayName = 'PanelSection'
 
@@ -38,7 +34,10 @@ const PanelSectionHeader = React.forwardRef<
 >(({ className, children }, ref) => (
   <AccordionPrimitive.Header
     ref={ref}
-    className={cn('bg-secondary sticky -top-px z-[1] flex', className)}
+    className={cn(
+      'bg-secondary sticky top-0 z-[1] flex border-t group-first/panel-section:border-t-0',
+      className
+    )}
   >
     {children}
   </AccordionPrimitive.Header>
