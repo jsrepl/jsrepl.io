@@ -9,6 +9,7 @@ import Logo from '@/components/logo'
 import ReplSettingsDialog from '@/components/repl-settings-dialog'
 import ShareReplDropdownItem from '@/components/share-repl-dropdown-item'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +67,7 @@ export default function ActivityBar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            {user ? 'Go to dashboard' : 'Go to homepage'}
+            {user ? 'Go to Dashboard' : 'Go to Homepage'}
           </TooltipContent>
         </Tooltip>
 
@@ -87,7 +88,7 @@ export default function ActivityBar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            Toggle files sidebar
+            Project
           </TooltipContent>
         </Tooltip>
 
@@ -107,7 +108,7 @@ export default function ActivityBar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            Toggle preview window
+            Preview Window
           </TooltipContent>
         </Tooltip>
 
@@ -118,14 +119,22 @@ export default function ActivityBar() {
             <Button
               size="icon-lg"
               variant="ghost"
-              className="text-activityBar-foreground"
+              className="text-activityBar-foreground group"
               onClick={restartRepl}
             >
               <div className="relative">
                 {userState.autostartOnCodeChange ? (
-                  <LucideRotateCw size={20} strokeWidth={1.5} />
+                  <LucideRotateCw
+                    size={20}
+                    strokeWidth={1.5}
+                    className="transition-transform group-active:rotate-90"
+                  />
                 ) : (
-                  <LucidePlay size={21} strokeWidth={1.5} />
+                  <LucidePlay
+                    size={21}
+                    strokeWidth={1.5}
+                    className="transition-transform group-active:translate-x-1"
+                  />
                 )}
               </div>
             </Button>
@@ -133,13 +142,13 @@ export default function ActivityBar() {
           <TooltipContent side="right" sideOffset={8} align="start">
             {userState.autostartOnCodeChange ? 'Restart REPL' : 'Start REPL'}
             <div className="bg-secondary text-secondary-foreground border-primary -mx-2 -mb-1 mt-1 rounded-b border px-2 py-2">
-              <label className="flex items-center gap-1">
+              <label className="flex cursor-pointer select-none items-center gap-1">
                 <span>Restart on code change</span>
-                <input
-                  type="checkbox"
-                  defaultChecked={userState.autostartOnCodeChange}
-                  onChange={(e) =>
-                    setUserState((prev) => ({ ...prev, autostartOnCodeChange: e.target.checked }))
+                <Checkbox
+                  size="sm"
+                  checked={userState.autostartOnCodeChange}
+                  onCheckedChange={(checked) =>
+                    setUserState((prev) => ({ ...prev, autostartOnCodeChange: !!checked }))
                   }
                 />
               </label>
@@ -162,7 +171,7 @@ export default function ActivityBar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            Rewind mode
+            Rewind Mode
           </TooltipContent>
         </Tooltip>
 
@@ -178,7 +187,7 @@ export default function ActivityBar() {
               </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Choose theme...
+              Themes
             </TooltipContent>
           </Tooltip>
 
@@ -210,7 +219,7 @@ export default function ActivityBar() {
               </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Share...
+              Share
             </TooltipContent>
           </Tooltip>
 
@@ -231,7 +240,7 @@ export default function ActivityBar() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            Settings...
+            Settings
           </TooltipContent>
         </Tooltip>
 

@@ -80,32 +80,9 @@ React JSX & TSX is supported out of the box.
 
 ## Prettier
 
-Press \`CMD+S\` to format your code with Prettier.
-
-## README.md
-
-You can add a \`README.md\` file to the root of the REPL to describe your REPL.
-The title of the REPL will be taken from the \`README.md\` file and rendered
-into the \`<title>\` tag of the page.
+Press \`CMD+S\` or \`Ctrl+S\` to format your code with Prettier and save changes.
 
 ## Have fun! 🎉
-
-The main goal of the https://jsrepl.io is to make it easier and faster to experiment
-with JavaScript/TypeScript snippets, considering today's needs including NPM packages,
-React, TailwindCSS, Prettier, etc.
-
-I hope you will enjoy using it! 🚀
-
-https://jsrepl.io is free and open source ✨. If you have any ideas on how to improve it,
-please let me know by opening an issue on GitHub: https://github.com/jsrepl/jsrepl.io/issues.
-I would really appreciate your feedback and suggestions. 
-
-If you like the project, consider giving it a ⭐️ on GitHub https://github.com/jsrepl/jsrepl.io
-or make a small donation 💖 to support the development and help cover some of the costs
-of the domain and running the service:
-https://github.com/sponsors/nag5000 or https://buymeacoffee.com/nag5000.
-
-With 🧡, Aleksei.
 `
 
 export const virtualFilesStorage = new Map<string, string>([

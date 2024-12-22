@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DialogProps } from '@radix-ui/react-dialog'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'

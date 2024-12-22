@@ -52,16 +52,21 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
 
       <PanelSectionContent className="text-muted-foreground flex select-text flex-col p-4 pr-2 pt-2 text-xs">
         <h3 className="text-accent-foreground text-[0.8125rem] font-semibold leading-tight">
-          {replState.title}
+          {replState.title || 'Untitled REPL'}
         </h3>
         {replState.description && <p className="mt-2">{replState.description}</p>}
-        {replState.user?.user_name && (
+        {replState.user?.user_name ? (
           <div className="mt-3 flex items-center gap-2">
             <UserAvatar user={replState.user} size={22} />
             <span className="text-[0.8125rem]">{replState.user.user_name}</span>
           </div>
+        ) : (
+          <div className="mt-3 flex items-center gap-2">
+            <UserAvatar user={null} size={22} />
+            <span className="text-[0.8125rem]">Anonymous</span>
+          </div>
         )}
-        <div className="mt-3 space-y-1">
+        <div className="mt-3 space-y-1 empty:hidden">
           {updatedAtRelativeTime && (
             <div title={'Updated at ' + new Date(replState.updated_at).toLocaleString()}>
               Updated {updatedAtRelativeTime}

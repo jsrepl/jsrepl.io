@@ -13,7 +13,7 @@ export function load(searchParams: URLSearchParams): ReplStoredState {
     updated_at: '',
     user_id: '',
     user: null,
-    title: '',
+    title: 'Untitled REPL',
     description: '',
     activeModel: '',
     openedModels: [],
