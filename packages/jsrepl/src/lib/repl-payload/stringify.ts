@@ -1,9 +1,5 @@
-import {
-  type MarshalledDomNode,
-  type ReplPayload,
-  identifierNameFunctionMeta,
-} from '@jsrepl/shared-types'
-import { getBabel } from '../get-babel'
+import { type MarshalledDomNode, type ReplPayload } from '@jsrepl/shared-types'
+import { parseFunction } from './parse-function'
 import * as utils from './payload-utils'
 
 const MAX_NESTING_LEVEL = 20
@@ -57,8 +53,12 @@ function _stringifyResult(
     return data?.caught ? `[ref *${data.index}] ` : ''
   }
 
-  function next(result: ReplPayload['result'], target: StringifyResultTarget): StringifyResult {
-    return _stringifyResult(result, target, nestingLevel + 1, refs)
+  function next(
+    result: ReplPayload['result'],
+    target: StringifyResultTarget,
+    customNestingLevel?: number
+  ): StringifyResult {
+    return _stringifyResult(result, target, customNestingLevel ?? nestingLevel + 1, refs)
   }
 
   function t(str: string, relativeIndexLevel: number) {
@@ -331,6 +331,29 @@ ${t('', 0)}}`
     return { value, type: 'promise', lang: 'js' }
   }
 
+  if (utils.isMarshalledProxy(result)) {
+    const { target: targetObj, handler } = result.__meta__
+    let value: string
+    if (target === 'decor') {
+      const targetStr = next(targetObj, target, nestingLevel).value
+      const handlerStr = next(handler, target).value
+      value = `Proxy(${targetStr}) ${handlerStr}`
+    } else {
+      const targetStr = next(targetObj, target).value
+      const handlerStr = next(handler, target).value
+      value = `Proxy {
+${t('', 1)}[[Target]]: ${targetStr},
+${t('', 1)}[[Handler]]: ${handlerStr}
+${t('', 0)}}`
+    }
+
+    return {
+      value,
+      type: 'proxy',
+      lang: 'js',
+    }
+  }
+
   if (utils.isMarshalledObject(result)) {
     const releaseRef = putRef(result)
     const { __meta__: meta, ...props } = result
@@ -386,101 +409,6 @@ ${t('', 0)}}`
     type: 'unknown',
     lang: '',
   }
-}
-
-// Let babel to parse this madness.
-// - function (arg1, arg2) {}
-// - async function (arg1, arg2) {}
-// - function name(arg1, arg2) {}
-// - async function name(arg1, arg2) {}
-// - function name(arg1, arg2 = 123, ...args) {}
-// - () => {}
-// - async () => {}
-// - args1 => {}
-// - async args1 => {}
-// - (args1, args2) => {}
-// - async (args1, args2) => {}
-// - function ({ jhkhj, asdad = 123 } = {}) {}
-// - () => 7
-// - function (asd = adsasd({})) { ... }
-function parseFunction(
-  str: string,
-  _isOriginalSource = false
-): {
-  name: string
-  args: string
-  isAsync: boolean
-  isArrow: boolean
-  origSource: string | null
-} | null {
-  const babel = getBabel()[0].value!
-
-  // @ts-expect-error Babel standalone: https://babeljs.io/docs/babel-standalone#internal-packages
-  const { parser } = babel.packages as { parser: typeof import('@babel/parser') }
-
-  let ast: ReturnType<typeof parser.parseExpression>
-
-  try {
-    // ArrowFunctionExpression | FunctionExpression
-    ast = parser.parseExpression(str)
-  } catch {
-    return null
-  }
-
-  let origSource: string | null = null
-
-  if (!_isOriginalSource) {
-    origSource = getFunctionOriginalSource(ast)
-    if (origSource) {
-      return parseFunction(origSource, true)
-    }
-  } else {
-    origSource = str
-  }
-
-  if (ast.type === 'ArrowFunctionExpression') {
-    return {
-      name: '',
-      args: ast.params.map((param) => str.slice(param.start!, param.end!)).join(', '),
-      isAsync: ast.async,
-      isArrow: true,
-      origSource,
-    }
-  }
-
-  if (ast.type === 'FunctionExpression') {
-    return {
-      name: ast.id?.name ?? '',
-      args: ast.params.map((param) => str.slice(param.start!, param.end!)).join(', '),
-      isAsync: ast.async,
-      isArrow: false,
-      origSource,
-    }
-  }
-
-  return null
-}
-
-function getFunctionOriginalSource(
-  ast: ReturnType<typeof import('@babel/parser').parseExpression>
-): string | null {
-  if (
-    (ast.type === 'ArrowFunctionExpression' || ast.type === 'FunctionExpression') &&
-    ast.body.type === 'BlockStatement'
-  ) {
-    const node = ast.body.body[0]
-    if (
-      node?.type === 'ExpressionStatement' &&
-      node.expression.type === 'CallExpression' &&
-      node.expression.callee.type === 'Identifier' &&
-      node.expression.callee.name === identifierNameFunctionMeta &&
-      node.expression.arguments[0]?.type === 'StringLiteral'
-    ) {
-      return node.expression.arguments[0].value
-    }
-  }
-
-  return null
 }
 
 function stringifyDomNodeShort(result: MarshalledDomNode): string {

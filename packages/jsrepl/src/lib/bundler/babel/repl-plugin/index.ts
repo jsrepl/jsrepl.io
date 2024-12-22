@@ -336,7 +336,9 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         let fnId =
           t.isFunctionDeclaration(path.node) || t.isFunctionExpression(path.node)
             ? path.node.id
-            : null
+            : t.isObjectMethod(path.node) && !path.node.computed && t.isIdentifier(path.node.key)
+              ? path.node.key
+              : null
 
         // Infer function id from variable id
         if (
