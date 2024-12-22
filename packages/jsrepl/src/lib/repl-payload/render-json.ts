@@ -47,6 +47,13 @@ function replacer(this: unknown, key: string, value: unknown): unknown {
           finally: 'function finally() { [native code] }',
         }
 
+      case utils.isMarshalledProxy(value): {
+        const { target } = value.__meta__
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { __meta__, ...props } = target
+        return props
+      }
+
       case utils.isMarshalledObject(value): {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { __meta__, ...props } = value

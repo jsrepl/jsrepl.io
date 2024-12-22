@@ -11,6 +11,7 @@ import {
 } from '@jsrepl/shared-types'
 import { expect, test } from 'vitest'
 import { transformPayloadResult } from './payload'
+import { setupProxyProxy } from './repl/proxy-proxy'
 import type { PreviewWindow } from './types'
 
 // title, rawResult, expected result from `transformPayloadResult`
@@ -230,7 +231,9 @@ const testCases: [string, unknown, unknown][] = [
 
 testCases.forEach(([desc, rawResult, expectedResult]) => {
   test(desc, () => {
-    const result = transformPayloadResult(window as PreviewWindow, rawResult)
+    const win = window as PreviewWindow
+    setupProxyProxy(win)
+    const result = transformPayloadResult(win, rawResult)
     expect(result).toEqual(expectedResult)
   })
 })

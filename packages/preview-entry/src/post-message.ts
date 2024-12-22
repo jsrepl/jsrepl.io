@@ -1,9 +1,13 @@
 import {
+  ReplPayloadContext,
+  ReplPayloadContextId,
   ReplPayloadContextMessageData,
   ReplPayloadMessageData,
   ReplStatusMessageData,
 } from '@jsrepl/shared-types'
+import { transformPayloadResult } from './payload'
 import { previewId } from './preview-id'
+import { PreviewWindow } from './types'
 
 const JSREPL_ORIGIN = __JSREPL_ORIGIN__
 
@@ -39,4 +43,30 @@ export function postMessage(
 
     console.error('JSRepl Error: unknown error on postMessage', err)
   }
+}
+
+export function postMessageRepl(
+  token: number,
+  win: PreviewWindow,
+  result: unknown,
+  isError: boolean,
+  ctxId: ReplPayloadContextId
+) {
+  postMessage(token, {
+    type: 'repl-payload',
+    payload: {
+      id: crypto.randomUUID(),
+      isError,
+      result: transformPayloadResult(win, result),
+      timestamp: Date.now(),
+      ctxId,
+    },
+  })
+}
+
+export function postMessageReplContext(token: number, ctx: ReplPayloadContext) {
+  postMessage(token, {
+    type: 'repl-payload-context',
+    ctx,
+  })
 }

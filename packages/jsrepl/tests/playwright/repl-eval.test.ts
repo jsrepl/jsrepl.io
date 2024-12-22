@@ -336,3 +336,113 @@ test('multiline decor', async ({ page }) => {
     `
   )
 })
+
+test(
+  'repl is not called as a side effect of transformPayloadResult',
+  {
+    annotation: {
+      type: 'issue',
+      description: 'https://github.com/jsrepl/jsrepl.io/issues/3',
+    },
+  },
+  async ({ page }) => {
+    await visitPlayground(page, {
+      openedModels: ['/test.ts'],
+      activeModel: '/test.ts',
+      showPreview: false,
+      fs: new ReplFS.FS({
+        kind: ReplFS.Kind.Directory,
+        children: {
+          'test.ts': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
+              const obj2 = {
+                get foo() {
+                  return obj2;
+                },
+              };
+
+              const obj = { a: 20 };
+
+              const proxy = new Proxy(obj, {
+                get(target, p) {
+
+                }
+              })
+            `,
+          },
+        },
+      }),
+    })
+
+    await assertMonacoContentsWithDecors(
+      page,
+      dedent`
+        const obj2 = { // → obj2 = [ref *1] {foo: [Circular *1]}
+          get foo() {
+            return obj2;
+          },
+        };
+
+        const obj = { a: 20 }; // → obj = {a: 20}
+
+        const proxy = new Proxy(obj, { // → proxy = Proxy({a: 20}) {…}
+          get(target, p) {
+
+          }
+        })
+      `
+    )
+  }
+)
+
+test(
+  'proxy decorations support',
+  {
+    annotation: {
+      type: 'issue',
+      description: 'https://github.com/jsrepl/jsrepl.io/issues/3',
+    },
+  },
+  async ({ page }) => {
+    await visitPlayground(page, {
+      openedModels: ['/test.ts'],
+      activeModel: '/test.ts',
+      showPreview: false,
+      fs: new ReplFS.FS({
+        kind: ReplFS.Kind.Directory,
+        children: {
+          'test.ts': {
+            kind: ReplFS.Kind.File,
+            content: dedent`
+              const obj = { a: 20 };
+              const proxy = new Proxy(obj, {
+                get(target, p) {
+                  return 5;
+                },
+              });
+              Proxy;
+              proxy.a;
+              proxy;
+            `,
+          },
+        },
+      }),
+    })
+
+    await assertMonacoContentsWithDecors(
+      page,
+      dedent`
+        const obj = { a: 20 }; // → obj = {a: 20}
+        const proxy = new Proxy(obj, { // → proxy = Proxy({a: 20}) {…}
+          get(target, p) { // → ƒƒ get({…}, "a", Proxy({…}) {…}), target = {a: 20}, p = "a"
+            return 5; // → ƒƒ => 5
+          },
+        });
+        Proxy; // → ƒ Proxy()
+        proxy.a; // → 5
+        proxy; // → Proxy({a: 20}) {…}
+      `
+    )
+  }
+)

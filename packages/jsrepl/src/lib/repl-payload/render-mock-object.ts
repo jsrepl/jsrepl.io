@@ -34,12 +34,18 @@ function revive(
         return doc.head.firstChild ?? doc.body.firstChild
       }
 
+      // TODO: support original source, see parse-function.ts
       case utils.isMarshalledFunction(value): {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         let fn: Function
         try {
           // Serialized function may contain `[native code]`.
           fn = new Function(`return ${value.serialized}`)()
+        } catch {}
+
+        try {
+          // Object method? - e.g., get() {}, async foo(value) {}
+          fn = new Function(`return Object.values({ ${value.serialized} })[0]`)()
         } catch {}
 
         try {
@@ -69,6 +75,13 @@ function revive(
 
       case utils.isMarshalledPromise(value):
         return new Promise(() => {})
+
+      case utils.isMarshalledProxy(value): {
+        const { target, handler } = value.__meta__
+        const revivedTarget = revive(target, context) as object
+        const revivedHandler = revive(handler, context) as ProxyHandler<object>
+        return new Proxy(revivedTarget, revivedHandler)
+      }
 
       case utils.isMarshalledObject(value): {
         const { __meta__: meta, ...props } = value

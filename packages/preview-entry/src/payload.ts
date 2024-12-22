@@ -3,12 +3,14 @@ import {
   MarshalledFunction,
   MarshalledObject,
   MarshalledPromise,
+  MarshalledProxy,
   MarshalledSymbol,
   MarshalledType,
   MarshalledWeakMap,
   MarshalledWeakRef,
   MarshalledWeakSet,
 } from '@jsrepl/shared-types'
+import { getProxyMetadata } from './repl/proxy-proxy'
 import type { PreviewWindow } from './types'
 
 // Traverse everything and replace non-clonable stuff for structured clone algorithm,
@@ -120,6 +122,17 @@ function transformResult(
         type: MarshalledType.Promise,
       },
     } as MarshalledPromise
+  }
+
+  const proxyMetadata = getProxyMetadata(win, result)
+  if (proxyMetadata) {
+    return {
+      __meta__: {
+        type: MarshalledType.Proxy,
+        target: transformResult(win, proxyMetadata.target, refs),
+        handler: transformResult(win, proxyMetadata.handler, refs),
+      },
+    } as MarshalledProxy
   }
 
   // TODO: support more built-in known transferable objects:
