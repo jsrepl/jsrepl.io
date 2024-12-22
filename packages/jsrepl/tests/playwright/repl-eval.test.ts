@@ -90,10 +90,10 @@ test('react starter', async ({ page }) => {
       import { createRoot } from 'react-dom/client?dev';
       import { useState } from 'react?dev';
 
-      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children), unmount: ƒ ()}
+      const root = createRoot(document.getElementById('root')); // → root = ReactDOMRoot {_internalRoot: FiberRootNode, render: ƒ (children, JSCompiler_OptimizeArguments…
       root.render(<App />); // → undefined
 
-      function App() { // → ƒƒ App({}, {})
+      function App() { // → ƒƒ App({}, undefined)
         const [counter, setCounter] = useState(0); // → counter = 0, setCounter = ƒ dispatchSetState()
 
         return (
@@ -105,7 +105,7 @@ test('react starter', async ({ page }) => {
               <button onClick={() => setCounter((x) => x + 1)}>+</button>
             </p>
           </>
-        ); // → ƒƒ => {$$typeof: Symbol(react.element), type: Symbol(react.fragment), key: null, ref: null, props: {…
+        ); // → ƒƒ => {$$typeof: Symbol(react.transitional.element), type: Symbol(react.fragment), key: null, ref: n…
       }
     `
   )
