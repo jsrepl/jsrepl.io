@@ -79,6 +79,8 @@ export function getDefaultState(): UserStoredState {
     leftSidebarWidth: 240,
     projectPanelExpandedSections: ['info', 'files'],
     autostartOnCodeChange: true,
+    packageProvider: 'auto',
+    packageDtsProvider: 'auto',
     workbench: {
       formatOnSave: true,
     },

@@ -16,6 +16,7 @@ import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
 import { type ImportMap, type ReplInfo } from '@/types'
 import { consoleLogRepl } from '../console-utils'
+import { getPackageUrl } from '../package-provider'
 import { type ReplData, replDataRef } from './data'
 
 const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL!
@@ -37,11 +38,13 @@ export async function sendRepl({
   addPayload,
   previewIframe,
   theme,
+  packageProvider,
 }: {
   models: Map<string, CodeEditorModel>
   addPayload: (token: number | string, payload: ReplPayload) => void
   previewIframe: HTMLIFrameElement
   theme: Theme
+  packageProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
 }): Promise<ReplInfo> {
   const replData: ReplData = replDataRef.current
   const token = replDataRef.current.token
@@ -179,6 +182,7 @@ export async function sendRepl({
       token,
       entryPointScripts,
       entryPointStylesheets,
+      packageProvider,
     })
 
     const srcdoc = previewDoc.documentElement.outerHTML
@@ -219,9 +223,10 @@ function processPreviewDoc(
     token: number
     entryPointScripts: HTMLScriptElement[]
     entryPointStylesheets: HTMLLinkElement[]
+    packageProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
   }
 ) {
-  const { bundle, theme, token, entryPointScripts, entryPointStylesheets } = data
+  const { bundle, theme, token, entryPointScripts, entryPointStylesheets, packageProvider } = data
   const result = bundle.result!
 
   // OutputFile.path starts with '/'.
@@ -257,7 +262,8 @@ function processPreviewDoc(
   const importmap: ImportMap = {
     imports: Array.from(packages).reduce(
       (acc, packageName) => {
-        acc[packageName] = `https://esm.sh/${packageName}`
+        const packageUrl = getPackageUrl(packageProvider, packageName)
+        acc[packageName] = packageUrl
         return acc
       },
       {} as ImportMap['imports']

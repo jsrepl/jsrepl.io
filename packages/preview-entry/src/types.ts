@@ -1,4 +1,9 @@
-import { identifierNameFunctionMeta, identifierNameRepl } from '@jsrepl/shared-types'
+import {
+  ProxyMetadata,
+  identifierNameFunctionMeta,
+  identifierNameProxyMap,
+  identifierNameRepl,
+} from '@jsrepl/shared-types'
 
 declare global {
   const __JSREPL_ORIGIN__: string
@@ -15,4 +20,5 @@ export type PreviewWindow = Window &
     [identifierNameRepl]: Function
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     [identifierNameFunctionMeta]: Function
+    [identifierNameProxyMap]: WeakMap<object, ProxyMetadata>
   }

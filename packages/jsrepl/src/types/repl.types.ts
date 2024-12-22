@@ -48,6 +48,8 @@ export type UserStoredState = {
   leftSidebarWidth: number
   projectPanelExpandedSections: string[]
   autostartOnCodeChange: boolean
+  packageProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
+  packageDtsProvider: 'auto' | 'esm.sh' | 'esm.sh-proxy'
   workbench: {
     formatOnSave: boolean
   }

@@ -3,6 +3,7 @@ import {
   MarshalledFunction,
   MarshalledObject,
   MarshalledPromise,
+  MarshalledProxy,
   MarshalledSymbol,
   MarshalledType,
   MarshalledWeakMap,
@@ -40,6 +41,10 @@ export function isMarshalledObject(result: object): result is MarshalledObject {
 
 export function isMarshalledPromise(result: object): result is MarshalledPromise {
   return getMarshalledType(result) === MarshalledType.Promise
+}
+
+export function isMarshalledProxy(result: object): result is MarshalledProxy {
+  return getMarshalledType(result) === MarshalledType.Proxy
 }
 
 export function getMarshalledType(result: object): MarshalledType | null {

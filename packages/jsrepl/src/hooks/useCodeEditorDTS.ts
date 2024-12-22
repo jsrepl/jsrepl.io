@@ -7,6 +7,8 @@ import { getDtsMap } from '@/lib/dts'
 import { FileCache } from '@/lib/file-cache'
 import { getTypescript, loadTypescript } from '@/lib/get-typescript'
 import { getNpmPackageFromImportPath } from '@/lib/npm-packages'
+import { getPackageUrl } from '@/lib/package-provider'
+import { useUserStoredState } from './useUserStoredState'
 
 const diagnosticsOptions: monaco.languages.typescript.DiagnosticsOptions = {
   noSemanticValidation: false,
@@ -40,6 +42,8 @@ monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compilerOption
 export default function useCodeEditorDTS(
   models: Map<string, InstanceType<typeof CodeEditorModel>>
 ) {
+  const [userState] = useUserStoredState()
+
   // Key is the package name
   const modelPackagesRef = useRef(new Map<string, { abortController: AbortController }>())
 
@@ -123,7 +127,7 @@ export default function useCodeEditorDTS(
       const { signal } = abortController
       modelPackages.set(packageName, { abortController })
 
-      const dtsMap = await getDtsMap(packageName, ts, { signal })
+      const dtsMap = await getDtsMap(packageName, userState.packageDtsProvider, ts, { signal })
       debugLog(DebugLog.DTS, packageName, 'dtsMap', dtsMap)
 
       for (const [fileUri, content] of dtsMap) {
@@ -151,7 +155,8 @@ export default function useCodeEditorDTS(
     if (addedPackages.length > 0 || removedPackages.length > 0) {
       const paths = Array.from(packages).reduce(
         (acc, packageName) => {
-          acc[`https://esm.sh/${packageName}`] = [`file:///node_modules/${packageName}`]
+          const packageUrl = getPackageUrl(userState.packageDtsProvider, packageName)
+          acc[packageUrl] = [`file:///node_modules/${packageName}`]
           return acc
         },
         {} as Record<string, string[]>
@@ -167,7 +172,7 @@ export default function useCodeEditorDTS(
         paths,
       })
     }
-  }, [models])
+  }, [models, userState.packageDtsProvider])
 
   useEffect(() => {
     let disposed = false
