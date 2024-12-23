@@ -35,13 +35,19 @@ export async function getRepls(
  */
 export async function getUserRepls(
   userId: string,
-  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
+  {
+    supabase,
+    page,
+    pageSize,
+    signal,
+  }: { supabase: SupabaseClient<Database>; page: number; pageSize: number; signal?: AbortSignal }
 ) {
   return await supabase
     .from('repls')
-    .select(`*, user:public_profiles(*)`)
+    .select(`*, user:public_profiles(*)`, { count: 'estimated' })
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1)
     .abortSignal(signal as AbortSignal /* undefined is fine here */)
 }
 
@@ -50,16 +56,20 @@ export async function getUserRepls(
  */
 export async function getRecentlyViewedRepls({
   supabase,
+  page,
+  pageSize,
   signal,
 }: {
   supabase: SupabaseClient<Database>
+  page: number
+  pageSize: number
   signal?: AbortSignal
 }) {
   return await supabase
     .from('recent_user_repls')
-    .select(`*, user:public_profiles(*)`)
+    .select(`*, user:public_profiles(*)`, { count: 'estimated' })
     .order('viewed_at', { ascending: false })
-    .limit(20)
+    .range((page - 1) * pageSize, page * pageSize - 1)
     .abortSignal(signal as AbortSignal /* undefined is fine here */)
 }
 

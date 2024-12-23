@@ -22,9 +22,22 @@ type ExtraUrlProps = {
 
 export async function loadUserRepls(
   userId: string,
-  { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
-): Promise<ReplStoredState[]> {
-  const { data, error, status, statusText } = await getUserRepls(userId, { supabase, signal })
+  {
+    supabase,
+    page,
+    pageSize,
+    signal,
+  }: { supabase: SupabaseClient<Database>; page?: number; pageSize?: number; signal?: AbortSignal }
+): Promise<{ data: ReplStoredState[]; hasMore: boolean }> {
+  page ??= 1
+  pageSize ??= 20
+
+  const { data, error, status, statusText, count } = await getUserRepls(userId, {
+    supabase,
+    page,
+    pageSize,
+    signal,
+  })
 
   if (error) {
     throw new ResponseError(`Error loading repls for user id=${userId}`, {
@@ -34,18 +47,30 @@ export async function loadUserRepls(
     })
   }
 
-  return data.map((repl) => reviveState({ state: fromPayload(repl) }))
+  return {
+    data: data.map((repl) => reviveState({ state: fromPayload(repl) })),
+    hasMore: count !== null && count > page * pageSize,
+  }
 }
 
 export async function loadRecentlyViewedRepls({
   supabase,
+  page,
+  pageSize,
   signal,
 }: {
   supabase: SupabaseClient<Database>
+  page?: number
+  pageSize?: number
   signal?: AbortSignal
-}): Promise<Array<ReplStoredState & { viewed_at: string }>> {
-  const { data, error, status, statusText } = await getRecentlyViewedRepls({
+}): Promise<{ data: Array<ReplStoredState & { viewed_at: string }>; hasMore: boolean }> {
+  page ??= 1
+  pageSize ??= 20
+
+  const { data, error, status, statusText, count } = await getRecentlyViewedRepls({
     supabase,
+    page,
+    pageSize,
     signal,
   })
 
@@ -57,10 +82,13 @@ export async function loadRecentlyViewedRepls({
     })
   }
 
-  return data.map((repl) => ({
-    ...reviveState({ state: fromPayload(repl) }),
-    viewed_at: repl.viewed_at,
-  }))
+  return {
+    data: data.map((repl) => ({
+      ...reviveState({ state: fromPayload(repl) }),
+      viewed_at: repl.viewed_at,
+    })),
+    hasMore: count !== null && count > page * pageSize,
+  }
 }
 
 export async function loadByIds(

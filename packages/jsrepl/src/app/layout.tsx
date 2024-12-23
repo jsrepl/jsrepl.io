@@ -36,7 +36,7 @@ export default async function RootLayout({
 
   return (
     // suppressHydrationWarning: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="scroll-pt-24">
       <body>
         <NavigationGuardProvider>
           <SessionProvider initialSession={session}>

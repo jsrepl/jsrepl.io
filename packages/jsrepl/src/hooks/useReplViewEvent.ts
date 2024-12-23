@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Database, ReplStoredState } from '@/types'
+import { Database } from '@/types'
 import { useReplSavedState } from './useReplSavedState'
 import { useSupabaseClient } from './useSupabaseClient'
 import { useUser } from './useUser'
@@ -33,24 +33,8 @@ export function useReplViewEvent() {
   }, [savedState.id, supabase, user])
 
   useEffect(() => {
-    if (!user) {
-      return
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ['recently-viewed-repls', user.id] })
     }
-
-    const queryKey = ['recently-viewed-repls', user.id]
-    queryClient.setQueryData<
-      (ReplStoredState & {
-        viewed_at: string
-      })[]
-    >(queryKey, (prev) => {
-      if (!prev) {
-        return prev
-      }
-
-      return [
-        { ...savedState, viewed_at: viewedAtRef.current },
-        ...prev.filter(({ id }) => id !== savedState.id),
-      ]
-    })
-  }, [savedState, queryClient, user])
+  }, [queryClient, user])
 }

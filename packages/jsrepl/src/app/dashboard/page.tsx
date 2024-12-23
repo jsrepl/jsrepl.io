@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { usePrefetchQuery } from '@tanstack/react-query'
 import { LucideLibrary, LucidePlus } from 'lucide-react'
 import IconLanguageCss from '~icons/mdi/language-css3.jsx'
 import IconLanguageHtml from '~icons/mdi/language-html5.jsx'
@@ -15,13 +14,9 @@ import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
-import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
-import { loadRecentlyViewedRepls, loadUserRepls } from '@/lib/repl-stored-state/adapter-supabase'
 import { RecentlyViewed } from './recently-viewed'
 import { YourWork } from './your-work'
-
-export const dynamic = 'force-dynamic'
 
 enum Tab {
   RecentlyViewed = 'recently-viewed',
@@ -34,7 +29,6 @@ export default function DashboardPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const user = useUser()
-  const supabase = useSupabaseClient()
   const { signInWithGithub } = useAuthHelpers()
   const [starterDialogOpen, setStarterDialogOpen] = useState(false)
 
@@ -42,26 +36,16 @@ export default function DashboardPage() {
 
   function setActiveTab(tab: Tab) {
     const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.delete('page')
+
     if (tab === defaultTab) {
       newSearchParams.delete('tab')
     } else {
       newSearchParams.set('tab', tab)
     }
 
-    router.push(`?${newSearchParams.toString()}`)
+    router.push(`?${newSearchParams.toString()}`, { scroll: false })
   }
-
-  usePrefetchQuery({
-    queryKey: ['recently-viewed-repls', user?.id],
-    queryFn: ({ signal }) => (user ? loadRecentlyViewedRepls({ supabase, signal }) : []),
-    staleTime: 60_000,
-  })
-
-  usePrefetchQuery({
-    queryKey: ['user-repls', user?.id],
-    queryFn: ({ signal }) => (user ? loadUserRepls(user.id, { supabase, signal }) : []),
-    staleTime: 60_000,
-  })
 
   if (!user) {
     return (

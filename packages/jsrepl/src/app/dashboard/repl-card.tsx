@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, SetStateAction, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -26,13 +28,19 @@ import * as ReplFS from '@/lib/repl-fs'
 import { fork, getPageUrl, remove } from '@/lib/repl-stored-state/adapter-supabase'
 import { ReplStoredState } from '@/types'
 
-export default function ReplCard({
-  repl,
-  customTimestamp,
-}: {
-  repl: ReplStoredState
-  customTimestamp?: React.ReactNode
-}) {
+type Props =
+  | {
+      repl: ReplStoredState
+      mode?: undefined
+    }
+  | {
+      repl: ReplStoredState & {
+        viewed_at: string
+      }
+      mode: 'recently-viewed'
+    }
+
+export default function ReplCard({ repl, mode }: Props) {
   const user = useUser()
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
@@ -46,6 +54,7 @@ export default function ReplCard({
   const url = useMemo(() => getPageUrl(repl), [repl])
 
   const filePath = repl.activeModel
+  const datetime = mode === 'recently-viewed' ? repl.viewed_at : repl.updated_at
 
   const code = useMemo(() => {
     const file = filePath ? ReplFS.getFile(repl.fs, filePath) : null
@@ -102,10 +111,7 @@ export default function ReplCard({
         },
       })
 
-      const queryKey = ['user-repls', user?.id]
-      queryClient.setQueryData<ReplStoredState[]>(queryKey, (prev) => {
-        return prev ? [forkedRepl, ...prev] : prev
-      })
+      queryClient.invalidateQueries({ queryKey: ['user-repls', user?.id] })
     } catch (error) {
       console.error(error)
       toast.error('Failed to fork.')
@@ -151,7 +157,11 @@ export default function ReplCard({
         <h2 className="font-medium">{repl.title || 'Untitled'}</h2>
         <p className="text-muted-foreground line-clamp-3 text-sm">{repl.description}</p>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
-          {customTimestamp ?? <Timestamp repl={repl} />}
+          {datetime && (
+            <span className="text-muted-foreground text-nowrap text-xs">
+              <RelativeTime date={new Date(datetime)} />
+            </span>
+          )}
           {repl.user && (
             <div className="text-muted-foreground flex min-w-0 items-center gap-1 text-xs">
               <UserAvatar user={repl.user} size={18} />
@@ -163,18 +173,6 @@ export default function ReplCard({
         </div>
       </div>
     </div>
-  )
-}
-
-function Timestamp({ repl }: { repl: ReplStoredState }) {
-  return (
-    <>
-      {repl.updated_at && (
-        <span className="text-muted-foreground text-nowrap text-xs">
-          <RelativeTime date={new Date(repl.updated_at)} />
-        </span>
-      )}
-    </>
   )
 }
 
@@ -203,13 +201,8 @@ function RemoveButton({
       await remove(repl.id, { supabase })
       toast('Deleted.')
 
-      queryClient.setQueryData<ReplStoredState[]>(['user-repls', user?.id], (prev) => {
-        return prev ? prev.filter((x) => x.id !== repl.id) : prev
-      })
-
-      queryClient.setQueryData<ReplStoredState[]>(['recently-viewed-repls', user?.id], (prev) => {
-        return prev ? prev.filter((x) => x.id !== repl.id) : prev
-      })
+      queryClient.invalidateQueries({ queryKey: ['user-repls', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['recently-viewed-repls', user?.id] })
     } catch (error) {
       console.error(error)
       toast.error('Failed to delete.')
