@@ -1,8 +1,10 @@
 import { LucideGitFork, LucideLoader, LucideSave } from 'lucide-react'
 import { PanelSections } from '@/components/panel-section'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useReplSave } from '@/hooks/useReplSave'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
+import { isMac } from '@/lib/user-agent'
 import FilesPanelSection from './files-panel-section'
 import { InfoPanelSection } from './info-panel-section'
 
@@ -17,20 +19,25 @@ export function ProjectPanel() {
       </div>
 
       <div className="flex items-center gap-2 pb-3 pl-4 pt-1">
-        <Button
-          size="xs"
-          variant="secondary"
-          className="text-accent-foreground gap-1"
-          disabled={!allowSave}
-          onClick={() => saveState()}
-        >
-          {isSaving ? (
-            <LucideLoader className="animate-spin" size={15} />
-          ) : (
-            <LucideSave size={15} className="opacity-80" strokeWidth={1.5} />
-          )}
-          Save
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="xs"
+              variant="secondary"
+              className="text-accent-foreground gap-1"
+              disabled={!allowSave}
+              onClick={() => saveState()}
+            >
+              {isSaving ? (
+                <LucideLoader className="animate-spin" size={15} />
+              ) : (
+                <LucideSave size={15} className="opacity-80" strokeWidth={1.5} />
+              )}
+              Save
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Save your changes ({isMac ? '⌘+S' : 'Ctrl+S'})</TooltipContent>
+        </Tooltip>
 
         <Button
           size="xs"

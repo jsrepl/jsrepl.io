@@ -17,6 +17,7 @@ import { useReplFSChanges } from '@/hooks/useReplFSChanges'
 import { useReplInfo } from '@/hooks/useReplInfo'
 import { useReplModels } from '@/hooks/useReplModels'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
+import { isMac } from '@/lib/user-agent'
 import { cn } from '@/lib/utils'
 import { FileIcon } from './file-icon'
 
@@ -202,7 +203,7 @@ export default function CodeEditorHeader() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" sideOffset={8} align="end">
-            Format code with Prettier (⌘+S)
+            Format code with Prettier ({isMac ? '⌘+S' : 'Ctrl+S'})
           </TooltipContent>
         </Tooltip>
 
