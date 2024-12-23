@@ -159,7 +159,7 @@ export default function ReplCard({ repl, mode }: Props) {
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           {datetime && (
             <span className="text-muted-foreground text-nowrap text-xs">
-              <RelativeTime date={new Date(datetime)} />
+              <RelativeTime value={datetime} />
             </span>
           )}
           {repl.user && (

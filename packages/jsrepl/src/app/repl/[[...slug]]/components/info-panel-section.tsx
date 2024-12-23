@@ -60,13 +60,13 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
         )}
         <div className="mt-3 space-y-1 empty:hidden">
           {replState.updated_at && (
-            <div title={'Updated at ' + new Date(replState.updated_at).toLocaleString()}>
-              Updated <RelativeTime date={new Date(replState.updated_at)} />
+            <div>
+              Updated <RelativeTime value={replState.updated_at} />
             </div>
           )}
           {replState.created_at && (
-            <div title={'Created at ' + new Date(replState.created_at).toLocaleString()}>
-              Created <RelativeTime date={new Date(replState.created_at)} />
+            <div>
+              Created <RelativeTime value={replState.created_at} />
             </div>
           )}
         </div>

@@ -1,8 +1,7 @@
 const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
 
-export function formatRelativeTime(date: Date): string {
-  const now = Date.now()
-  const diffInSeconds = date.getTime() - now
+export function formatRelativeTime(date: Date, date2: Date): string {
+  const diffInSeconds = date.getTime() - date2.getTime()
   const diffSign = Math.sign(diffInSeconds)
   const diffInSecondsAbs = Math.abs(diffInSeconds) / 1000
 

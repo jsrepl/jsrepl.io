@@ -1,26 +1,49 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatRelativeTime } from '@/lib/datetime'
 
-export function RelativeTime({ date, interval = 60_000 }: { date: Date; interval?: number }) {
-  const [value, setValue] = useState<string>(format(date))
+/**
+ * Displays a relative time as "some time ago", relative to the current time.
+ */
+export function RelativeTime({
+  value,
+  interval = 60_000,
+  className,
+}: {
+  value: Date | string
+  interval?: number
+  className?: string
+}) {
+  const date = useMemo(() => new Date(value), [value])
+  const [text, setText] = useState<string>(() => format(date))
 
   useEffect(() => {
-    setValue(format(date))
+    setText(format(date))
   }, [date])
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setValue(format(date))
+      setText(format(date))
     }, interval)
 
     return () => clearInterval(intervalId)
   }, [date, interval])
 
-  return value
+  return (
+    <time dateTime={date.toISOString()} className={className} title={date.toLocaleString()}>
+      {text}
+    </time>
+  )
 }
 
 function format(date: Date): string {
-  return formatRelativeTime(date)
+  const now = new Date()
+
+  // Time on server can differ a bit from client, but in this component
+  // `now` is always expected to be greater than or equal to `date`
+  // (to format it as "some time ago").
+  const fixedDate = now >= date ? date : now
+
+  return formatRelativeTime(fixedDate, now)
 }
