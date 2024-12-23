@@ -1,11 +1,11 @@
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react'
-import { useTheme } from 'next-themes'
+import { Dispatch, SetStateAction, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { LucideGitFork, LucideLoader2, LucideTrash2 } from 'lucide-react'
-import { BundledLanguage, BundledTheme, codeToHtml } from 'shiki'
+import { BundledLanguage } from 'shiki'
 import { toast } from 'sonner'
+import { RelativeTime } from '@/components/relative-time'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { UserAvatar } from '@/components/user-avatar'
+import { useCodeHighlighter } from '@/hooks/useCodeHighlighter'
 import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
-import { formatRelativeTime } from '@/lib/datetime'
 import * as ReplFS from '@/lib/repl-fs'
 import { fork, getPageUrl, remove } from '@/lib/repl-stored-state/adapter-supabase'
 import { ReplStoredState } from '@/types'
@@ -36,8 +36,8 @@ export default function ReplCard({
   const user = useUser()
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
-  const { resolvedTheme: themeId } = useTheme()
   const router = useRouter()
+  const { highlightCode } = useCodeHighlighter()
 
   const [isForking, setIsForking] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
@@ -84,28 +84,9 @@ export default function ReplCard({
     }
   }, [filePath])
 
-  const [highlightedCode, setHighlightedCode] = useState<string>(escapeHtml(code))
-
-  useEffect(() => {
-    if (!shikiLang) {
-      return
-    }
-
-    let disposed = false
-
-    codeToHtml(code, {
-      lang: shikiLang,
-      theme: themeId as BundledTheme,
-    }).then((html) => {
-      if (!disposed) {
-        setHighlightedCode(html)
-      }
-    })
-
-    return () => {
-      disposed = true
-    }
-  }, [code, shikiLang, themeId])
+  const highlightedCode = useMemo<string>(() => {
+    return highlightCode(code, shikiLang)
+  }, [code, shikiLang, highlightCode])
 
   async function onForkClick() {
     try {
@@ -186,14 +167,12 @@ export default function ReplCard({
 }
 
 function Timestamp({ repl }: { repl: ReplStoredState }) {
-  const updatedAtRelativeTime = useMemo(() => {
-    return repl.updated_at ? formatRelativeTime(new Date(repl.updated_at)) : null
-  }, [repl.updated_at])
-
   return (
     <>
-      {updatedAtRelativeTime && (
-        <span className="text-muted-foreground text-nowrap text-xs">{updatedAtRelativeTime}</span>
+      {repl.updated_at && (
+        <span className="text-muted-foreground text-nowrap text-xs">
+          <RelativeTime date={new Date(repl.updated_at)} />
+        </span>
       )}
     </>
   )
@@ -285,14 +264,4 @@ function RemoveButton({
       </AlertDialogContent>
     </AlertDialog>
   )
-}
-
-function escapeHtml(str: string) {
-  const escapeMap: { [key: string]: string } = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-  }
-
-  return str.replace(/[&<>]/g, (match) => escapeMap[match]!)
 }

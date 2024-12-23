@@ -1,12 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { LucideTelescope } from 'lucide-react'
 import ErrorComponent from '@/components/error'
+import { RelativeTime } from '@/components/relative-time'
 import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
-import { formatRelativeTime } from '@/lib/datetime'
 import { loadRecentlyViewedRepls } from '@/lib/repl-stored-state/adapter-supabase'
 import { ReplStoredState } from '@/types'
 import ReplCard from './repl-card'
@@ -49,14 +48,12 @@ export function RecentlyViewed() {
 }
 
 function RecentlyViewedTimestamp({ repl }: { repl: ReplStoredState & { viewed_at: string } }) {
-  const viewedAtRelativeTime = useMemo(() => {
-    return repl.viewed_at ? formatRelativeTime(new Date(repl.viewed_at)) : null
-  }, [repl.viewed_at])
-
   return (
     <>
-      {viewedAtRelativeTime && (
-        <span className="text-muted-foreground text-nowrap text-xs">{viewedAtRelativeTime}</span>
+      {repl.viewed_at && (
+        <span className="text-muted-foreground text-nowrap text-xs">
+          <RelativeTime date={new Date(repl.viewed_at)} />
+        </span>
       )}
     </>
   )

@@ -1,16 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useTheme } from 'next-themes'
+import { shikiToMonaco } from '@shikijs/monaco'
 import * as monaco from 'monaco-editor'
 import styles from '@/components/code-editor.module.css'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
+import { useCodeHighlighter } from '@/hooks/useCodeHighlighter'
 import { useMonacoEditor } from '@/hooks/useMonacoEditor'
 import useMonacopilot from '@/hooks/useMonacopilot'
 import { useReplModels } from '@/hooks/useReplModels'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { PrettierFormattingProvider } from '@/lib/monaco-prettier-formatting-provider'
-import { loadMonacoTheme } from '@/lib/monaco-themes'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,7 @@ if (process.env.NEXT_PUBLIC_NODE_ENV === 'test' && typeof window !== 'undefined'
 }
 
 setupMonaco()
+setupInitialMonacoThemes()
 setupTailwindCSS()
 
 export default function CodeEditor() {
@@ -27,10 +29,10 @@ export default function CodeEditor() {
   const [userState] = useUserStoredState()
   const [editorRef, setEditor] = useMonacoEditor()
   const { models, readOnlyModels } = useReplModels()
+  const { highlighter, loadedHighlightTheme } = useCodeHighlighter()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const [isThemeLoaded, setIsThemeLoaded] = useState(false)
   const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0]!, [themeId])
 
@@ -53,7 +55,7 @@ export default function CodeEditor() {
     fontSize: userState.editor.fontSize,
     minimap: { enabled: false },
     readOnly: isReadOnly,
-    theme: theme.id,
+    theme: loadedHighlightTheme ?? (theme.isDark ? 'initial-dark' : 'initial-light'),
     quickSuggestions: {
       other: true,
       comments: true,
@@ -100,12 +102,13 @@ export default function CodeEditor() {
   }, [userState.editor.lineNumbers, editorRef])
 
   useEffect(() => {
-    editorInitialOptions.current.theme = theme.id
-    loadMonacoTheme(theme).then(() => {
-      monaco.editor.setTheme(theme.id)
-      setIsThemeLoaded(true)
-    })
-  }, [theme])
+    if (highlighter && loadedHighlightTheme) {
+      editorInitialOptions.current.theme = loadedHighlightTheme
+
+      shikiToMonaco(highlighter, monaco)
+      monaco.editor.setTheme(loadedHighlightTheme)
+    }
+  }, [highlighter, loadedHighlightTheme])
 
   useEffect(() => {
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
@@ -125,7 +128,7 @@ export default function CodeEditor() {
   return (
     <div
       ref={containerRef}
-      className={cn('min-h-0 flex-1', styles.codeEditor, { 'opacity-0': !isThemeLoaded })}
+      className={cn('bg-editor-background min-h-0 flex-1', styles.codeEditor)}
     />
   )
 }
@@ -190,6 +193,30 @@ async function setupTailwindCSS() {
       dataProviders: {
         tailwindcssData,
       },
+    },
+  })
+}
+
+function setupInitialMonacoThemes() {
+  monaco.editor.defineTheme('initial-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': '#00000000',
+      'editor.lineHighlightBackground': '#FFFFFF0F',
+      focusBorder: '#00000000',
+    },
+  })
+
+  monaco.editor.defineTheme('initial-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': '#00000000',
+      'editor.lineHighlightBackground': '#EEEEEE1F',
+      focusBorder: '#00000000',
     },
   })
 }

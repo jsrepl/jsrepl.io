@@ -1,4 +1,5 @@
 import React from 'react'
+import { CodeHighlighterProvider } from '@/components/providers/code-highlighter-provider'
 import { MonacoEditorProvider } from '@/components/providers/monaco-editor-provider'
 import { ReplFSChangesProvider } from '@/components/providers/repl-fs-changes-provider'
 import ReplInfoProvider from '@/components/providers/repl-info-provider'
@@ -15,27 +16,29 @@ import WritableModelsProvider from '@/components/providers/writable-models-provi
 export default function ReplPlaygroundProviders({ children }: { children: React.ReactNode }) {
   return (
     <MonacoEditorProvider>
-      <ReplLoadedStateProvider>
-        <ReplSavedStateProvider>
-          <ReplStateProvider>
-            <UserStateProvider>
-              <ReplInfoProvider>
-                <ReplRewindModeProvider>
-                  <ReplModelsProvider>
-                    <WritableModelsProvider>
-                      <ReplSaveProvider>
-                        <ReplFSChangesProvider>
-                          <ReplPayloadsProvider>{children}</ReplPayloadsProvider>
-                        </ReplFSChangesProvider>
-                      </ReplSaveProvider>
-                    </WritableModelsProvider>
-                  </ReplModelsProvider>
-                </ReplRewindModeProvider>
-              </ReplInfoProvider>
-            </UserStateProvider>
-          </ReplStateProvider>
-        </ReplSavedStateProvider>
-      </ReplLoadedStateProvider>
+      <CodeHighlighterProvider>
+        <ReplLoadedStateProvider>
+          <ReplSavedStateProvider>
+            <ReplStateProvider>
+              <UserStateProvider>
+                <ReplInfoProvider>
+                  <ReplRewindModeProvider>
+                    <ReplModelsProvider>
+                      <WritableModelsProvider>
+                        <ReplSaveProvider>
+                          <ReplFSChangesProvider>
+                            <ReplPayloadsProvider>{children}</ReplPayloadsProvider>
+                          </ReplFSChangesProvider>
+                        </ReplSaveProvider>
+                      </WritableModelsProvider>
+                    </ReplModelsProvider>
+                  </ReplRewindModeProvider>
+                </ReplInfoProvider>
+              </UserStateProvider>
+            </ReplStateProvider>
+          </ReplSavedStateProvider>
+        </ReplLoadedStateProvider>
+      </CodeHighlighterProvider>
     </MonacoEditorProvider>
   )
 }

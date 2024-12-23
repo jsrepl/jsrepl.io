@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { LucidePencil } from 'lucide-react'
 import EditReplInfoDialog from '@/components/edit-repl-info-dialog'
 import {
@@ -9,11 +9,11 @@ import {
   PanelSectionHeaderActions,
   PanelSectionTrigger,
 } from '@/components/panel-section'
+import { RelativeTime } from '@/components/relative-time'
 import { UserAvatar } from '@/components/user-avatar'
 import { useReplRewindMode } from '@/hooks/useReplRewindMode'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUser } from '@/hooks/useUser'
-import { formatRelativeTime } from '@/lib/datetime'
 
 export function InfoPanelSection({ id: sectionId }: { id: string }) {
   const [replState] = useReplStoredState()
@@ -24,14 +24,6 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
   const isReadOnly = rewindMode.active
   const isNew = !replState.id
   const showEditButton = isNew || (user && user.id === replState.user_id)
-
-  const updatedAtRelativeTime = useMemo(() => {
-    return replState.updated_at ? formatRelativeTime(new Date(replState.updated_at)) : null
-  }, [replState.updated_at])
-
-  const createdAtRelativeTime = useMemo(() => {
-    return replState.created_at ? formatRelativeTime(new Date(replState.created_at)) : null
-  }, [replState.created_at])
 
   return (
     <PanelSection value={sectionId}>
@@ -67,14 +59,14 @@ export function InfoPanelSection({ id: sectionId }: { id: string }) {
           </div>
         )}
         <div className="mt-3 space-y-1 empty:hidden">
-          {updatedAtRelativeTime && (
+          {replState.updated_at && (
             <div title={'Updated at ' + new Date(replState.updated_at).toLocaleString()}>
-              Updated {updatedAtRelativeTime}
+              Updated <RelativeTime date={new Date(replState.updated_at)} />
             </div>
           )}
-          {createdAtRelativeTime && (
+          {replState.created_at && (
             <div title={'Created at ' + new Date(replState.created_at).toLocaleString()}>
-              Created {createdAtRelativeTime}
+              Created <RelativeTime date={new Date(replState.created_at)} />
             </div>
           )}
         </div>
