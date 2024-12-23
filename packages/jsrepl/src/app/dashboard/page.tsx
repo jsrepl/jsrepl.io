@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { usePrefetchQuery } from '@tanstack/react-query'
 import { LucideLibrary, LucidePlus } from 'lucide-react'
 import IconLanguageCss from '~icons/mdi/language-css3.jsx'
@@ -20,11 +21,35 @@ import { loadRecentlyViewedRepls, loadUserRepls } from '@/lib/repl-stored-state/
 import { RecentlyViewed } from './recently-viewed'
 import { YourWork } from './your-work'
 
+export const dynamic = 'force-dynamic'
+
+enum Tab {
+  RecentlyViewed = 'recently-viewed',
+  YourWork = 'your-work',
+}
+
+const defaultTab = Tab.RecentlyViewed
+
 export default function DashboardPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const user = useUser()
   const supabase = useSupabaseClient()
   const { signInWithGithub } = useAuthHelpers()
   const [starterDialogOpen, setStarterDialogOpen] = useState(false)
+
+  const activeTab: Tab = (searchParams.get('tab') as Tab | null) ?? defaultTab
+
+  function setActiveTab(tab: Tab) {
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (tab === defaultTab) {
+      newSearchParams.delete('tab')
+    } else {
+      newSearchParams.set('tab', tab)
+    }
+
+    router.push(`?${newSearchParams.toString()}`)
+  }
 
   usePrefetchQuery({
     queryKey: ['recently-viewed-repls', user?.id],
@@ -94,19 +119,19 @@ export default function DashboardPage() {
         </Button>
       </section>
 
-      <Tabs defaultValue="recently-viewed" className="my-12">
+      <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="my-12">
         <TabsList className="mx-auto grid h-10 w-full max-w-96 grid-cols-2">
-          <TabsTrigger value="recently-viewed" className="leading-6">
+          <TabsTrigger value={Tab.RecentlyViewed} className="leading-6">
             Recently Viewed
           </TabsTrigger>
-          <TabsTrigger value="your-work" className="leading-6">
+          <TabsTrigger value={Tab.YourWork} className="leading-6">
             Your Work
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="recently-viewed" className="my-10">
+        <TabsContent value={Tab.RecentlyViewed} className="my-10">
           <RecentlyViewed />
         </TabsContent>
-        <TabsContent value="your-work" className="my-10">
+        <TabsContent value={Tab.YourWork} className="my-10">
           <YourWork />
         </TabsContent>
       </Tabs>
