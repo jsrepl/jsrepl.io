@@ -33,12 +33,12 @@ export default {
             function App() {
               const [counter, setCounter] = useState(0);
 
-              const decrement = () => {
-                setCounter((x) => x - 1)
+              function decrement() {
+                setCounter((x) => x - 1);
               }
 
-              const increment = () => {
-                setCounter((x) => x + 1)
+              function increment() {
+                setCounter((x) => x + 1);
               }
 
               return (

@@ -33,13 +33,21 @@ export default {
             function App() {
               const [counter, setCounter] = useState(0);
 
+              function decrement() {
+                setCounter((x) => x - 1);
+              }
+
+              function increment() {
+                setCounter((x) => x + 1);
+              }
+
               return (
                 <>
-                  <h1 className="italic">Hello, world!</h1>
-                  <p className="space-x-1">
-                    <button onClick={() => setCounter((x) => x - 1)}>-</button>
+                  <h1 className="m-0 italic">Hello, world!</h1>
+                  <p className="space-x-2">
+                    <button onClick={decrement}>-</button>
                     <span>Counter: {counter}</span>
-                    <button onClick={() => setCounter((x) => x + 1)}>+</button>
+                    <button onClick={increment}>+</button>
                   </p>
                 </>
               );
