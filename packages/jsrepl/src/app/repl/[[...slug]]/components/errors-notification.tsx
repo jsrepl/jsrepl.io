@@ -40,7 +40,7 @@ export function ErrorsNotification() {
         </Button>
 
         {expanded && (
-          <span className="flex max-w-prose flex-1 select-text items-center gap-2 whitespace-normal p-2 font-normal">
+          <span className="flex max-w-prose flex-1 select-text items-center gap-2 whitespace-normal p-2 pr-3 font-normal">
             {primaryError.location?.file && (
               <span className="text-muted-foreground">
                 {primaryError.location.file}:{primaryError.location.line}:

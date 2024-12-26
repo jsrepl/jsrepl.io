@@ -13,13 +13,8 @@ import { useSupabaseClient } from '@/hooks/useSupabaseClient'
 import { useUser } from '@/hooks/useUser'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { useWritableModels } from '@/hooks/useWritableModels'
-import {
-  checkDirty,
-  checkEffectivelyDirty,
-  fork,
-  getPageUrl,
-  save,
-} from '@/lib/repl-stored-state/adapter-supabase'
+import { fork, getPageUrl, save } from '@/lib/repl-stored-state/adapter-supabase'
+import { checkDirty, checkEffectivelyDirty } from '@/lib/repl-stored-state/adapter-supabase/utils'
 import { ResponseError, isAbortError } from '@/lib/response-error'
 import type { ReplStoredState } from '@/types/repl.types'
 

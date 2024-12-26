@@ -14,7 +14,7 @@ export default function useReplDecorations() {
   const [replState] = useReplStoredState()
   const [rewindMode] = useReplRewindMode()
   const { payloads } = useReplPayloads()
-  const { editorRef } = useMonacoEditor()
+  const { editor, editorRef } = useMonacoEditor()
   const { setDecorationsOutdated } = useReplOutdatedDecorations()
 
   const decorationsDisposable = useRef<() => void>(undefined)
@@ -136,11 +136,11 @@ export default function useReplDecorations() {
   }, [])
 
   useEffect(() => {
-    if (!editorRef.current) {
+    if (!editor) {
       return
     }
 
-    const disposable = editorRef.current.addAction({
+    const disposable = editor.addAction({
       id: 'jsrepl.copyContentsWithDecors',
       label: 'Copy With REPL Decorations',
       async run(editor) {
@@ -154,5 +154,5 @@ export default function useReplDecorations() {
     return () => {
       disposable.dispose()
     }
-  }, [editorRef])
+  }, [editor])
 }

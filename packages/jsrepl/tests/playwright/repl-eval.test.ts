@@ -1,14 +1,14 @@
 import { test } from '@playwright/test'
 import dedent from 'string-dedent'
 import * as ReplFS from '@/lib/repl-fs'
-import { reactStarter } from '@/lib/repl-stored-state/defaults'
+import reactStarter from '../../supabase/seeds/system-repls/react'
 import { assertMonacoContentsWithDecors, visitPlayground } from './utils'
 
 test('simple expressions', async ({ page }) => {
   await visitPlayground(page, {
-    openedModels: ['/test.ts'],
-    activeModel: '/test.ts',
-    showPreview: false,
+    opened_models: ['/test.ts'],
+    active_model: '/test.ts',
+    show_preview: false,
     fs: {
       root: {
         kind: ReplFS.Kind.Directory,
@@ -16,33 +16,33 @@ test('simple expressions', async ({ page }) => {
           'test.ts': {
             kind: ReplFS.Kind.File,
             content: dedent`
-            const n = 1;
-            const m = n + 2;
+              const n = 1;
+              const m = n + 2;
 
-            const a = 'foo';
-            const b = a + 'bar';
+              const a = 'foo';
+              const b = a + 'bar';
 
-            let now = new Date('2024');
-            now.toISOString();
+              let now = new Date('2024');
+              now.toISOString();
 
-            const f2Val = 2;
-            const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();
+              const f2Val = 2;
+              const [f1, f2 = f2Val, {x: f3}, [f4 = -1], ...f5] = foo();
 
-            foo();
-            foo(); [window.hhh] = foo();
-            window.hadds = foo();
-            ({ x: hhh } = foo({x: 1}));
-            let h;
-            ;[h] = foo()
-            // TODO: Handle SequenceExpressions better
-            ;[h] = foo(), [h] = foo([9])
-            let hhhVar = window.hhh;
-            h
+              foo();
+              foo(); [window.hhh] = foo();
+              window.hadds = foo();
+              ({ x: hhh } = foo({x: 1}));
+              let h;
+              ;[h] = foo()
+              // TODO: Handle SequenceExpressions better
+              ;[h] = foo(), [h] = foo([9])
+              let hhhVar = window.hhh;
+              h
 
-            function foo(x) {
-              return x ?? [1,, {x: 3}, [4], 5, 6];
-            }
-          `,
+              function foo(x) {
+                return x ?? [1,, {x: 3}, [4], 5, 6];
+              }
+            `,
           },
         },
       },
@@ -115,9 +115,9 @@ test('react starter', async ({ page }) => {
 
 test('stuff', async ({ page }) => {
   await visitPlayground(page, {
-    openedModels: ['/test.ts'],
-    activeModel: '/test.ts',
-    showPreview: false,
+    opened_models: ['/test.ts'],
+    active_model: '/test.ts',
+    show_preview: false,
     fs: {
       root: {
         kind: ReplFS.Kind.Directory,
@@ -125,99 +125,99 @@ test('stuff', async ({ page }) => {
           'index.html': {
             kind: ReplFS.Kind.File,
             content: dedent`
-            <div class="flex items-center justify-center h-full dark:text-stone-100">
-              <time id="clock" class="text-5xl font-bold">xx</time>
-            </div>
+              <div class="flex items-center justify-center h-full dark:text-stone-100">
+                <time id="clock" class="text-5xl font-bold">xx</time>
+              </div>
 
-            <script type="module" src="/test.ts"></script>
-          `,
+              <script type="module" src="/test.ts"></script>
+            `,
           },
           'test.ts': {
             kind: ReplFS.Kind.File,
             content: dedent`
-            let now = new Date('2024-11-05T13:27:00.458Z');
-            const str = '\\\\\\t'
-            54
+              let now = new Date('2024-11-05T13:27:00.458Z');
+              const str = '\\\\\\t'
+              54
 
-            let aa = 23, bb = 213,
-            zcxzxc = 777
+              let aa = 23, bb = 213,
+              zcxzxc = 777
 
-            aa = 123, bb = 123123;
+              aa = 123, bb = 123123;
 
-            aa = 1; bb = 123;
+              aa = 1; bb = 123;
 
-            HTMLTimeElement
+              HTMLTimeElement
 
-            const clock = document.getElementById('clock') as HTMLTimeElement;
+              const clock = document.getElementById('clock') as HTMLTimeElement;
 
-            clock.dateTime = now.toISOString();
+              clock.dateTime = now.toISOString();
 
-            const sasd = 'asdasda"asd';
-              
-            const asdasdads = \`asdasda
-            adaas\\\`asdas\\t\\\\d\`;
+              const sasd = 'asdasda"asd';
+                
+              const asdasdads = \`asdasda
+              adaas\\\`asdas\\t\\\\d\`;
 
-            const a = { a: 1, b: 2, c: { d: 4 }, e: clock }
+              const a = { a: 1, b: 2, c: { d: 4 }, e: clock }
 
-            ;({ a: 1, b: 2, c: { d: 4 }, z: 0.1 + 0.2 });
+              ;({ a: 1, b: 2, c: { d: 4 }, z: 0.1 + 0.2 });
 
-            const b = \`
-            asa
-            <b>asd</b>
-            <script>
-              alert(1)                     j dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-            </script>
-            aasda
+              const b = \`
+              asa
+              <b>asd</b>
+              <script>
+                alert(1)                     j dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+              </script>
+              aasda
 
 
-            asdads\`;
+              asdads\`;
 
-            console.log(1,2,3); console.error(1)
+              console.log(1,2,3); console.error(1)
 
-            console.log(clock.constructor.name, a, 'asd', a, a);
+              console.log(clock.constructor.name, a, 'asd', a, a);
 
-            const obj = {}
-            const arr = [obj]
-            arr.push(obj)
-            arr.push([obj])
-            arr.push(arr)
-            arr.push([])
-            console.log(arr)
-            arr
-            console.log(arr)
+              const obj = {}
+              const arr = [obj]
+              arr.push(obj)
+              arr.push([obj])
+              arr.push(arr)
+              arr.push([])
+              console.log(arr)
+              arr
+              console.log(arr)
 
-            ;123
+              ;123
 
-            const inventory = [
-              { name: "asparagus", type: "vegetables", quantity: 5 },
-              { name: "bananas", type: "fruit", quantity: 0 },
-              { name: "goat", type: "meat", quantity: 23 },
-              { name: "cherries", type: "fruit", quantity: 5, vv: HTMLTimeElement },
-              { name: "fish", type: "meat", quantity: 22, date: new Date() },
-            ];
+              const inventory = [
+                { name: "asparagus", type: "vegetables", quantity: 5 },
+                { name: "bananas", type: "fruit", quantity: 0 },
+                { name: "goat", type: "meat", quantity: 23 },
+                { name: "cherries", type: "fruit", quantity: 5, vv: HTMLTimeElement },
+                { name: "fish", type: "meat", quantity: 22, date: new Date() },
+              ];
 
-            console.log(inventory)
+              console.log(inventory)
 
-            class Foo {}
+              class Foo {}
 
-            let foo = new Foo()
+              let foo = new Foo()
 
-            let set = new Set()
-            set.add('asd')
-            set.add('asdasddas')
-            let obj2 = { set }
+              let set = new Set()
+              set.add('asd')
+              set.add('asdasddas')
+              let obj2 = { set }
 
-            let map = new Map()
-            map.set('a', 'b')
-            map.set({ x: 'xx' }, { f: 2 })
-            map.set(1, new Map())
-            map.set(new Map(), 5)
-            map.set([], [])
-            map.set([1], [2])
-            map.set('now', now)
-            let obj3 = { map, now }
-            console.log(map)
-          `,
+              let map = new Map()
+              map.set('a', 'b')
+              map.set({ x: 'xx' }, { f: 2 })
+              map.set(1, new Map())
+              map.set(new Map(), 5)
+              map.set([], [])
+              map.set([1], [2])
+              map.set('now', now)
+              let obj3 = { map, now }
+              console.log(map)
+            `,
           },
         },
       },
@@ -315,9 +315,9 @@ test('stuff', async ({ page }) => {
 
 test('multiline decor', async ({ page }) => {
   await visitPlayground(page, {
-    openedModels: ['/test.ts'],
-    activeModel: '/test.ts',
-    showPreview: false,
+    opened_models: ['/test.ts'],
+    active_model: '/test.ts',
+    show_preview: false,
     fs: {
       root: {
         kind: ReplFS.Kind.Directory,
@@ -325,9 +325,9 @@ test('multiline decor', async ({ page }) => {
           'test.ts': {
             kind: ReplFS.Kind.File,
             content: dedent`
-            console.log(1, 2,
-            3);
-          `,
+              console.log(1, 2,
+              3);
+            `,
           },
         },
       },
@@ -353,32 +353,34 @@ test(
   },
   async ({ page }) => {
     await visitPlayground(page, {
-      openedModels: ['/test.ts'],
-      activeModel: '/test.ts',
-      showPreview: false,
-      fs: new ReplFS.FS({
-        kind: ReplFS.Kind.Directory,
-        children: {
-          'test.ts': {
-            kind: ReplFS.Kind.File,
-            content: dedent`
-              const obj2 = {
-                get foo() {
-                  return obj2;
-                },
-              };
+      opened_models: ['/test.ts'],
+      active_model: '/test.ts',
+      show_preview: false,
+      fs: {
+        root: {
+          kind: ReplFS.Kind.Directory,
+          children: {
+            'test.ts': {
+              kind: ReplFS.Kind.File,
+              content: dedent`
+                const obj2 = {
+                  get foo() {
+                    return obj2;
+                  },
+                };
 
-              const obj = { a: 20 };
+                const obj = { a: 20 };
 
-              const proxy = new Proxy(obj, {
-                get(target, p) {
+                const proxy = new Proxy(obj, {
+                  get(target, p) {
 
-                }
-              })
-            `,
+                  }
+                })
+              `,
+            },
           },
         },
-      }),
+      },
     })
 
     await assertMonacoContentsWithDecors(
@@ -412,28 +414,30 @@ test(
   },
   async ({ page }) => {
     await visitPlayground(page, {
-      openedModels: ['/test.ts'],
-      activeModel: '/test.ts',
-      showPreview: false,
-      fs: new ReplFS.FS({
-        kind: ReplFS.Kind.Directory,
-        children: {
-          'test.ts': {
-            kind: ReplFS.Kind.File,
-            content: dedent`
-              const obj = { a: 20 };
-              const proxy = new Proxy(obj, {
-                get(target, p) {
-                  return 5;
-                },
-              });
-              Proxy;
-              proxy.a;
-              proxy;
-            `,
+      opened_models: ['/test.ts'],
+      active_model: '/test.ts',
+      show_preview: false,
+      fs: {
+        root: {
+          kind: ReplFS.Kind.Directory,
+          children: {
+            'test.ts': {
+              kind: ReplFS.Kind.File,
+              content: dedent`
+                const obj = { a: 20 };
+                const proxy = new Proxy(obj, {
+                  get(target, p) {
+                    return 5;
+                  },
+                });
+                Proxy;
+                proxy.a;
+                proxy;
+              `,
+            },
           },
         },
-      }),
+      },
     })
 
     await assertMonacoContentsWithDecors(

@@ -4,7 +4,7 @@ import { useMonacoEditor } from './useMonacoEditor'
 import { useReplModels } from './useReplModels'
 
 export default function useReplDecorationsOutdated() {
-  const { editorRef } = useMonacoEditor()
+  const { editor, editorRef } = useMonacoEditor()
   const { models } = useReplModels()
 
   const decorationsOutdatedRef = useRef(false)
@@ -35,7 +35,6 @@ export default function useReplDecorationsOutdated() {
   )
 
   useEffect(() => {
-    const editor = editorRef.current
     if (!editor) {
       return
     }
@@ -54,7 +53,7 @@ export default function useReplDecorationsOutdated() {
     return () => {
       disposable.dispose()
     }
-  }, [models, editorRef, setDecorationsOutdated])
+  }, [models, editor, setDecorationsOutdated])
 
   return { setDecorationsOutdated }
 }

@@ -69,7 +69,6 @@ export default function CodeEditor() {
     tabSize: 2,
     renderLineHighlight: userState.editor.renderLineHighlight,
     lineNumbers: userState.editor.lineNumbers,
-    scrollBeyondLastLine: false,
   })
 
   useEffect(() => {

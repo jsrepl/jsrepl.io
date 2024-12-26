@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database, ReplStoredState } from '@/types'
+import { toCreatePayload, toUpdatePayload } from './utils'
 
 /**
  * Get a repl by id
@@ -80,14 +81,7 @@ export async function createRepl(
   repl: ReplStoredState,
   { supabase, signal }: { supabase: SupabaseClient<Database>; signal?: AbortSignal }
 ) {
-  const payload = {
-    title: repl.title,
-    description: repl.description,
-    fs: repl.fs,
-    opened_models: repl.openedModels,
-    active_model: repl.activeModel,
-    show_preview: repl.showPreview,
-  }
+  const payload = toCreatePayload(repl)
 
   return await supabase
     .from('repls')
@@ -118,15 +112,7 @@ export async function updateRepl(
     throw new Error('Repl ID is required')
   }
 
-  const payload = {
-    id: repl.id,
-    title: repl.title,
-    description: repl.description,
-    fs: repl.fs,
-    opened_models: repl.openedModels,
-    active_model: repl.activeModel,
-    show_preview: repl.showPreview,
-  }
+  const payload = toUpdatePayload(repl)
 
   return await supabase
     .from('repls')

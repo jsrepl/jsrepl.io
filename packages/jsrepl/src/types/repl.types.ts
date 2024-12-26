@@ -28,11 +28,15 @@ export type ReplStoredState = {
   showPreview: boolean
 }
 
-export type ReplRecordPayload = Database['public']['Tables']['repls']['Row'] & {
+export type ReplRecordPayload = Database['public']['Tables']['repls']['Row']
+
+export type ReplRecordPayloadWithUser = Database['public']['Tables']['repls']['Row'] & {
   user: Database['public']['Tables']['public_profiles']['Row'] | null
 }
 
 export type ReplUpdatePayload = Database['public']['Tables']['repls']['Update']
+
+export type ReplCreatePayload = Omit<Database['public']['Tables']['repls']['Insert'], 'id'>
 
 export type UserStoredState = {
   /**

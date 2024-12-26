@@ -16,7 +16,7 @@ import { useReplStoredState } from './useReplStoredState'
 type RequestHandler = Exclude<RegisterCompletionOptions['requestHandler'], undefined>
 
 export default function useMonacopilot() {
-  const { editorRef } = useMonacoEditor()
+  const { editor } = useMonacoEditor()
   const { models } = useReplModels()
   const [replState] = useReplStoredState()
   const recentModelsRef = useRef<CodeEditorModel[]>([])
@@ -107,15 +107,11 @@ export default function useMonacopilot() {
   }, [models, replState.activeModel, enableRelatedFiles])
 
   useEffect(() => {
-    if (!editorRef.current) {
+    if (!editor || !isEnabled) {
       return
     }
 
-    if (!isEnabled) {
-      return
-    }
-
-    const completion = registerCompletion(monaco, editorRef.current, {
+    const completion = registerCompletion(monaco, editor, {
       endpoint: '',
       language: [
         { language: 'typescript', exclusive: true },
@@ -144,7 +140,7 @@ export default function useMonacopilot() {
     return () => {
       completion.deregister()
     }
-  }, [editorRef, isEnabled, requestHandler, enableCaching, maxContextLines, enableRelatedFiles])
+  }, [editor, isEnabled, requestHandler, enableCaching, maxContextLines, enableRelatedFiles])
 }
 
 function customPrompt(metadata: CompletionMetadata) {

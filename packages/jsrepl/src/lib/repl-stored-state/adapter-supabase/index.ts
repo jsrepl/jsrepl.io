@@ -1,8 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import { deepEqual } from '@/lib/equal'
 import * as ReplFS from '@/lib/repl-fs'
 import { ResponseError } from '@/lib/response-error'
-import type { Database, ReplRecordPayload, ReplStoredState, ReplUpdatePayload } from '@/types'
+import type { Database, ReplStoredState } from '@/types'
 import {
   createRepl,
   deleteRepl,
@@ -13,6 +12,7 @@ import {
   getUserRepls,
   updateRepl,
 } from './api'
+import { fromPayload } from './utils'
 
 type ExtraUrlProps = {
   openedModels?: string[]
@@ -234,60 +234,6 @@ export function getPageUrl(state: ReplStoredState, extraUrlProps?: ExtraUrlProps
   }
 
   return url
-}
-
-export function checkDirty(state: ReplStoredState, savedState: ReplStoredState) {
-  const a = toPayload(state)
-  const b = toPayload(savedState)
-  return !deepEqual(a, b)
-}
-
-export function checkEffectivelyDirty(state: ReplStoredState, savedState: ReplStoredState) {
-  const a = toPayload(state)
-  const b = toPayload(savedState)
-
-  delete a.opened_models
-  delete a.active_model
-  delete a.show_preview
-
-  delete b.opened_models
-  delete b.active_model
-  delete b.show_preview
-
-  return !deepEqual(a, b)
-}
-
-function fromPayload(payload: ReplRecordPayload): ReplStoredState {
-  return {
-    id: payload.id,
-    user_id: payload.user_id,
-    user: payload.user
-      ? {
-          avatar_url: payload.user.avatar_url,
-          user_name: payload.user.user_name,
-        }
-      : null,
-    created_at: payload.created_at,
-    updated_at: payload.updated_at,
-    title: payload.title,
-    description: payload.description,
-    fs: payload.fs,
-    openedModels: payload.opened_models,
-    activeModel: payload.active_model,
-    showPreview: payload.show_preview,
-  }
-}
-
-function toPayload(state: ReplStoredState): ReplUpdatePayload {
-  return {
-    id: state.id,
-    title: state.title,
-    description: state.description,
-    fs: state.fs,
-    opened_models: state.openedModels,
-    active_model: state.activeModel,
-    show_preview: state.showPreview,
-  }
 }
 
 function searchParamsToExtraUrlProps(searchParams: URLSearchParams): ExtraUrlProps {
