@@ -5,8 +5,8 @@ import {
   ReplPayloadContextKind,
   identifierNameFunctionMeta,
 } from '@jsrepl/shared-types'
+import { initSkip } from '../skip-utils'
 import { getBaseCtx, getNextId, initReplCallExpression } from './repl-utils'
-import { initSkip } from './skip-utils'
 
 export type ReplPluginMetadata = {
   replPlugin: {
@@ -14,8 +14,11 @@ export type ReplPluginMetadata = {
   }
 }
 
-export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
-  const { skip, shouldSkip } = initSkip()
+export function replPlugin(
+  { types: t }: { types: typeof types },
+  args: { skipUtils: ReturnType<typeof initSkip> }
+): PluginObj {
+  const { skip, shouldSkip } = args.skipUtils
   const { r, ctxList } = initReplCallExpression({ types: t })
 
   function ForInOrOfStatement(
@@ -189,6 +192,10 @@ export function replPlugin({ types: t }: { types: typeof types }): PluginObj {
         const declarations = path.get('declarations')
         declarations.forEach((declaration) => {
           const declarationId = declaration.get('id')
+          if (shouldSkip(declarationId)) {
+            return
+          }
+
           if (t.isIdentifier(declarationId.node)) {
             vars.push({ path: declarationId, identifier: declarationId.node })
           } else {

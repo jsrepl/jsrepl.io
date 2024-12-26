@@ -8,18 +8,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type { NodePath, PluginObj, template as templateBuilder, types } from '@babel/core'
+import { initSkip } from './skip-utils'
 
 // Based on https://repl.it/site/blog/infinite-loops.
 
 const MAX_ITERATIONS = 6000
 
-export function preventInfiniteLoopsPlugin({
-  types: t,
-  template,
-}: {
-  types: typeof types
-  template: typeof templateBuilder
-}): PluginObj {
+export function preventInfiniteLoopsPlugin(
+  {
+    types: t,
+    template,
+  }: {
+    types: typeof types
+    template: typeof templateBuilder
+  },
+  args: { skipUtils: ReturnType<typeof initSkip> }
+): PluginObj {
+  const { skip } = args.skipUtils
+
   const buildGuard = template.statement(`
     if (%%iterator%%++ > %%maxIterations%%) {
       throw new RangeError(
@@ -55,6 +61,9 @@ export function preventInfiniteLoopsPlugin({
         } else {
           bodyPath.unshiftContainer('body', guard)
         }
+
+        // Skip variable from being processed by jsrepl plugin
+        skip(iterator)
       },
     },
   }

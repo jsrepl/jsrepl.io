@@ -6,6 +6,7 @@ import { getBabel, isBabelParseError } from '@/lib/get-babel'
 import { getFileExtension } from '../fs-utils'
 import { preventInfiniteLoopsPlugin } from './babel/prevent-infinite-loops-plugin'
 import { ReplPluginMetadata, replPlugin } from './babel/repl-plugin'
+import { initSkip } from './babel/skip-utils'
 import { fs } from './fs'
 import { babelParseErrorToEsbuildError } from './utils'
 
@@ -67,8 +68,12 @@ function transform(code: string, filePath: string): TransformResult {
     return cached
   }
 
+  const skipUtils = initSkip()
   const jsReplPreset = {
-    plugins: [replPlugin, preventInfiniteLoopsPlugin],
+    plugins: [
+      [replPlugin, { skipUtils }],
+      [preventInfiniteLoopsPlugin, { skipUtils }],
+    ],
   }
 
   const ext = getFileExtension(filePath)
