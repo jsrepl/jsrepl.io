@@ -18,7 +18,7 @@ export function JsEsbuildPlugin({ replMeta }: { replMeta: ReplMeta }): esbuild.P
   const ctxList: ReplPayload['ctx'][] = []
 
   return {
-    name: 'jsrepl-js',
+    name: 'esbuild-jsrepl-js',
     setup(build) {
       build.onLoad({ filter: /\.(ts|tsx|js|jsx)$/ }, onLoadCallback)
       build.onEnd(() => {

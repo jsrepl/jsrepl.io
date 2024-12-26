@@ -9,34 +9,24 @@ import {
 import * as monaco from 'monaco-editor'
 import { CodeEditorModel } from '@/lib/code-editor-model'
 import { useMonacoEditor } from './useMonacoEditor'
+import useMonacopilotOptions from './useMonacopilotOptions'
 import { useReplModels } from './useReplModels'
 import { useReplStoredState } from './useReplStoredState'
-import { useUserStoredState } from './useUserStoredState'
 
 type RequestHandler = Exclude<RegisterCompletionOptions['requestHandler'], undefined>
 
 export default function useMonacopilot() {
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
   const { models } = useReplModels()
   const [replState] = useReplStoredState()
-  const [userState] = useUserStoredState()
   const recentModelsRef = useRef<CodeEditorModel[]>([])
   const relatedModelsRef = useRef<CodeEditorModel[]>([])
-
-  const apiKey = useMemo(() => {
-    return userState.copilot.apiKey
-  }, [userState.copilot.apiKey])
+  const { apiKey, isEnabled, enableCaching, enableRelatedFiles, maxContextLines, model, provider } =
+    useMonacopilotOptions()
 
   const copilotOptions = useMemo<CopilotOptions>(() => {
-    return {
-      provider: userState.copilot.provider,
-      model: userState.copilot.model,
-    } as CopilotOptions
-  }, [userState.copilot.provider, userState.copilot.model])
-
-  const isEnabled = useMemo(() => {
-    return !!apiKey && copilotOptions.provider && copilotOptions.model
-  }, [apiKey, copilotOptions])
+    return { provider, model } as CopilotOptions
+  }, [provider, model])
 
   const providerCustomHeaders = useMemo(() => {
     const { provider } = copilotOptions
@@ -97,7 +87,7 @@ export default function useMonacopilot() {
   )
 
   useEffect(() => {
-    if (!userState.copilot.enableRelatedFiles) {
+    if (!enableRelatedFiles) {
       return
     }
 
@@ -114,7 +104,7 @@ export default function useMonacopilot() {
     relatedModelsRef.current = recentModelsRef.current.filter(
       (model) => model.filePath !== replState.activeModel
     )
-  }, [models, replState.activeModel, userState.copilot.enableRelatedFiles])
+  }, [models, replState.activeModel, enableRelatedFiles])
 
   useEffect(() => {
     if (!editorRef.current) {
@@ -136,11 +126,11 @@ export default function useMonacopilot() {
         { language: 'markdown', exclusive: true },
       ],
       trigger: 'onTyping',
-      enableCaching: userState.copilot.enableCaching,
-      maxContextLines: userState.copilot.maxContextLines,
+      enableCaching,
+      maxContextLines,
       requestHandler,
       get relatedFiles() {
-        if (!userState.copilot.enableRelatedFiles) {
+        if (!enableRelatedFiles) {
           return undefined
         }
 
@@ -154,14 +144,7 @@ export default function useMonacopilot() {
     return () => {
       completion.deregister()
     }
-  }, [
-    editorRef,
-    isEnabled,
-    requestHandler,
-    userState.copilot.enableCaching,
-    userState.copilot.maxContextLines,
-    userState.copilot.enableRelatedFiles,
-  ])
+  }, [editorRef, isEnabled, requestHandler, enableCaching, maxContextLines, enableRelatedFiles])
 }
 
 function customPrompt(metadata: CompletionMetadata) {

@@ -64,6 +64,10 @@ const config: Config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -82,6 +86,9 @@ const config: Config = {
       },
       height: {
         'repl-header': '2.25rem',
+      },
+      fontSize: {
+        xsx: ['0.8125rem', '1.125rem'],
       },
       keyframes: {
         'accordion-down': {

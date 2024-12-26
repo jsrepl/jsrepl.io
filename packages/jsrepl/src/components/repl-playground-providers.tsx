@@ -9,6 +9,7 @@ import ReplPayloadsProvider from '@/components/providers/repl-payloads-provider'
 import ReplRewindModeProvider from '@/components/providers/repl-rewind-mode-provider'
 import ReplSaveProvider from '@/components/providers/repl-save-provider'
 import ReplSavedStateProvider from '@/components/providers/repl-saved-state-provider'
+import ReplSettingsDialogProvider from '@/components/providers/repl-settings-dialog-provider'
 import ReplStateProvider from '@/components/providers/repl-state-provider'
 import UserStateProvider from '@/components/providers/user-state-provider'
 import WritableModelsProvider from '@/components/providers/writable-models-provider'
@@ -27,7 +28,9 @@ export default function ReplPlaygroundProviders({ children }: { children: React.
                       <WritableModelsProvider>
                         <ReplSaveProvider>
                           <ReplFSChangesProvider>
-                            <ReplPayloadsProvider>{children}</ReplPayloadsProvider>
+                            <ReplPayloadsProvider>
+                              <ReplSettingsDialogProvider>{children}</ReplSettingsDialogProvider>
+                            </ReplPayloadsProvider>
                           </ReplFSChangesProvider>
                         </ReplSaveProvider>
                       </WritableModelsProvider>

@@ -32,7 +32,7 @@ type ModelSwitcherOption = {
 export default function CodeEditorHeader() {
   const [replState, setReplState] = useReplStoredState()
   const [replInfo] = useReplInfo()
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
   const { readOnlyModels } = useReplModels()
   const { changes: replFSChanges } = useReplFSChanges()
 

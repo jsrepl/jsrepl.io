@@ -11,7 +11,10 @@ import useMonacopilot from '@/hooks/useMonacopilot'
 import { useReplModels } from '@/hooks/useReplModels'
 import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
-import { PrettierFormattingProvider } from '@/lib/monaco-prettier-formatting-provider'
+import {
+  PrettierFormattingProvider,
+  SUPPORTED_FORMATTING_LANGUAGES,
+} from '@/lib/monaco-prettier-formatting-provider'
 import { Themes } from '@/lib/themes'
 import { cn } from '@/lib/utils'
 
@@ -27,7 +30,7 @@ setupTailwindCSS()
 export default function CodeEditor() {
   const [replState] = useReplStoredState()
   const [userState] = useUserStoredState()
-  const [editorRef, setEditor] = useMonacoEditor()
+  const { editorRef, setEditor } = useMonacoEditor()
   const { models, readOnlyModels } = useReplModels()
   const { highlighter, loadedHighlightTheme } = useCodeHighlighter()
 
@@ -168,12 +171,7 @@ function setupMonaco() {
 
   const prettierFormattingProvider = new PrettierFormattingProvider()
   monaco.languages.registerDocumentFormattingEditProvider(
-    [
-      { language: 'typescript', exclusive: true },
-      { language: 'javascript', exclusive: true },
-      { language: 'html', exclusive: true },
-      { language: 'css', exclusive: true },
-    ],
+    SUPPORTED_FORMATTING_LANGUAGES.map((language) => ({ language, exclusive: true })),
     prettierFormattingProvider
   )
 

@@ -37,7 +37,7 @@ export function CssEsbuildPlugin({
   }
 
   return {
-    name: 'jsrepl-css',
+    name: 'esbuild-jsrepl-css',
     setup(build) {
       tailwindContent = null
       tailwindConfigLoadDeferred = null

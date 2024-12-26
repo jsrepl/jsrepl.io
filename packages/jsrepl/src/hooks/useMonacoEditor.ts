@@ -1,11 +1,14 @@
-import { RefObject, useContext } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 import type * as monaco from 'monaco-editor'
 import { MonacoEditorContext } from '@/components/providers/monaco-editor-provider'
 
-export function useMonacoEditor(): [
-  RefObject<monaco.editor.IStandaloneCodeEditor | null>,
-  (editor: monaco.editor.IStandaloneCodeEditor | null) => void,
-] {
-  const { editorRef, setEditor } = useContext(MonacoEditorContext)!
-  return [editorRef, setEditor]
+export function useMonacoEditor() {
+  const { editor, setEditor } = useContext(MonacoEditorContext)!
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(editor)
+
+  useEffect(() => {
+    editorRef.current = editor
+  }, [editor])
+
+  return { editor, editorRef, setEditor }
 }

@@ -1,77 +1,56 @@
-import type * as esbuild from 'esbuild-wasm'
+import { useMemo, useState } from 'react'
 import { LucideCircleAlert, LucideTriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useReplInfo } from '@/hooks/useReplInfo'
-import { useReplStoredState } from '@/hooks/useReplStoredState'
+import { isBabelParseEsbuildError } from '@/lib/bundler/utils'
 
 export function ErrorsNotification() {
   const [replInfo] = useReplInfo()
+  const [expanded, setExpanded] = useState(true)
+
+  const primaryError = replInfo?.errors[0]
+
+  const errorText = useMemo(() => {
+    if (!primaryError) {
+      return null
+    }
+
+    const isBabelParseError = isBabelParseEsbuildError(primaryError)
+    return isBabelParseError ? primaryError.detail.shortMessage : primaryError.text
+  }, [primaryError])
+
+  if (!replInfo || replInfo.ok || !primaryError) {
+    return null
+  }
 
   return (
-    <>
-      {replInfo && !replInfo.ok && (
-        <div className="absolute bottom-6 left-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon-lg">
-                {replInfo.errors.length === 0 && replInfo.warnings.length > 0 ? (
-                  <LucideTriangleAlert size={24} className="text-yellow-500" />
-                ) : (
-                  <LucideCircleAlert size={24} className="text-red-500" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="end">
-              <div className="flex max-w-[calc(var(--radix-popper-available-width)-2rem)] flex-col gap-1 px-2 py-1 text-sm">
-                {replInfo.errors.map((error) => (
-                  <div key={error.text} className="flex items-start gap-3">
-                    <LucideCircleAlert size={18} className="translate-y-px text-red-500" />
-                    {error.location?.file && <Location location={error.location} />}
-                    <span className="flex-1">{error.text}</span>
-                  </div>
-                ))}
+    <div className="absolute bottom-6 left-6 mr-6">
+      <div className="bg-secondary text-secondary-foreground flex items-stretch overflow-hidden rounded-md border text-sm leading-tight shadow-sm">
+        <Button
+          variant="secondary"
+          size="icon-lg"
+          className="h-auto min-h-10 rounded-none border-none shadow-none ring-inset"
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          {replInfo.errors.length === 0 && replInfo.warnings.length > 0 ? (
+            <LucideTriangleAlert size={24} className="text-yellow-500" />
+          ) : (
+            <LucideCircleAlert size={24} className="text-red-500" />
+          )}
+        </Button>
 
-                {replInfo.warnings.map((warning) => (
-                  <div key={warning.text} className="flex items-start gap-3">
-                    <LucideTriangleAlert size={18} className="translate-y-px text-yellow-500" />
-                    {warning.location?.file && <Location location={warning.location} />}
-                    <span className="flex-1">{warning.text}</span>
-                  </div>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
-    </>
-  )
-}
-
-function Location({ location }: { location: esbuild.Location }) {
-  const [, setReplState] = useReplStoredState()
-
-  return (
-    <Button
-      variant="link"
-      size="none"
-      className="leading-5"
-      onClick={() => {
-        const filePath = `/${location.file}`
-        setReplState((state) => ({
-          ...state,
-          activeModel: filePath,
-          openedModels: state.openedModels.includes(filePath)
-            ? state.openedModels
-            : [...state.openedModels, filePath],
-        }))
-      }}
-    >
-      /{location.file}
-    </Button>
+        {expanded && (
+          <span className="flex max-w-prose flex-1 select-text items-center gap-2 whitespace-normal p-2 font-normal">
+            {primaryError.location?.file && (
+              <span className="text-muted-foreground">
+                {primaryError.location.file}:{primaryError.location.line}:
+                {primaryError.location.column}
+              </span>
+            )}
+            <span className="line-clamp-3">{errorText}</span>
+          </span>
+        )}
+      </div>
+    </div>
   )
 }

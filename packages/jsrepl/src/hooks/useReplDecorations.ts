@@ -14,7 +14,7 @@ export default function useReplDecorations() {
   const [replState] = useReplStoredState()
   const [rewindMode] = useReplRewindMode()
   const { payloads } = useReplPayloads()
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
   const { setDecorationsOutdated } = useReplOutdatedDecorations()
 
   const decorationsDisposable = useRef<() => void>(undefined)

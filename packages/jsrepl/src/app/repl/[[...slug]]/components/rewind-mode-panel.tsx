@@ -22,7 +22,7 @@ export default function RewindModePanel() {
   const [rewindMode, setRewindMode] = useReplRewindMode()
   const { payloads } = useReplPayloads()
   const [, setReplState] = useReplStoredState()
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
 
   const elRef = useRef<HTMLDivElement>(null)
 

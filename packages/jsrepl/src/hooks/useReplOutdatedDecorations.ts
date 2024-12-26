@@ -4,7 +4,7 @@ import { useMonacoEditor } from './useMonacoEditor'
 import { useReplModels } from './useReplModels'
 
 export default function useReplDecorationsOutdated() {
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
   const { models } = useReplModels()
 
   const decorationsOutdatedRef = useRef(false)

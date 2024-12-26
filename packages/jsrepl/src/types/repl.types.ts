@@ -86,6 +86,7 @@ export type ImportMap = {
 
 export type ReplInfo = {
   ok: boolean
+  masterErrorMessage: string | undefined
   errors: esbuild.Message[]
   warnings: esbuild.Message[]
 }

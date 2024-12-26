@@ -15,6 +15,7 @@ import { getBundler } from '@/lib/bundler/get-bundler'
 import type { CodeEditorModel } from '@/lib/code-editor-model'
 import { DebugLog, debugLog } from '@/lib/debug-log'
 import { type ImportMap, type ReplInfo } from '@/types'
+import { isBabelParseEsbuildError } from '../bundler/utils'
 import { consoleLogRepl } from '../console-utils'
 import { getPackageUrl } from '../package-provider'
 import { type ReplData, replDataRef } from './data'
@@ -208,6 +209,7 @@ export async function sendRepl({
 
   const replInfo: ReplInfo = {
     ok: bundle.ok,
+    masterErrorMessage: bundle.error?.message,
     errors: bundleErrors,
     warnings: bundleWarnings,
   }
@@ -366,10 +368,13 @@ function getPayloadFromEsbuildMessage(
     filePath = '/' + filePath
   }
 
+  const isBabelParseError = isBabelParseEsbuildError(msg)
+  const text = isBabelParseError ? msg.detail.shortMessage : msg.text
+
   const commonPart = {
     id: crypto.randomUUID(),
     isError: true,
-    result: msg.text,
+    result: text,
     timestamp: Date.now(),
     ctx: {
       id: `bundle-${kind}-${msg.id}-${msg.location?.file}-${msg.location?.line}:${msg.location?.column}`,

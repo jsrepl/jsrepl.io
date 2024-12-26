@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { ReplPayload } from '@jsrepl/shared-types'
@@ -6,7 +6,6 @@ import { LucideFiles, LucidePlay, LucideRewind, LucideRotateCw, LucideSettings }
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
 import IconGithub from '~icons/simple-icons/github.jsx'
 import Logo from '@/components/logo'
-import ReplSettingsDialog from '@/components/repl-settings-dialog'
 import ShareReplDropdownItem from '@/components/share-repl-dropdown-item'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -25,6 +24,7 @@ import { UserMenu } from '@/components/user-menu'
 import { useReplPayloads } from '@/hooks/useReplPayloads'
 import { useReplPreviewShown } from '@/hooks/useReplPreviewShown'
 import { useReplRewindMode } from '@/hooks/useReplRewindMode'
+import useReplSettingsDialog from '@/hooks/useReplSettingsDialog'
 import { useUser } from '@/hooks/useUser'
 import { useUserStoredState } from '@/hooks/useUserStoredState'
 import { Themes } from '@/lib/themes'
@@ -37,7 +37,7 @@ export default function ActivityBar() {
   const [rewindMode, setRewindMode] = useReplRewindMode()
   const { payloads } = useReplPayloads()
   const { previewEnabled, previewShown, setPreviewShown } = useReplPreviewShown()
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
+  const replSettingsDialog = useReplSettingsDialog()
 
   const restartRepl = useCallback(() => {
     setRewindMode((prev) => ({ ...prev, active: false, currentPayloadId: null }))
@@ -234,7 +234,7 @@ export default function ActivityBar() {
               size="icon-lg"
               variant="ghost"
               className="text-activityBar-foreground"
-              onClick={() => setSettingsDialogOpen(true)}
+              onClick={() => replSettingsDialog.show()}
             >
               <LucideSettings size={21} strokeWidth={1.5} />
             </Button>
@@ -260,8 +260,6 @@ export default function ActivityBar() {
           dropdownMenuContentProps={{ side: 'right', align: 'end' }}
         />
       </div>
-
-      <ReplSettingsDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen} />
     </>
   )
 }

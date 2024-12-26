@@ -44,7 +44,7 @@ export default function ReplSaveProvider({ children }: { children: React.ReactNo
   const user = useUser()
   const [state, setState] = useReplStoredState()
   const [userStoredState] = useUserStoredState()
-  const [editorRef] = useMonacoEditor()
+  const { editorRef } = useMonacoEditor()
   const { signInWithGithub } = useAuthHelpers()
   const { flushPendingChanges } = useWritableModels()
   const [savedState, setSavedState] = useReplSavedState()

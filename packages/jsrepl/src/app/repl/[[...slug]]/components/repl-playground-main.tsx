@@ -5,6 +5,7 @@ import CodeEditorContainer from './code-editor-container'
 import GridLayout from './grid-layout'
 import LeftSidebar from './left-sidebar'
 import Preview from './preview'
+import StatusBar from './status-bar'
 
 export default function ReplPlaygroundMain() {
   useReplViewEvent()
@@ -17,6 +18,7 @@ export default function ReplPlaygroundMain() {
         <LeftSidebar />
         <CodeEditorContainer />
         <Preview />
+        <StatusBar />
       </GridLayout>
     </main>
   )

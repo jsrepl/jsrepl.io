@@ -3,16 +3,18 @@ import { LucideLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useReplSave } from '@/hooks/useReplSave'
+import { useReplStoredState } from '@/hooks/useReplStoredState'
 import { useUser } from '@/hooks/useUser'
 import { getPageUrl } from '@/lib/repl-stored-state/adapter-supabase'
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from './ui/dropdown-menu'
 
 export default function ShareReplDropdownItem() {
-  const [savedState, saveReplState, { isNew, isSaving }] = useReplSave()
-  const savedStateRef = useRef(savedState)
+  const [state] = useReplStoredState()
+  const [, saveReplState, { isNew, isSaving }] = useReplSave()
+  const stateRef = useRef(state)
   useEffect(() => {
-    savedStateRef.current = savedState
-  }, [savedState])
+    stateRef.current = state
+  }, [state])
 
   const user = useUser()
   const { signInWithGithub } = useAuthHelpers()
@@ -23,7 +25,7 @@ export default function ShareReplDropdownItem() {
       await new Promise((resolve) => setTimeout(resolve, 0))
     }
 
-    const sharableUrl = getPageUrl(savedStateRef.current, true)
+    const sharableUrl = getPageUrl(stateRef.current, true)
     await navigator.clipboard.writeText(sharableUrl.toString())
     toast.success('Link copied to clipboard')
   }
