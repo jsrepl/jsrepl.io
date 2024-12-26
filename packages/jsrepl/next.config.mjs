@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import createMDX from '@next/mdx'
 import { readFileSync } from 'fs'
 import Icons from 'unplugin-icons/webpack'
