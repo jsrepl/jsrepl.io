@@ -122,6 +122,11 @@ export default function CodeEditorHeader() {
     [setReplState, editorRef]
   )
 
+  const onFormatClick = useCallback(async () => {
+    await editorRef.current?.getAction('editor.action.formatDocument')?.run()
+    editorRef.current?.focus()
+  }, [editorRef])
+
   return (
     <header ref={headerRef} className="h-repl-header bg-secondary flex items-stretch">
       <ScrollArea scrollHideDelay={0} className="flex-1">
@@ -195,9 +200,7 @@ export default function CodeEditorHeader() {
               size="icon-xs"
               className="text-muted-foreground"
               disabled={isReadOnly}
-              onClick={() => {
-                editorRef.current?.getAction('editor.action.formatDocument')?.run()
-              }}
+              onClick={onFormatClick}
             >
               <IconPrettier width={15} height={15} />
             </Button>
