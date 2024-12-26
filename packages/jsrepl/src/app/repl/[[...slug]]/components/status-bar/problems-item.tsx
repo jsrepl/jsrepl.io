@@ -140,7 +140,11 @@ function EsbuildMessage({
 }
 
 function Marker({ marker }: { marker: monaco.editor.IMarker }) {
-  const owner = marker.owner === 'typescript' ? 'ts' : marker.owner
+  const owner =
+    {
+      typescript: 'ts',
+      javascript: 'js',
+    }[marker.owner] ?? marker.owner
 
   return (
     <li className="flex items-start gap-2 py-1">
