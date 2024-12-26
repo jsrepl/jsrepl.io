@@ -28,6 +28,8 @@ jobs:
         run: pnpm install
       - name: Run lint
         run: pnpm lint
+        env:
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
   vitest:
     name: Vitest
@@ -74,12 +76,16 @@ jobs:
         run: pnpm test:playwright:web-server:build
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Install Playwright Browsers
         run: pnpm -F jsrepl exec playwright install --with-deps
       - name: Run Playwright tests
         run: pnpm -F jsrepl test:playwright
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
