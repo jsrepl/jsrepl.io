@@ -68,8 +68,8 @@ export default function ReplPreview({ className }: { className?: string }) {
       className={cn(
         className,
         pos === 'aside-right' && 'relative min-w-0 [grid-area:right-sidebar]',
-        pos === 'float-bottom-right' && 'absolute bottom-1 right-4 z-10',
-        pos === 'float-top-right' && 'absolute right-4 top-10 z-10',
+        pos === 'float-bottom-right' && 'absolute bottom-6 right-4 z-10',
+        pos === 'float-top-right' && 'absolute right-4 top-9 z-10',
         !previewShown && 'pointer-events-none !absolute opacity-0'
       )}
     >
@@ -81,7 +81,7 @@ export default function ReplPreview({ className }: { className?: string }) {
         className={cn(
           pos === 'aside-right' && 'bg-secondary !h-full max-w-full border-l pl-2',
           (pos === 'float-bottom-right' || pos === 'float-top-right') &&
-            'max-h-[calc(100vh-0.25rem-var(--hh))] max-w-[calc(100vw-1rem)] p-4'
+            'max-h-[calc(100vh-1.5rem-2.25rem)] max-w-[calc(100vw-1rem)] p-4'
         )}
       >
         <div
