@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Message } from 'esbuild-wasm'
-import { LucideCheckCircle2, LucideCircleX, LucideTriangleAlert } from 'lucide-react'
+import { LucideCheckCircle2, LucideCircleX, LucideInfo, LucideTriangleAlert } from 'lucide-react'
 import * as monaco from 'monaco-editor'
 import {
   DropdownMenu,
@@ -153,6 +153,10 @@ function Marker({ marker }: { marker: monaco.editor.IMarker }) {
       )}
       {marker.severity === monaco.MarkerSeverity.Warning && (
         <LucideTriangleAlert className="shrink-0 translate-y-px text-yellow-500" size={16} />
+      )}
+      {(marker.severity === monaco.MarkerSeverity.Hint ||
+        marker.severity === monaco.MarkerSeverity.Info) && (
+        <LucideInfo className="shrink-0 translate-y-px text-blue-500" size={16} />
       )}
       <span className="text-muted-foreground">
         {marker.resource.path.replace(/^\//, '')}:{marker.startLineNumber}:{marker.startColumn}
