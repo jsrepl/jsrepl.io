@@ -78,7 +78,9 @@ function envVars() {
   }
 
   if (!process.env.NEXT_PUBLIC_SITE_URL) {
-    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    if (process.env.VERCEL_ENV === 'preview') {
+      process.env.NEXT_PUBLIC_SITE_URL = 'https://' + process.env.VERCEL_BRANCH_URL
+    } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
       process.env.NEXT_PUBLIC_SITE_URL = 'https://' + process.env.NEXT_PUBLIC_VERCEL_URL
     } else {
       throw new Error('NEXT_PUBLIC_SITE_URL is not set')
