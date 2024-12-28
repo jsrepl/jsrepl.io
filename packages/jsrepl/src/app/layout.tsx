@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
   title: 'JavaScript REPL & Playground',
   description: 'Quickly test and share your code snippets. Ideal for learning and prototyping.',
   openGraph: {
