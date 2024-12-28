@@ -1,14 +1,15 @@
-import { LucideFolder } from 'lucide-react'
-import IconReadme from '~icons/mdi/book-open-variant-outline.jsx'
-import IconCodeJson from '~icons/mdi/code-json.jsx'
-import IconFile from '~icons/mdi/file-outline.jsx'
-import IconLanguageCss from '~icons/mdi/language-css3.jsx'
-import IconLanguageHtml from '~icons/mdi/language-html5.jsx'
-import IconLanguageJavascript from '~icons/mdi/language-javascript.jsx'
-import IconLanguageMarkdown from '~icons/mdi/language-markdown.jsx'
-import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
-import IconReact from '~icons/mdi/react.jsx'
-import IconTailwind from '~icons/mdi/tailwind.jsx'
+import { BeardedIconsCss } from '@/components/icons/bearded-icons/css'
+import { BeardedIconsFile } from '@/components/icons/bearded-icons/file'
+import { BeardedIconsFolder } from '@/components/icons/bearded-icons/folder'
+import { BeardedIconsHtml } from '@/components/icons/bearded-icons/html'
+import { BeardedIconsJavascript } from '@/components/icons/bearded-icons/javascript'
+import { BeardedIconsJson } from '@/components/icons/bearded-icons/json'
+import { BeardedIconsMarkdown } from '@/components/icons/bearded-icons/markdown'
+import { BeardedIconsReactjs } from '@/components/icons/bearded-icons/reactjs'
+import { BeardedIconsReactts } from '@/components/icons/bearded-icons/reactts'
+import { BeardedIconsReadme } from '@/components/icons/bearded-icons/readme'
+import { BeardedIconsTailwind } from '@/components/icons/bearded-icons/tailwind'
+import { BeardedIconsTypescript } from '@/components/icons/bearded-icons/typescript'
 import { getFileExtension } from '@/lib/fs-utils'
 
 export function FileIcon({
@@ -21,37 +22,36 @@ export function FileIcon({
   className?: string
 }) {
   if (isFolder) {
-    return <LucideFolder className={`${className}`} />
+    return <BeardedIconsFolder className={className} />
   }
 
   switch (true) {
     case /tailwind\.config\.(ts|js)?$/i.test(name):
-      return <IconTailwind className={`${className} text-[#38BDF9]`} />
+      return <BeardedIconsTailwind className={className} />
 
     case /readme\.md$/i.test(name):
-      return <IconReadme className={`${className} text-[#38BDF9]`} />
+      return <BeardedIconsReadme className={className} />
   }
 
   const ext = getFileExtension(name)
   switch (ext) {
     case '.tsx':
+      return <BeardedIconsReactts className={className} />
     case '.jsx':
-      return <IconReact className={`${className} text-[#0A7EA4]`} />
+      return <BeardedIconsReactjs className={className} />
     case '.ts':
-      return <IconLanguageTypescript className={`${className} text-[#3078C6]`} />
+      return <BeardedIconsTypescript className={className} />
     case '.js':
-      return (
-        <IconLanguageJavascript className={`${className} text-[#c8a421] dark:text-[#E8D44E]`} />
-      )
+      return <BeardedIconsJavascript className={className} />
     case '.html':
-      return <IconLanguageHtml className={`${className} text-[#DC4A25]`} />
+      return <BeardedIconsHtml className={className} />
     case '.css':
-      return <IconLanguageCss className={`${className} text-[#3078C6]`} />
+      return <BeardedIconsCss className={className} />
     case '.json':
-      return <IconCodeJson className={`${className} text-[#CC8000]`} />
+      return <BeardedIconsJson className={className} />
     case '.md':
-      return <IconLanguageMarkdown className={`${className} text-[#3078C6]`} />
+      return <BeardedIconsMarkdown className={className} />
     default:
-      return <IconFile className={`${className} text-muted-foreground`} />
+      return <BeardedIconsFile className={className} />
   }
 }

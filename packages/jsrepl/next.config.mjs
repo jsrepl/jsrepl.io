@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import createMDX from '@next/mdx'
 import { readFileSync } from 'fs'
-import Icons from 'unplugin-icons/webpack'
 
 envVars()
 
@@ -37,17 +36,6 @@ const nextConfig = {
         destination: 'https://cloud.umami.is/script.js',
       },
     ]
-  },
-
-  webpack(config) {
-    config.plugins.push(
-      Icons({
-        compiler: 'jsx',
-        jsx: 'react',
-      })
-    )
-
-    return config
   },
 }
 

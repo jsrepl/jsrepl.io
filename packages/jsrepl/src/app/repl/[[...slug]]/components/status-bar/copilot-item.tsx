@@ -18,7 +18,7 @@ export default function CopilotItem() {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <StatusBarButton aria-label="AI Autocomplete">
-          <CopilotIcon size={14} className={!isEnabled ? 'opacity-50' : undefined} />
+          <CopilotIcon width={14} height={14} className={!isEnabled ? 'opacity-50' : undefined} />
         </StatusBarButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

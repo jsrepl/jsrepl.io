@@ -1,4 +1,4 @@
-import { LucideFolderOpen } from 'lucide-react'
+import { BeardedIconsFolderOpen } from '@/components/icons/bearded-icons/folder-open'
 import { TreeDataItem } from '@/components/ui/tree-view'
 import * as ReplFS from '@/lib/repl-fs'
 import { ReplInfo } from '@/types/repl.types'
@@ -82,7 +82,7 @@ export function fsEntryToTreeDataItem(
     icon: ({ className }: { className?: string }) => (
       <FileIcon name={name} isFolder={entry.kind === ReplFS.Kind.Directory} className={className} />
     ),
-    openIcon: entry.kind === ReplFS.Kind.Directory ? LucideFolderOpen : undefined,
+    openIcon: entry.kind === ReplFS.Kind.Directory ? BeardedIconsFolderOpen : undefined,
     actions: <Actions path={path} entry={entry} />,
     children,
   }

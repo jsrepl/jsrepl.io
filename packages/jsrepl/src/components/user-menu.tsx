@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { DropdownMenuContentProps } from '@radix-ui/react-dropdown-menu'
 import { LucideLibrary, LucideLogOut } from 'lucide-react'
-import IconGithub from '~icons/simple-icons/github.jsx'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { UserAvatar } from '@/components/user-avatar'
 import { useAuthHelpers } from '@/hooks/useAuthHelpers'
 import { useUser } from '@/hooks/useUser'
 import { cn } from '@/lib/utils'
-import { UserAvatar } from './user-avatar'
 
 export function UserMenu({
   className,
@@ -76,7 +76,7 @@ export function UserMenu({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signInWithGithub(signInOptions)}>
-              <IconGithub width={16} height={16} className="text-muted-foreground" />
+              <SimpleIconsGithub width={16} height={16} className="text-muted-foreground" />
               Sign in with GitHub
             </DropdownMenuItem>
           </>

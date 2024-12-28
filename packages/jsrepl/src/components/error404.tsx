@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import IconGithub from '~icons/simple-icons/github.jsx'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
 import { Button } from '@/components/ui/button'
 
 export default function Error404() {
@@ -28,7 +28,7 @@ export default function Error404() {
 
         <Button asChild variant="link" size="lg">
           <Link href="https://github.com/jsrepl/jsrepl.io/issues" target="_blank">
-            <IconGithub width={20} height={20} className="mr-2" />
+            <SimpleIconsGithub width={20} height={20} className="mr-2" />
             Report an issue
           </Link>
         </Button>

@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { DialogProps } from '@radix-ui/react-dialog'
-import IconLanguageHtml from '~icons/mdi/language-html5.jsx'
-import IconLanguageJavascript from '~icons/mdi/language-javascript.jsx'
-import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
-import IconReact from '~icons/mdi/react.jsx'
-import IconTailwind from '~icons/mdi/tailwind.jsx'
+import { MdiLanguageHtml5 } from '@/components/icons/mdi/language-html5'
+import { MdiLanguageJavascript } from '@/components/icons/mdi/language-javascript'
+import { MdiLanguageTypescript } from '@/components/icons/mdi/language-typescript'
+import { MdiReact } from '@/components/icons/mdi/react'
+import { MdiTailwind } from '@/components/icons/mdi/tailwind'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
 import Logo from './logo'
@@ -25,49 +25,49 @@ export default function ReplStarterDialog(props?: DialogProps) {
             replId={SystemRepls.demo}
           />
           <StarterButton
-            logo={<IconReact width="32" height="32" color="#3096FF" />}
+            logo={<MdiReact width="32" height="32" color="#3096FF" />}
             title="React"
             description="TSX, HTML & Tailwind CSS"
             replId={SystemRepls.react}
           />
           <StarterButton
-            logo={<IconTailwind width="32" height="32" color="#38BDF9" />}
+            logo={<MdiTailwind width="32" height="32" color="#38BDF9" />}
             title="Tailwind CSS playground"
             description="HTML, Tailwind CSS & Tailwind config"
             replId={SystemRepls.tailwindcss}
           />
           <StarterButton
-            logo={<IconLanguageTypescript width="32" height="32" color="#3078C6" />}
+            logo={<MdiLanguageTypescript width="32" height="32" color="#3078C6" />}
             title="TypeScript"
             description="TypeScript"
             replId={SystemRepls.ts}
           />
           <StarterButton
-            logo={<IconLanguageTypescript width="32" height="32" color="#3078C6" />}
+            logo={<MdiLanguageTypescript width="32" height="32" color="#3078C6" />}
             title="Empty TypeScript"
             description="TypeScript"
             replId={SystemRepls.tsEmpty}
           />
           <StarterButton
-            logo={<IconLanguageJavascript width="32" height="32" color="#E8D44E" />}
+            logo={<MdiLanguageJavascript width="32" height="32" color="#E8D44E" />}
             title="JavaScript"
             description="JavaScript"
             replId={SystemRepls.js}
           />
           <StarterButton
-            logo={<IconLanguageJavascript width="32" height="32" color="#E8D44E" />}
+            logo={<MdiLanguageJavascript width="32" height="32" color="#E8D44E" />}
             title="Empty JavaScript"
             description="JavaScript"
             replId={SystemRepls.jsEmpty}
           />
           <StarterButton
-            logo={<IconLanguageHtml width="32" height="32" color="#DC4A25" />}
+            logo={<MdiLanguageHtml5 width="32" height="32" color="#DC4A25" />}
             title="HTML, CSS & TypeScript"
             description="HTML, CSS & TypeScript"
             replId={SystemRepls.htmlCssTs}
           />
           <StarterButton
-            logo={<IconLanguageHtml width="32" height="32" color="#DC4A25" />}
+            logo={<MdiLanguageHtml5 width="32" height="32" color="#DC4A25" />}
             title="HTML, CSS & JavaScript"
             description="HTML, CSS & JavaScript"
             replId={SystemRepls.htmlCssJs}

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { LucideEllipsisVertical, LucideLock, LucideX } from 'lucide-react'
-import IconPrettier from '~icons/simple-icons/prettier'
+import { SimpleIconsPrettier } from '@/components/icons/simple-icons/prettier'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -202,7 +202,7 @@ export default function CodeEditorHeader() {
               disabled={isReadOnly}
               onClick={onFormatClick}
             >
-              <IconPrettier width={15} height={15} />
+              <SimpleIconsPrettier width={15} height={15} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" sideOffset={8} align="end">

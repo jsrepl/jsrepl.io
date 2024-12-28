@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import Link from 'next/link'
-import IconGithub from '~icons/simple-icons/github.jsx'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
 import { Button } from '@/components/ui/button'
 import { ResponseError } from '@/lib/response-error'
 
@@ -37,7 +37,7 @@ export default function ErrorComponent({
       <div className="mt-12 flex flex-wrap items-center gap-4">
         <Button asChild size="lg">
           <Link href="https://github.com/jsrepl/jsrepl.io/issues" target="_blank">
-            <IconGithub width={20} height={20} className="mr-2" />
+            <SimpleIconsGithub width={20} height={20} className="mr-2" />
             Report an issue
           </Link>
         </Button>

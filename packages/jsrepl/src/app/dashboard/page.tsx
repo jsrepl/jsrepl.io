@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LucideLibrary, LucidePlus } from 'lucide-react'
-import IconLanguageCss from '~icons/mdi/language-css3.jsx'
-import IconLanguageHtml from '~icons/mdi/language-html5.jsx'
-import IconLanguageJavascript from '~icons/mdi/language-javascript.jsx'
-import IconLanguageTypescript from '~icons/mdi/language-typescript.jsx'
-import IconReact from '~icons/mdi/react.jsx'
-import IconTailwind from '~icons/mdi/tailwind.jsx'
-import IconGithub from '~icons/simple-icons/github.jsx'
+import { MdiLanguageCss3 } from '@/components/icons/mdi/language-css3'
+import { MdiLanguageHtml5 } from '@/components/icons/mdi/language-html5'
+import { MdiLanguageJavascript } from '@/components/icons/mdi/language-javascript'
+import { MdiLanguageTypescript } from '@/components/icons/mdi/language-typescript'
+import { MdiReact } from '@/components/icons/mdi/react'
+import { MdiTailwind } from '@/components/icons/mdi/tailwind'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
 import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -65,7 +65,7 @@ export default function DashboardPage() {
                   })
                 }
               >
-                <IconGithub width={18} height={18} className="mr-2" />
+                <SimpleIconsGithub width={18} height={18} className="mr-2" />
                 Log in with Github
               </Button>
               to store your REPLs on the Dashboard
@@ -92,12 +92,12 @@ export default function DashboardPage() {
           </div>
           <div className="pointer-events-none absolute bottom-0 right-0 top-0 flex w-20 items-center justify-center overflow-hidden opacity-20">
             <div className="grid grid-cols-2 gap-x-2 *:h-10 *:w-10">
-              <IconLanguageTypescript />
-              <IconLanguageHtml />
-              <IconLanguageCss />
-              <IconReact />
-              <IconLanguageJavascript />
-              <IconTailwind />
+              <MdiLanguageTypescript />
+              <MdiLanguageHtml5 />
+              <MdiLanguageCss3 />
+              <MdiReact />
+              <MdiLanguageJavascript />
+              <MdiTailwind />
             </div>
           </div>
         </Button>

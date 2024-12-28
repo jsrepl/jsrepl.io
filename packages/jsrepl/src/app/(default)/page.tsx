@@ -7,15 +7,15 @@ import {
   LucideArrowDown,
   LucideArrowRight,
   LucideHeart,
+  LucideMail,
   LucideMessageCircleQuestion,
   LucidePackage,
   LucidePiggyBank,
   LucideSquareFunction,
 } from 'lucide-react'
-import IconEmail from '~icons/mdi/email-outline.jsx'
-import IconGithub from '~icons/mdi/github.jsx'
-import IconEsbuild from '~icons/simple-icons/esbuild.jsx'
-import IconGithubSponsors from '~icons/simple-icons/githubsponsors.jsx'
+import { SimpleIconsEsbuild } from '@/components/icons/simple-icons/esbuild'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
+import { SimpleIconsGithubsponsors } from '@/components/icons/simple-icons/githubsponsors'
 import ReplStarterDialog from '@/components/repl-starter-dialog'
 import { Button } from '@/components/ui/button'
 import { SystemRepls } from '@/lib/repl-stored-state/system-repls'
@@ -128,7 +128,7 @@ export default function Home() {
         />
 
         <FeatureBox
-          icon={<IconEsbuild width={24} height={24} className="text-primary" />}
+          icon={<SimpleIconsEsbuild width={24} height={24} className="text-primary" />}
           title={
             <>
               Powered by <span className="gradient-text">esbuild</span>
@@ -676,13 +676,13 @@ export default function Home() {
           <p className="flex">
             <Button asChild size="icon" variant="ghost">
               <Link href="https://github.com/nag5000" target="_blank">
-                <IconGithub width={24} height={24} className="opacity-80" />
+                <SimpleIconsGithub width={21} height={21} className="opacity-80" />
               </Link>
             </Button>
 
             <Button asChild size="icon" variant="ghost">
               <Link href="https://github.com/sponsors/nag5000" target="_blank">
-                <IconGithubSponsors
+                <SimpleIconsGithubsponsors
                   width={22}
                   height={22}
                   className="opacity-80 hover:text-[#bf3989]"
@@ -692,7 +692,7 @@ export default function Home() {
 
             <Button asChild size="icon" variant="ghost">
               <Link href="mailto:contact@jsrepl.io" target="_blank">
-                <IconEmail width={24} height={24} className="opacity-80" />
+                <LucideMail width={24} height={24} className="opacity-80" />
               </Link>
             </Button>
           </p>

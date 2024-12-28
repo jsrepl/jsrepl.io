@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ReplPayload } from '@jsrepl/shared-types'
 import { LucideFiles, LucidePlay, LucideRewind, LucideRotateCw, LucideSettings } from 'lucide-react'
 import { LucideEye, LucideMoon, LucidePalette, LucideShare2, LucideSun } from 'lucide-react'
-import IconGithub from '~icons/simple-icons/github.jsx'
+import { SimpleIconsGithub } from '@/components/icons/simple-icons/github'
 import Logo from '@/components/logo'
 import ShareReplDropdownItem from '@/components/share-repl-dropdown-item'
 import { Button } from '@/components/ui/button'
@@ -246,7 +246,7 @@ export default function ActivityBar() {
 
         <Button size="icon-lg" variant="ghost" className="text-activityBar-foreground" asChild>
           <Link href="https://github.com/jsrepl/jsrepl.io" target="_blank">
-            <IconGithub width={19} height={19} />
+            <SimpleIconsGithub width={19} height={19} />
           </Link>
         </Button>
 
