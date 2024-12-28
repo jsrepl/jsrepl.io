@@ -15,7 +15,7 @@ const skipPaths = [/tailwind\.config\.(ts|js)?$/]
 type TransformResult = { code: string; metadata: ReplPluginMetadata }
 const replTransformCache = new FileCache<TransformResult>()
 
-export function JsEsbuildPlugin({ replMeta }: { replMeta: ReplMeta }): esbuild.Plugin {
+export function jsEsbuildPlugin({ replMeta }: { replMeta: ReplMeta }): esbuild.Plugin {
   const ctxList: ReplPayload['ctx'][] = []
 
   return {

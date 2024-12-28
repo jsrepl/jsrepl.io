@@ -39,5 +39,10 @@
   "packageManager": "pnpm@9.9.0",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@babel/standalone": "patches/@babel__standalone.patch"
+    }
   }
 }

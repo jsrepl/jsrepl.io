@@ -17,7 +17,7 @@ let tailwindConfigLoadDeferred: PromiseWithResolvers<void> | null = null
 let lastAppliedTailwindConfig: string | TailwindConfig | undefined
 let awaitTailwindConfigReady: () => Promise<void>
 
-export function CssEsbuildPlugin({
+export function cssEsbuildPlugin({
   setTailwindConfig,
   processCSSWithTailwind,
 }: {

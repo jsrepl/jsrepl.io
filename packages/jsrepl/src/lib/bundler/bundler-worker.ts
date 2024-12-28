@@ -3,18 +3,29 @@ import type { TailwindConfig } from '@nag5000/monaco-tailwindcss'
 import * as Comlink from 'comlink'
 import * as esbuild from 'esbuild-wasm'
 import { getBabel } from '@/lib/get-babel'
-import { CssEsbuildPlugin } from './css-esbuild-plugin'
+import { cssEsbuildPlugin } from './css-esbuild-plugin'
 import { resetFileSystem, stderrSinceReset } from './fs'
-import { JsEsbuildPlugin } from './js-esbuild-plugin'
+import { jsEsbuildPlugin } from './js-esbuild-plugin'
 
 let initialized = false
+
+function getWasmUrl() {
+  const url = new URL('esbuild-wasm/esbuild.wasm', import.meta.url)
+  // HACK: With Turbopack, `url` will be relative here and won't include the origin
+  // (It is unexpected that URL instance is a relative url, but it is, Turbopack does odd
+  // transform for `new URL(..., import.meta.url)`, which produces `instanceof URL`,
+  // but with relative `href`).
+  // We need to make it absolute to ensure it works when passed to esbuild-wasm.
+  const absoluteUrl = new URL(url, location.origin)
+  return absoluteUrl
+}
 
 async function setup() {
   if (!initialized) {
     const [, loadBabel] = getBabel()
     await Promise.all([
       esbuild.initialize({
-        wasmURL: new URL('esbuild-wasm/esbuild.wasm', import.meta.url),
+        wasmURL: getWasmUrl(),
         worker: false,
       }),
       loadBabel(),
@@ -63,8 +74,8 @@ async function build(
     result = await esbuild.build({
       ...options,
       plugins: [
-        JsEsbuildPlugin({ replMeta }),
-        CssEsbuildPlugin({ setTailwindConfig, processCSSWithTailwind }),
+        jsEsbuildPlugin({ replMeta }),
+        cssEsbuildPlugin({ setTailwindConfig, processCSSWithTailwind }),
       ],
     })
   } catch (err) {

@@ -1,0 +1,17 @@
+diff --git a/babel.js b/babel.js
+index 2d1d4321bc2bc0c6971180ba825b606afa2f16ab..5c491eb4ded1d65c31d6a207665d50bbf1f2ffbe 100644
+--- a/babel.js
++++ b/babel.js
+@@ -75770,7 +75770,11 @@
+   		if (resolvedPath !== null) {
+   			return resolvedPath;
+   		}
+-  		return require.resolve(path);
++      // https://github.com/babel/babel/issues/14301
++      // https://github.com/rollup/plugins/pull/1530
++      // `require.resolve(path)` with webpack emits warnings "Critical dependency: the request of a dependency is an expression",
++      // with turbopack raises build-time error "Module not found: Can't resolve <dynamic>".
++  		throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
+   	};
+   	return handleRequire;
+   }

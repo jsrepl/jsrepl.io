@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "preview": "next start",
     "lint": "next lint && tsc",
@@ -18,7 +18,7 @@
     "supabase:seed-system-repls": "./supabase/seeds/seed-system-repls.sh"
   },
   "dependencies": {
-    "@babel/standalone": "^7.24.10",
+    "@babel/standalone": "^7.26.4",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@jsrepl/shared-types": "workspace:*",
     "@mdx-js/loader": "^3.0.1",
@@ -51,11 +51,11 @@
     "fflate": "^0.8.2",
     "interactjs": "^1.10.27",
     "lucide-react": "^0.445.0",
-    "next": "15.0.3",
+    "next": "15.1.3",
     "next-navigation-guard": "^0.1.2",
     "next-themes": "npm:@nag5000/next-themes@0.3.0-fork.0",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "shiki": "^1.11.1",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.4.0",
@@ -85,15 +85,15 @@
     "@types/babel__core": "^7.20.5",
     "@types/babel__standalone": "^7.1.7",
     "@types/node": "^20",
-    "@types/react": "npm:types-react@19.0.0-rc.1",
-    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "@types/react": "19.0.2",
+    "@types/react-dom": "19.0.2",
     "@types/umami": "^2.10.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "eslint": "^8",
-    "eslint-config-next": "15.0.3",
-    "eslint-plugin-react-compiler": "19.0.0-beta-6fc168f-20241025",
+    "eslint-config-next": "15.1.3",
+    "eslint-plugin-react-compiler": "19.0.0-beta-b2e8e9c-20241220",
     "eslint-plugin-storybook": "^0.11.1",
     "fast-deep-equal": "^3.1.3",
     "http-proxy-middleware": "^3.0.3",
@@ -110,11 +110,5 @@
     "last 2 chrome versions",
     "last 2 firefox versions",
     "last 2 safari versions"
-  ],
-  "pnpm": {
-    "overrides": {
-      "@types/react": "npm:types-react@19.0.0-rc.1",
-      "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
-    }
-  }
+  ]
 }
