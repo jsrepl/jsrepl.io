@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import { shikiToMonaco } from '@shikijs/monaco'
 import * as monaco from 'monaco-editor'
-import styles from '@/components/code-editor.module.css'
+import codeEditorStyles from '@/components/code-editor.module.css'
 import useCodeEditorDTS from '@/hooks/useCodeEditorDTS'
 import useCodeEditorRepl from '@/hooks/useCodeEditorRepl'
 import { useCodeHighlighter } from '@/hooks/useCodeHighlighter'
@@ -30,11 +30,12 @@ setupTailwindCSS()
 export default function CodeEditor() {
   const [replState] = useReplStoredState()
   const [userState] = useUserStoredState()
-  const { editorRef, setEditor } = useMonacoEditor()
+  const { editor, setEditor } = useMonacoEditor()
   const { models, readOnlyModels } = useReplModels()
   const { highlighter, loadedHighlightTheme } = useCodeHighlighter()
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(editor)
 
   const { resolvedTheme: themeId } = useTheme()
   const theme = useMemo(() => Themes.find((theme) => theme.id === themeId) ?? Themes[0]!, [themeId])
@@ -116,10 +117,12 @@ export default function CodeEditor() {
     const editor = monaco.editor.create(containerRef.current!, editorInitialOptions.current)
     editor.focus()
     setEditor(editor)
+    editorRef.current = editor
 
     return () => {
       editor.dispose()
       setEditor(null)
+      editorRef.current = null
     }
   }, [setEditor])
 
@@ -130,7 +133,7 @@ export default function CodeEditor() {
   return (
     <div
       ref={containerRef}
-      className={cn('bg-editor-background min-h-0 flex-1', styles.codeEditor)}
+      className={cn('bg-editor-background min-h-0 flex-1', codeEditorStyles.codeEditor)}
     />
   )
 }
