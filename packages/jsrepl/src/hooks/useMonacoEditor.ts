@@ -8,6 +8,10 @@ export function useMonacoEditor() {
 
   useEffect(() => {
     editorRef.current = editor
+
+    return () => {
+      editorRef.current = null
+    }
   }, [editor])
 
   return { editor, editorRef, setEditor }
