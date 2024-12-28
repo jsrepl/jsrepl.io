@@ -22,7 +22,6 @@ import { PreviewPosition } from '@/types'
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy#directives
 const iframeAllow = [
   'accelerometer',
-  'ambient-light-sensor',
   'attribution-reporting',
   'autoplay',
   'bluetooth',
@@ -48,7 +47,6 @@ const iframeAllow = [
   'publickey-credentials-get',
   'screen-wake-lock',
   'serial',
-  'speaker-selection',
   'usb',
   'web-share',
   'window-management',
